@@ -1,0 +1,479 @@
+# Point Cloud Processing and Pile Segmentation{#ptcld_process}
+
+To start, we'll use the point cloud data alone to attempt to classify slash piles using structural signatures alone without additional spectral information.
+
+We'll use the `cloud2trees` package to perform all preprocessing of point cloud data which includes:
+
+* ground classification and noise removal
+* raster data (DTM and CHM) generation
+* point cloud height normalization
+
+All of this can be accomplished using the `cloud2raster()` function. After generating these products from the raw point cloud we'll perform object segmentation to attempt to detect round, conical objects like slash piles from: 1) the normalized point cloud directly; 2) the CHM which we'll generate by setting the minimum height to zero (essentially a digital surface model [DSM] with the ground removed).
+
+To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation in a bottom-up approach. *Insert something from paper about bottom-up approach that uses a CHM "slice" near the ground*. For slash piles, which are often irregular and may not have a distinct "treetop" equivalent, CHM-based methods might be less directly applicable unless the piles present a very clear, isolated conical or rounded form. Could use expected morphology of the slash piles (e.g. maximum height) based on prior research and/or the pile construction prescription. We won't use the height normalized point cloud data in this project but future work could attempt to detect slash piles directly from the point cloud by using a clustering algorithm such as DBSCAN (Density-Based Spatial Clustering of Applications with Noise), for example.
+
+* [**Section 5**](#raster_watershed) builds and tests a raster-based watershed segmentation methodology
+* [**Section 6**](#data_fusion) combines the raster-based watershed segmentation methodology with spectral information in a data fusion approach
+
+```{r, include=FALSE,eval=FALSE}
+# To attempt to detect slash piles directly from the point cloud we can use a clustering algorithm such as DBSCAN (Density-Based Spatial Clustering of Applications with Noise) which identifies clusters based on point density, making it effective for detecting clusters of arbitrary shapes and sizes. It does not require the number of clusters to be specified beforehand. [Fu et al. (2022)](https://doi.org/10.3390/f13040566) outline a method using DBSCAN in semi-automated way to segment individual trees from TLS data. After segmenting the point cloud using DBSCAN, either random forest can be used as a classifier (i.e. classification step) or a rules-based method can filter segments to distinguish slash piles from other objects based on their extracted geometric features. The general workflow is:
+# 
+# 1) for each point in the normalized non-ground point cloud, compute a suite of relevant geometric features within a defined local neighborhood radius using `lidR::point_metrics()`
+# 2) calculate features derived from PCA, such as linearity, planarity, sphericity, and surface variation. Also, compute curvature (mean, Gaussian) and roughness
+# 3) perform object segmentation/clustering to group points belonging to individual objects using DBSCAN which can identify dense clusters without requiring a predefined number of objects
+# 4a) classify the segmented objects (clusters) as "slash pile" or "non-slash pile" based on their extracted features (e.g., sphericity, roughness, height, volume) with a random forest classifier using a manually annotated subset of segmented objects
+# 4b) *or* used a rules-based approach to filter the segmented objects based on their extracted features (e.g., sphericity, roughness, height, volume) based on expected morphology of the slash piles (e.g. maximum height) using prior research or prescription settings.
+# 5) merge small, adjacent segments that likely belong to a single slash pile based on proximity and connectivity
+# 6) perform a confusion matrix-based evaluation on the results
+```
+
+## Process Raw Point Cloud
+
+We'll use `cloud2trees::cloud2raster()` to process the raw point cloud data
+
+```{r}
+# set chm res
+chm_res_m_temp <- 0.2
+dir_temp <- paste0("../data/point_cloud_processing_delivery_chm",chm_res_m_temp,"m")
+las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
+# read header with catalog
+lidR::readLAScatalog(las_dir_temp)
+# do it
+if(!dir.exists(dir_temp)){
+  # cloud2trees
+  cloud2raster_ans <- cloud2trees::cloud2raster(
+    output_dir = "../data"
+    , input_las_dir = las_dir_temp
+    , accuracy_level = 2
+    , keep_intrmdt = T
+    , dtm_res_m = 0.25
+    , chm_res_m = chm_res_m_temp
+    , min_height = 0 # effectively generates a DSM based on non-ground points
+  )
+  # rename
+  file.rename(from = "../data/point_cloud_processing_delivery", to = dir_temp)
+}else{
+  dtm_temp <- terra::rast( file.path(dir_temp, "dtm_0.25m.tif") )
+  chm_temp <- terra::rast( file.path(dir_temp, paste0("chm_", chm_res_m_temp,"m.tif")) )
+  
+  # dtm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.1m/dtm_0.25m.tif")
+  # chm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.1m/chm_0.1m.tif")
+  
+  # dtm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.2m/dtm_0.5m.tif")
+  # chm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.2m/chm_0.2m.tif")
+  
+  cloud2raster_ans <- list(
+    "dtm_rast" = dtm_temp
+    , "chm_rast" = chm_temp
+  )
+}
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+let's check out the DTM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+cloud2raster_ans$dtm_rast %>% 
+  terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
+  terra::plot(axes = F)
+```
+
+```{r, include=FALSE, eval=TRUE}
+ggplot2::ggsave("../data/dtm.jpeg", height = 8, width = 10.5)
+```
+
+and CHM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+cloud2raster_ans$chm_rast %>% 
+  terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
+  terra::plot(col = viridis::plasma(100), axes = F)
+```
+
+```{r, include=FALSE, eval=TRUE}
+ggplot2::ggsave("../data/chm.jpeg", height = 8, width = 10.5)
+```
+
+### DTM and CHM + piles
+
+let's visually inspect the DTM and CHM with the pile outlines overlaid
+
+```{r}
+p_fn_temp <- function(
+    rn
+    , df = slash_piles_polys
+    , rast = cloud2raster_ans$dtm_rast
+    , crs = terra::crs(cloud2raster_ans$dtm_rast)
+    , my_title = ""
+    , vopt = "viridis"
+    , lim = NULL
+) {
+  # scale the buffer based on the largest
+    d_temp <- df %>%
+      dplyr::arrange(tolower(comment), desc(field_diameter_m)) %>% 
+      dplyr::slice(rn) %>% 
+      sf::st_transform(crs)
+    
+    # plt classifier
+    # convert to stars
+    comp_st <- rast %>%  
+      terra::crop(
+        d_temp %>% sf::st_buffer(20) %>% terra::vect()
+      ) %>% 
+      terra::as.data.frame(xy = T) %>% 
+      dplyr::rename(f=3)
+    
+    # ggplot
+    comp_temp <- ggplot2::ggplot() +
+      ggplot2::geom_tile(data = comp_st, ggplot2::aes(x=x,y=y,fill=f)) +
+      ggplot2::geom_sf(data = d_temp, fill = NA, color = "gray33", lwd = 0.4) +
+      ggplot2::scale_x_continuous(expand = c(0, 0)) +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
+      ggplot2::labs(
+        x = ""
+        , y = ""
+        , subtitle = my_title
+      ) +
+      ggplot2::theme_void() +
+      ggplot2::theme(
+        legend.position = "none" # c(0.5,1)
+        , legend.margin = margin(0,0,0,0)
+        , legend.text = element_text(size = 8)
+        , legend.title = element_text(size = 8)
+        , legend.key = element_rect(fill = "white")
+        # , plot.title = ggtext::element_markdown(size = 10, hjust = 0.5)
+        , plot.title = element_text(size = 8, hjust = 0.5, face = "bold")
+        , plot.subtitle = element_text(size = 6, hjust = 0.5, face = "italic")
+      )
+  if(!is.null(lim)){
+    comp_temp <- comp_temp + 
+      ggplot2::scale_fill_viridis_c(option = vopt, limits = lim)
+  }else{
+    comp_temp <- comp_temp + 
+      ggplot2::scale_fill_viridis_c(option = vopt)
+  }
+    
+  plt_temp <- comp_temp
+  return(list("plt"=plt_temp,"d"=d_temp))
+}
+
+# p_fn_temp(
+#   rn = 5
+#   # , lim = c(floor(terra::minmax(cloud2raster_ans$dtm_rast)[1]*0.98), floor(terra::minmax(cloud2raster_ans$dtm_rast)[2]*1.02))
+# )
+# p_fn_temp(
+#   rn = 11
+#   , rast = cloud2raster_ans$chm_rast
+#   , vopt = "plasma"
+# )
+# combine 3
+plt_combine_temp <- function(
+    rn
+    , df = slash_piles_polys %>% dplyr::filter(!is.na(comment))
+    , rast1 = cloud2raster_ans$dtm_rast
+    , title1 = "DTM"
+    , vopt1 = "viridis"
+    , rast2 = cloud2raster_ans$chm_rast
+    , title2 = "CHM"
+    , vopt2 = "plasma"
+    , crs = terra::crs(cloud2raster_ans$dtm_rast)
+) {
+  # composite 1
+  ans1 <- p_fn_temp(
+    rn = rn
+    , df = df
+    , rast = rast1
+    , my_title = title1
+    , crs = crs
+    , vopt = vopt1
+  )
+  # composite 2
+  ans2 <- p_fn_temp(
+    rn = rn
+    , df = df
+    , rast = rast2
+    , my_title = title2
+    , crs = crs
+    , vopt = vopt2
+  )
+  # plt rgb
+    rgb_temp <-
+      ortho_plt_fn(my_ortho_rast = ortho_rast, stand =ans1$d) + 
+      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "white", lwd = 0.3)
+  # combine
+    r <- ans1$plt + ans2$plt + rgb_temp
+    return(r)
+}
+
+# plt_combine_temp(2)
+
+# add pile locations
+plt_list_rast_comp <- sample(1:nrow(slash_piles_polys %>% dplyr::filter(!is.na(comment))),10) %>% 
+  purrr::map(plt_combine_temp)
+# plt_list_rast_comp[[2]]
+```
+
+combine the plots for a few piles
+
+```{r, height = 10.5, width = 7.5}
+patchwork::wrap_plots(
+  plt_list_rast_comp
+  , ncol = 2
+)
+ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 10.5)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(las_ctg, plt_list_rast_comp)
+gc()
+```
+
+a few things are noteworthy in these examples:
+ 
+* Piles are clearly visible in some areas of the DTM but less visible in other areas
+* Piles are delineated in the CHM but with varying degrees of definition based on surrounding terrain and pile structure
+* The DTM and CHM were rarely impacted by shadows in the RGB imagery
+* It is interesting to see coarse woody debris occasionally visible in the CHM
+
+```{r, include=FALSE, eval=TRUE}
+# quick function to ingest a sf data.frame with geometry features for each row
+# and return a bbox for each row-level geometry
+st_bbox_by_row <- function(
+  df
+  , corner = NA # ul,ll,ur,lr,full
+  , dimensions = T
+) {
+  if(!inherits(df,"sf")){stop("must be sf class object")}
+  # corner
+  corner <- dplyr::coalesce(corner,"") %>% tolower()
+  
+  nd <- df %>% 
+    sf::st_set_geometry("geometry") %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(
+      xmin_temp = sf::st_bbox(geometry)[1]
+      , ymin_temp = sf::st_bbox(geometry)[2]
+      , xmax_temp = sf::st_bbox(geometry)[3]
+      , ymax_temp = sf::st_bbox(geometry)[4]
+    )
+
+  if(corner == "ul"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmin_temp","ymax_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "ll"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmin_temp","ymin_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "ur"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmax_temp","ymax_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "lr"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmax_temp","ymin_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "full"){
+    ret_d <- nd %>% 
+      dplyr::mutate(
+        geometry = sf::st_sfc(
+            sf::st_point(c(xmin_temp,ymin_temp)) # lower_left_pt
+            , sf::st_point(c(xmax_temp,ymax_temp)) # upper_right_pt
+          ) %>% 
+          sf::st_bbox() %>% 
+          sf::st_as_sfc()
+      ) %>%
+      dplyr::ungroup() %>%
+      sf::st_set_geometry("geometry") %>%
+      sf::st_set_crs(sf::st_crs(df))
+  }else{
+    ret_d <- nd %>% dplyr::ungroup()
+  }
+  
+  # length/width
+  if(dimensions){
+    ret_d <- ret_d %>% 
+      dplyr::rowwise() %>% 
+      dplyr::mutate(
+        # calc dimensions
+        xdiff_temp = xmax_temp-xmin_temp
+        , ydiff_temp = ymax_temp-ymin_temp
+        , shape_length = max(xdiff_temp,ydiff_temp,na.rm = T)
+        , shape_width = min(xdiff_temp,ydiff_temp,na.rm = T)
+      ) %>% 
+      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp,xdiff_temp,ydiff_temp)) %>% 
+      dplyr::ungroup()
+  }else{
+    ret_d <- ret_d %>% 
+      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp))
+  }
+  
+  return(ret_d)
+}
+```
+
+```{r, include = F, eval = F}
+pile_id_temp <- 
+  # slash_piles_polys %>% dplyr::arrange(desc(field_diameter_m)) %>% dplyr::slice(1) %>% dplyr::pull(pile_id)
+  73
+crs_temp <- terra::crs(ortho_rast)
+# buff
+buff_temp <- slash_piles_polys %>% dplyr::filter(pile_id == pile_id_temp) %>% 
+  sf::st_centroid() %>% 
+  sf::st_buffer(35, endCapStyle = "SQUARE")
+# piles filter
+piles_temp <- slash_piles_polys %>% 
+  sf::st_intersection(buff_temp) %>% 
+  dplyr::mutate(rn = dplyr::row_number())
+piles_bbox_temp <- piles_temp %>% st_bbox_by_row(corner = "ul")
+  
+# rgb
+rgb_temp <- 
+  ortho_plt_fn(my_ortho_rast = ortho_rast, stand = buff_temp %>% sf::st_transform(crs_temp), buffer = 0) 
+# rgb_temp
+rgb_temp + 
+  ggplot2::geom_sf(
+    data = piles_temp %>% sf::st_transform(crs_temp)
+    , fill = NA, color = "orangered2", lwd = 0.8
+  ) +
+  ggplot2::geom_sf_label(
+    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
+    , ggplot2::aes(label = rn, fontface = "bold")
+    , vjust = 0, hjust = 0.5
+    # , color = "white"
+  )
+ggplot2::ggsave("../data/rgbtesttest.jpg", height = 7, width = 7.5)
+# dtm
+dtm_temp <- 
+  cloud2raster_ans$dtm_rast %>%  
+  terra::crop(
+    buff_temp %>% 
+      sf::st_transform(crs_temp) %>% 
+      terra::vect()
+  ) %>% 
+  terra::as.data.frame(xy = T) %>% 
+  dplyr::rename(f=3) %>% 
+  ggplot2::ggplot() +
+  ggplot2::geom_tile(ggplot2::aes(x=x,y=y,fill=f)) +
+  ggplot2::scale_fill_viridis_c(option = "viridis") +
+  ggplot2::scale_x_continuous(expand = c(0, 0)) +
+  ggplot2::scale_y_continuous(expand = c(0, 0)) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none")
+dtm_temp +
+  ggplot2::geom_sf(
+    data = piles_temp %>% sf::st_transform(crs_temp)
+    , fill = NA, color = "orangered2", lwd = 0.8
+  ) +
+  ggplot2::geom_sf_label(
+    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
+    , ggplot2::aes(label = rn, fontface = "bold")
+    , vjust = 0, hjust = 0.5
+    # , color = "white"
+  )
+ggplot2::ggsave("../data/dtmtesttest.jpg", height = 7, width = 7.5)
+# chm
+chm_temp <- 
+  cloud2raster_ans$chm_rast %>%  
+  terra::crop(
+    buff_temp %>% 
+      sf::st_transform(crs_temp) %>% 
+      terra::vect()
+  ) %>% 
+  terra::as.data.frame(xy = T) %>% 
+  dplyr::rename(f=3) %>% 
+  ggplot2::ggplot() +
+  ggplot2::geom_tile(ggplot2::aes(x=x,y=y,fill=f)) +
+  # harrypotter::scale_fill_hp("mischief") +
+  ggplot2::scale_fill_viridis_c(option = "mako", direction = -1) +
+  # ggplot2::scale_fill_distiller(palette = "BrBG", direction = 1) +
+  ggplot2::scale_x_continuous(expand = c(0, 0)) +
+  ggplot2::scale_y_continuous(expand = c(0, 0)) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none")
+chm_temp +
+  ggplot2::geom_sf(
+    data = piles_temp %>% sf::st_transform(crs_temp)
+    , fill = NA, color = "orangered2", lwd = 0.8
+  ) +
+  ggplot2::geom_sf_label(
+    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
+    , ggplot2::aes(label = rn, fontface = "bold")
+    , vjust = 0, hjust = 0.5
+    # , color = "white"
+  )
+ggplot2::ggsave("../data/chmtesttest.jpg", height = 7, width = 7.5)
+```
+
+```{r, include = F, eval = F}
+# cld
+ctg_temp <- lidR::readLAScatalog(
+  "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
+  # "../data/point_cloud_processing_temp/02_normalize"
+  , select = "xyzRGB"
+)
+lidR::opt_progress(ctg_temp) <- F
+lidR::opt_filter(ctg_temp) <- "-drop_duplicates"
+
+lidR::clip_roi(
+  ctg_temp
+  # biggest mechanical
+  , piles_temp %>%
+    dplyr::filter(rn==1) %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(4.2, endCapStyle = "SQUARE") %>% 
+    sf::st_transform(lidR::st_crs(ctg_temp))
+) %>% 
+lidR::plot(
+    color = "RGB", bg = "white", legend = F
+  )  
+
+
+lidR::clip_roi(
+  ctg_temp
+  # biggest mechanical
+  , piles_temp %>%
+    dplyr::filter(rn==2) %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(5, endCapStyle = "SQUARE") %>% 
+    sf::st_transform(lidR::st_crs(ctg_temp))
+) %>% 
+  purrr::pluck("data") %>% 
+  summary()
+lidR::plot(
+    color = "RGB", bg = "white", legend = F
+  )  
+
+
+p_fn_temp(1)
+p_fn_temp(2)
+p_fn_temp(3)
+p_fn_temp(4)
+p_fn_temp(5)
+```
+

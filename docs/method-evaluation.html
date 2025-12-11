@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Section 3 Method Evaluation | Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Section 3 Method Evaluation | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Section 3 Method Evaluation | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="training-data.html"/>
+<link rel="next" href="ptcld_process.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script src="libs/. - 1_d2f159-1/data_stars_1b1597e.txt"></script>
+<script src="libs/joda-0.0.1/joda.js"></script>
+<script src="libs/joda-0.0.1/addImageQuery-bindings.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="training-data.html"><a href="training-data.html"><i class="fa fa-check"></i><b>2</b> Training Data</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="training-data.html"><a href="training-data.html#site-introduction"><i class="fa fa-check"></i><b>2.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="2.2" data-path="training-data.html"><a href="training-data.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a></li>
+<li class="chapter" data-level="2.3" data-path="training-data.html"><a href="training-data.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="training-data.html"><a href="training-data.html#example-ratio-based-index"><i class="fa fa-check"></i><b>2.3.1</b> Example ratio-based index</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="training-data.html"><a href="training-data.html#study-area-imagery"><i class="fa fa-check"></i><b>2.4</b> Study area imagery</a></li>
+<li class="chapter" data-level="2.5" data-path="training-data.html"><a href="training-data.html#point-cloud-data"><i class="fa fa-check"></i><b>2.5</b> Point Cloud Data</a></li>
+<li class="chapter" data-level="2.6" data-path="training-data.html"><a href="training-data.html#check-out-one-pile"><i class="fa fa-check"></i><b>2.6</b> Check out one pile</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="method-evaluation.html"><a href="method-evaluation.html"><i class="fa fa-check"></i><b>3</b> Method Evaluation</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="method-evaluation.html"><a href="method-evaluation.html#iou_match"><i class="fa fa-check"></i><b>3.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="3.2" data-path="method-evaluation.html"><a href="method-evaluation.html#detect_metrics_form"><i class="fa fa-check"></i><b>3.2</b> Detection Accuracy Metrics</a></li>
+<li class="chapter" data-level="3.3" data-path="method-evaluation.html"><a href="method-evaluation.html#quant_metrics_form"><i class="fa fa-check"></i><b>3.3</b> Quantification Accuracy Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>4</b> Point Cloud Processing and Pile Segmentation</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>4.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#dtm-and-chm-piles"><i class="fa fa-check"></i><b>4.1.1</b> DTM and CHM + piles</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="raster_watershed.html"><a href="raster_watershed.html"><i class="fa fa-check"></i><b>5</b> Structural Detection from CHM</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="raster_watershed.html"><a href="raster_watershed.html#method-demonstration"><i class="fa fa-check"></i><b>5.1</b> Method Demonstration</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="raster_watershed.html"><a href="raster_watershed.html#geometric-filtering-irregularity-filtering"><i class="fa fa-check"></i><b>5.1.1</b> Geometric filtering: Irregularity Filtering</a></li>
+<li class="chapter" data-level="5.1.2" data-path="raster_watershed.html"><a href="raster_watershed.html#area-filtering"><i class="fa fa-check"></i><b>5.1.2</b> Area Filtering</a></li>
+<li class="chapter" data-level="5.1.3" data-path="raster_watershed.html"><a href="raster_watershed.html#geometric-filtering-circularity-filtering"><i class="fa fa-check"></i><b>5.1.3</b> Geometric filtering: Circularity Filtering</a></li>
+<li class="chapter" data-level="5.1.4" data-path="raster_watershed.html"><a href="raster_watershed.html#area-and-volume-from-chm"><i class="fa fa-check"></i><b>5.1.4</b> Area and Volume from CHM</a></li>
+<li class="chapter" data-level="5.1.5" data-path="raster_watershed.html"><a href="raster_watershed.html#shape-refinement"><i class="fa fa-check"></i><b>5.1.5</b> Shape Refinement</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="raster_watershed.html"><a href="raster_watershed.html#instance-matching"><i class="fa fa-check"></i><b>5.2</b> Instance Matching</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="raster_watershed.html"><a href="raster_watershed.html#example-area"><i class="fa fa-check"></i><b>5.2.1</b> Example Area</a></li>
+<li class="chapter" data-level="5.2.2" data-path="raster_watershed.html"><a href="raster_watershed.html#full-study-area"><i class="fa fa-check"></i><b>5.2.2</b> Full Study Area</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="raster_watershed.html"><a href="raster_watershed.html#slash_pile_detect_watershed"><i class="fa fa-check"></i><b>5.3</b> Watershed Pile Detection Function</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="data_fusion.html"><a href="data_fusion.html"><i class="fa fa-check"></i><b>6</b> Data Fusion</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="data_fusion.html"><a href="data_fusion.html#rgb-indices"><i class="fa fa-check"></i><b>6.1</b> RGB Indices</a>
+<ul>
+<li class="chapter" data-level="6.1.1" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-functions"><i class="fa fa-check"></i><b>6.1.1</b> Spectral Index Functions</a></li>
+<li class="chapter" data-level="6.1.2" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-of-polygons"><i class="fa fa-check"></i><b>6.1.2</b> Spectral Index of Polygons</a></li>
+</ul></li>
+<li class="chapter" data-level="6.2" data-path="data_fusion.html"><a href="data_fusion.html#ground-truth-pile-spectral-summary"><i class="fa fa-check"></i><b>6.2</b> Ground Truth Pile Spectral Summary</a>
+<ul>
+<li class="chapter" data-level="6.2.1" data-path="data_fusion.html"><a href="data_fusion.html#voting-system"><i class="fa fa-check"></i><b>6.2.1</b> Voting System</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="data_fusion.html"><a href="data_fusion.html#polygon_spectral_filtering"><i class="fa fa-check"></i><b>6.3</b> Candidate Polygon Spectral Filtering Function</a></li>
+<li class="chapter" data-level="6.4" data-path="data_fusion.html"><a href="data_fusion.html#data-fusion-example"><i class="fa fa-check"></i><b>6.4</b> Data Fusion Example</a>
+<ul>
+<li class="chapter" data-level="6.4.1" data-path="data_fusion.html"><a href="data_fusion.html#instance-matching-1"><i class="fa fa-check"></i><b>6.4.1</b> Instance Matching</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="wshed_params_test.html"><a href="wshed_params_test.html"><i class="fa fa-check"></i><b>7</b> Sensitivity Testing Method</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="wshed_params_test.html"><a href="wshed_params_test.html#all_the_combos"><i class="fa fa-check"></i><b>7.1</b> Workflow over parameter combinations</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-workflow"><i class="fa fa-check"></i><b>7.1.1</b> Test Workflow</a></li>
+<li class="chapter" data-level="7.1.2" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-instance-matching"><i class="fa fa-check"></i><b>7.1.2</b> Test Instance Matching</a></li>
+<li class="chapter" data-level="7.1.3" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-accuracy"><i class="fa fa-check"></i><b>7.1.3</b> Test Accuracy</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="chm_sens_test.html"><a href="chm_sens_test.html"><i class="fa fa-check"></i><b>8</b> Sensitivity Testing Results</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#process-raw-point-cloud-1"><i class="fa fa-check"></i><b>8.1</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="8.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#structural-only-parameter-testing"><i class="fa fa-check"></i><b>8.2</b> Structural Only: Parameter Testing</a>
+<ul>
+<li class="chapter" data-level="8.2.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#validation-over-parameter-combinations"><i class="fa fa-check"></i><b>8.2.1</b> Validation over parameter combinations</a></li>
+<li class="chapter" data-level="8.2.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#aggregate-validation-metrics-to-parameter-combination"><i class="fa fa-check"></i><b>8.2.2</b> Aggregate Validation Metrics to Parameter Combination</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion-parameter-testing"><i class="fa fa-check"></i><b>8.3</b> Data Fusion: Parameter Testing</a>
+<ul>
+<li class="chapter" data-level="8.3.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#aggregate-validation-metrics-to-parameter-combination-1"><i class="fa fa-check"></i><b>8.3.1</b> Aggregate Validation Metrics to Parameter Combination</a></li>
+</ul></li>
+<li class="chapter" data-level="8.4" data-path="chm_sens_test.html"><a href="chm_sens_test.html#read-data-for-analysis"><i class="fa fa-check"></i><b>8.4</b> Read Data for Analysis</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#structural-only"><i class="fa fa-check"></i><b>8.4.1</b> Structural Only</a></li>
+<li class="chapter" data-level="8.4.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion"><i class="fa fa-check"></i><b>8.4.2</b> Data Fusion</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="chm_sens_test.html"><a href="chm_sens_test.html#allthetests"><i class="fa fa-check"></i><b>8.5</b> Structural Only: Sensitivity Testing</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#detect_trends"><i class="fa fa-check"></i><b>8.5.1</b> Main Effects: pile detection</a></li>
+<li class="chapter" data-level="8.5.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#quant_trends"><i class="fa fa-check"></i><b>8.5.2</b> Main Effects: form quantification</a></li>
+<li class="chapter" data-level="8.5.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#best-settings"><i class="fa fa-check"></i><b>8.5.3</b> Best settings</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion-sensitivity-testing"><i class="fa fa-check"></i><b>8.6</b> Data Fusion: Sensitivity Testing</a>
+<ul>
+<li class="chapter" data-level="8.6.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#main-effects-pile-detection"><i class="fa fa-check"></i><b>8.6.1</b> Main Effects: pile detection</a></li>
+<li class="chapter" data-level="8.6.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#main-effects-form-quantification"><i class="fa fa-check"></i><b>8.6.2</b> Main Effects: form quantification</a></li>
+<li class="chapter" data-level="8.6.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#balanced_acc_assess"><i class="fa fa-check"></i><b>8.6.3</b> Top settings</a></li>
+</ul></li>
+<li class="chapter" data-level="8.7" data-path="chm_sens_test.html"><a href="chm_sens_test.html#save-the-data"><i class="fa fa-check"></i><b>8.7</b> save the data</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="stats_method.html"><a href="stats_method.html"><i class="fa fa-check"></i><b>9</b> Statistical Testing of Method Settings</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="stats_method.html"><a href="stats_method.html#bayesian-glm---f-score"><i class="fa fa-check"></i><b>9.1</b> Bayesian GLM - F-score</a>
+<ul>
+<li class="chapter" data-level="9.1.1" data-path="stats_method.html"><a href="stats_method.html#model-selection"><i class="fa fa-check"></i><b>9.1.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.1.2" data-path="stats_method.html"><a href="stats_method.html#modeling"><i class="fa fa-check"></i><b>9.1.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.1.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks"><i class="fa fa-check"></i><b>9.1.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.1.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects"><i class="fa fa-check"></i><b>9.1.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.1.5" data-path="stats_method.html"><a href="stats_method.html#f_score_epred"><i class="fa fa-check"></i><b>9.1.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.2" data-path="stats_method.html"><a href="stats_method.html#mod_diam_mape"><i class="fa fa-check"></i><b>9.2</b> Bayesian GLM - Diameter MAPE</a>
+<ul>
+<li class="chapter" data-level="9.2.1" data-path="stats_method.html"><a href="stats_method.html#model-selection-1"><i class="fa fa-check"></i><b>9.2.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.2.2" data-path="stats_method.html"><a href="stats_method.html#mod_diam_mape2"><i class="fa fa-check"></i><b>9.2.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.2.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks-1"><i class="fa fa-check"></i><b>9.2.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.2.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects-1"><i class="fa fa-check"></i><b>9.2.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.2.5" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-expectation"><i class="fa fa-check"></i><b>9.2.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="stats_method.html"><a href="stats_method.html#bayesian-glm---height-mape"><i class="fa fa-check"></i><b>9.3</b> Bayesian GLM - Height MAPE</a>
+<ul>
+<li class="chapter" data-level="9.3.1" data-path="stats_method.html"><a href="stats_method.html#model-selection-2"><i class="fa fa-check"></i><b>9.3.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.3.2" data-path="stats_method.html"><a href="stats_method.html#modeling-1"><i class="fa fa-check"></i><b>9.3.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.3.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks-2"><i class="fa fa-check"></i><b>9.3.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.3.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects-2"><i class="fa fa-check"></i><b>9.3.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.3.5" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-expectation-1"><i class="fa fa-check"></i><b>9.3.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.4" data-path="stats_method.html"><a href="stats_method.html#hey_balanced_acc"><i class="fa fa-check"></i><b>9.4</b> Balanced Accuracy Bayesian Optimization</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="stats_method.html"><a href="stats_method.html#balanced-accuracy-selection"><i class="fa fa-check"></i><b>9.4.1</b> Balanced Accuracy Selection</a></li>
+<li class="chapter" data-level="9.4.2" data-path="stats_method.html"><a href="stats_method.html#overall-across-chm-resolution-2"><i class="fa fa-check"></i><b>9.4.2</b> Overall (across CHM resolution)</a></li>
+<li class="chapter" data-level="9.4.3" data-path="stats_method.html"><a href="stats_method.html#by-chm-resolution-2"><i class="fa fa-check"></i><b>9.4.3</b> by CHM resolution</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="stats_method.html"><a href="stats_method.html#training_detect_final"><i class="fa fa-check"></i><b>9.5</b> Balanced Accuracy Validation</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="stats_method.html"><a href="stats_method.html#detection"><i class="fa fa-check"></i><b>9.5.1</b> Detection</a></li>
+<li class="chapter" data-level="9.5.2" data-path="stats_method.html"><a href="stats_method.html#instance-match-accuracy-assessment"><i class="fa fa-check"></i><b>9.5.2</b> Instance Match &amp; Accuracy Assessment</a></li>
+<li class="chapter" data-level="9.5.3" data-path="stats_method.html"><a href="stats_method.html#training_detect_final_volcomp"><i class="fa fa-check"></i><b>9.5.3</b> Volume Comparison</a></li>
+<li class="chapter" data-level="9.5.4" data-path="stats_method.html"><a href="stats_method.html#stand-level-aggregation"><i class="fa fa-check"></i><b>9.5.4</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html"><i class="fa fa-check"></i><b>10</b> Method Validation: Pinyon-Juniper</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#site-introduction-1"><i class="fa fa-check"></i><b>10.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="10.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#data-processing"><i class="fa fa-check"></i><b>10.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="10.2.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#vector-data"><i class="fa fa-check"></i><b>10.2.1</b> Vector Data</a></li>
+<li class="chapter" data-level="10.2.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#rgb-data"><i class="fa fa-check"></i><b>10.2.2</b> RGB Data</a></li>
+<li class="chapter" data-level="10.2.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#process-raw-point-cloud-2"><i class="fa fa-check"></i><b>10.2.3</b> Process Raw Point Cloud</a></li>
+</ul></li>
+<li class="chapter" data-level="10.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#pj_detect_fusion"><i class="fa fa-check"></i><b>10.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="10.3.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#structural-candidate-segments"><i class="fa fa-check"></i><b>10.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="10.3.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#accuracy-of-these-structural-settings"><i class="fa fa-check"></i><b>10.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="10.3.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#spect_filtering_final_pj"><i class="fa fa-check"></i><b>10.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="10.3.4" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#detection-and-quantification-accuracy"><i class="fa fa-check"></i><b>10.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="10.3.5" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#validation_detect_final_volcomp"><i class="fa fa-check"></i><b>10.3.5</b> Volume Comparison</a></li>
+<li class="chapter" data-level="10.3.6" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#stand-level-aggregation-1"><i class="fa fa-check"></i><b>10.3.6</b> Stand-level Aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="10.4" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#pj_detect_struct"><i class="fa fa-check"></i><b>10.4</b> Pile Detection: Structural Only</a>
+<ul>
+<li class="chapter" data-level="10.4.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#structural-detection"><i class="fa fa-check"></i><b>10.4.1</b> Structural Detection</a></li>
+<li class="chapter" data-level="10.4.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#detection-and-quantification-accuracy-1"><i class="fa fa-check"></i><b>10.4.2</b> Detection and Quantification Accuracy</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html"><i class="fa fa-check"></i><b>11</b> Method Validation: BHEF Machine Piles</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#site-introduction-2"><i class="fa fa-check"></i><b>11.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="11.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#data-processing-1"><i class="fa fa-check"></i><b>11.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="11.2.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#rgb-data-1"><i class="fa fa-check"></i><b>11.2.1</b> RGB Data</a></li>
+<li class="chapter" data-level="11.2.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#process-raw-point-cloud-3"><i class="fa fa-check"></i><b>11.2.2</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="11.2.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#vector-data-1"><i class="fa fa-check"></i><b>11.2.3</b> Vector Data</a></li>
+</ul></li>
+<li class="chapter" data-level="11.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#bhef_detect_fusion"><i class="fa fa-check"></i><b>11.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="11.3.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#structural-candidate-segments-1"><i class="fa fa-check"></i><b>11.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="11.3.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#accuracy-of-these-structural-settings-1"><i class="fa fa-check"></i><b>11.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="11.3.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#spect_filtering_final_bhef"><i class="fa fa-check"></i><b>11.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="11.3.4" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#detection-and-quantification-accuracy-2"><i class="fa fa-check"></i><b>11.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="11.3.5" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#stand-level-aggregation-2"><i class="fa fa-check"></i><b>11.3.5</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html"><i class="fa fa-check"></i><b>12</b> Method Validation: ARNF Machine Piles</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#site-introduction-3"><i class="fa fa-check"></i><b>12.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="12.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#data-processing-2"><i class="fa fa-check"></i><b>12.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="12.2.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#process-raw-point-cloud-4"><i class="fa fa-check"></i><b>12.2.1</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="12.2.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#vector-data-2"><i class="fa fa-check"></i><b>12.2.2</b> Vector Data</a></li>
+<li class="chapter" data-level="12.2.3" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#rgb-data-2"><i class="fa fa-check"></i><b>12.2.3</b> RGB Data</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#arnf_detect_fusion"><i class="fa fa-check"></i><b>12.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="12.3.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#structural-candidate-segments-2"><i class="fa fa-check"></i><b>12.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="12.3.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#accuracy-of-these-structural-settings-2"><i class="fa fa-check"></i><b>12.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="12.3.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#spect_filtering_final_bhef"><i class="fa fa-check"></i><b>12.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="12.3.4" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#detection-and-quantification-accuracy-3"><i class="fa fa-check"></i><b>12.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="12.3.5" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#stand-level-aggregation-3"><i class="fa fa-check"></i><b>12.3.5</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="validation_summary.html"><a href="validation_summary.html"><i class="fa fa-check"></i><b>13</b> Method Validation: Summary</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="method-evaluation" class="section level1 hasAnchor" number="3">
+<h1><span class="header-section-number">Section 3</span> Method Evaluation<a href="method-evaluation.html#method-evaluation" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>This section is entirely devoted to detailing the methods and defining analysis functions for instance matching and the calculation of overall prediction performance assessment metrics. Field-measured slash piles will be used as the ground truth data to perform a confusion matrix-based validation accuracy assessment of the methods.</p>
+<p><a href="method-evaluation.html#iou_match">Instance matching</a> compares predictions to the ground truth data to establish True Positives (TP), False Positives (FP, commissions), and False Negatives (FN, omissions). Aggregation of the instance matching results allows us to calculate overall performance assessment metrics to determine overall detection accuracy and, in the case of our slash pile analysis, form quantification accuracy.</p>
+<ul>
+<li><a href="method-evaluation.html#detect_metrics_form">detection accuracy metrics</a>: such as Recall, Precision, and F-score, are calculated directly by aggregating these raw TP, FP, and FN counts and quantifies the method’s ability to find the piles</li>
+<li><a href="method-evaluation.html#quant_metrics_form">quantification accuracy metrics</a>: such as RMSE, MAPE, and Mean Error of pile form measurements (e.g. height, diameter) are calculated by aggregating the differences between the estimated pile attributes and the ground truth values for instances classified as True Positives. These metrics tell us about the method’s ability to accurately quantify the form of the piles it successfully identified</li>
+</ul>
+<div id="iou_match" class="section level2 hasAnchor" number="3.1">
+<h2><span class="header-section-number">3.1</span> Instance Matching<a href="method-evaluation.html#iou_match" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Puliti et al. <a href="https://doi.org/10.48550/arXiv.2309.01279">(2023, p. 14)</a> provide guidance on performing “instance segmentation evaluation” to assess the ability of a method to correctly identify and delineate individual tree crown instances compared ground truth data. We’ll use this same methodology to test our slash pile identification approach.</p>
+<blockquote>
+<p>The first step in performing any instance segmentation evaluation is to match the point cloud reference and predicted instance IDs. To do this, it is necessary to define whether a prediction is correct. Here we adopt a method Wielgosz et al. (2023) proposed for matching tree instance IDs from two point clouds with reference and predicted instance IDs, respectively. Given a reference and a predicted point cloud with two separate sets of instances, the tree instances are iteratively matched in descending order from the tallest to the shortest trees by using the following algorithm:</p>
+</blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Find the tallest tree in the reference data;</li>
+<li>Find the tree in the predicted instances that have the largest intersection over union (IoU) with the tree selected in the previous step;</li>
+<li>if the IoU is &lt;0.5: the predicted tree is considered an error, and thus no reference instance ID is available;</li>
+<li>if the IoU is ≥0.5: the tree is considered a correct match, and assign reference instance ID label to the predicted tree;</li>
+<li>Add to collection (dictionary) of predicted tree instances with IDs matching the reference instance IDs.</li>
+</ol>
+<p>Following the initial matching of reference and predicted instance IDs, the evaluation can be done on the tree level to evaluate detection, omission, and commission rates (which can be used to calculate precision, recall, and the F-score metric)</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="method-evaluation.html#cb44-1" tabindex="-1"></a><span class="co"># check the data</span></span>
+<span id="cb44-2"><a href="method-evaluation.html#cb44-2" tabindex="-1"></a>check_gt_str <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb44-3"><a href="method-evaluation.html#cb44-3" tabindex="-1"></a>  gt_inst</span>
+<span id="cb44-4"><a href="method-evaluation.html#cb44-4" tabindex="-1"></a>  , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb44-5"><a href="method-evaluation.html#cb44-5" tabindex="-1"></a>  , predictions</span>
+<span id="cb44-6"><a href="method-evaluation.html#cb44-6" tabindex="-1"></a>  , <span class="at">pred_id =</span> <span class="st">&quot;pred_pile_id&quot;</span>  </span>
+<span id="cb44-7"><a href="method-evaluation.html#cb44-7" tabindex="-1"></a>) {</span>
+<span id="cb44-8"><a href="method-evaluation.html#cb44-8" tabindex="-1"></a>  <span class="cf">if</span>( <span class="sc">!</span><span class="fu">inherits</span>(gt_inst,<span class="st">&quot;sf&quot;</span>)){<span class="fu">stop</span>(<span class="st">&quot;ground truth must be spatial `sf` data with a single record&quot;</span>)}</span>
+<span id="cb44-9"><a href="method-evaluation.html#cb44-9" tabindex="-1"></a>  <span class="cf">if</span>( <span class="sc">!</span><span class="fu">inherits</span>(predictions,<span class="st">&quot;sf&quot;</span>) ){<span class="fu">stop</span>(<span class="st">&quot;predictions must be spatial `sf` data&quot;</span>)}</span>
+<span id="cb44-10"><a href="method-evaluation.html#cb44-10" tabindex="-1"></a>  <span class="cf">if</span>( <span class="sc">!</span><span class="fu">identical</span>(sf<span class="sc">::</span><span class="fu">st_crs</span>(gt_inst),sf<span class="sc">::</span><span class="fu">st_crs</span>(predictions)) ){<span class="fu">stop</span>(<span class="st">&quot;`sf` data should have same crs projection&quot;</span>)}</span>
+<span id="cb44-11"><a href="method-evaluation.html#cb44-11" tabindex="-1"></a>  <span class="cf">if</span>( <span class="fu">is.null</span>(gt_id) <span class="sc">||</span> <span class="fu">is.na</span>(gt_id) <span class="sc">||</span> </span>
+<span id="cb44-12"><a href="method-evaluation.html#cb44-12" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">inherits</span>(gt_id, <span class="st">&quot;character&quot;</span>) <span class="sc">||</span></span>
+<span id="cb44-13"><a href="method-evaluation.html#cb44-13" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_trim</span>(gt_id) <span class="sc">==</span> <span class="st">&quot;&quot;</span> </span>
+<span id="cb44-14"><a href="method-evaluation.html#cb44-14" tabindex="-1"></a>  ){</span>
+<span id="cb44-15"><a href="method-evaluation.html#cb44-15" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;ground truth data must contain `gt_id` column&quot;</span>)</span>
+<span id="cb44-16"><a href="method-evaluation.html#cb44-16" tabindex="-1"></a>  }</span>
+<span id="cb44-17"><a href="method-evaluation.html#cb44-17" tabindex="-1"></a>  <span class="cf">if</span>( <span class="fu">is.null</span>(pred_id) <span class="sc">||</span> <span class="fu">is.na</span>(pred_id) <span class="sc">||</span> </span>
+<span id="cb44-18"><a href="method-evaluation.html#cb44-18" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">inherits</span>(pred_id, <span class="st">&quot;character&quot;</span>) <span class="sc">||</span></span>
+<span id="cb44-19"><a href="method-evaluation.html#cb44-19" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_trim</span>(pred_id) <span class="sc">==</span> <span class="st">&quot;&quot;</span> </span>
+<span id="cb44-20"><a href="method-evaluation.html#cb44-20" tabindex="-1"></a>  ){</span>
+<span id="cb44-21"><a href="method-evaluation.html#cb44-21" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;ground truth  data must contain `pred_id` column&quot;</span>)</span>
+<span id="cb44-22"><a href="method-evaluation.html#cb44-22" tabindex="-1"></a>  }</span>
+<span id="cb44-23"><a href="method-evaluation.html#cb44-23" tabindex="-1"></a>  <span class="cf">if</span>( <span class="sc">!</span>(<span class="fu">names</span>(gt_inst) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_equal</span>(gt_id) <span class="sc">%&gt;%</span> <span class="fu">any</span>()) ){<span class="fu">stop</span>(<span class="st">&quot;ground truth  data must contain `gt_id` column&quot;</span>)}</span>
+<span id="cb44-24"><a href="method-evaluation.html#cb44-24" tabindex="-1"></a>  <span class="co"># get rid of gt_id if it exists in the predictions and is not the key</span></span>
+<span id="cb44-25"><a href="method-evaluation.html#cb44-25" tabindex="-1"></a>  <span class="cf">if</span>( </span>
+<span id="cb44-26"><a href="method-evaluation.html#cb44-26" tabindex="-1"></a>    (<span class="fu">names</span>(predictions) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_equal</span>(gt_id) <span class="sc">%&gt;%</span> <span class="fu">any</span>() )</span>
+<span id="cb44-27"><a href="method-evaluation.html#cb44-27" tabindex="-1"></a>    <span class="sc">&amp;&amp;</span> (gt_id<span class="sc">!=</span>pred_id)</span>
+<span id="cb44-28"><a href="method-evaluation.html#cb44-28" tabindex="-1"></a>  ){</span>
+<span id="cb44-29"><a href="method-evaluation.html#cb44-29" tabindex="-1"></a>    predictions <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span> </span>
+<span id="cb44-30"><a href="method-evaluation.html#cb44-30" tabindex="-1"></a>      <span class="co"># throw in hey_xxxxxxxxxx to test it works if we include non-existant columns</span></span>
+<span id="cb44-31"><a href="method-evaluation.html#cb44-31" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>( <span class="sc">-</span>dplyr<span class="sc">::</span><span class="fu">any_of</span>(<span class="fu">c</span>(</span>
+<span id="cb44-32"><a href="method-evaluation.html#cb44-32" tabindex="-1"></a>        <span class="st">&quot;hey_xxxxxxxxxx&quot;</span></span>
+<span id="cb44-33"><a href="method-evaluation.html#cb44-33" tabindex="-1"></a>        , gt_id</span>
+<span id="cb44-34"><a href="method-evaluation.html#cb44-34" tabindex="-1"></a>      )))</span>
+<span id="cb44-35"><a href="method-evaluation.html#cb44-35" tabindex="-1"></a>  }</span>
+<span id="cb44-36"><a href="method-evaluation.html#cb44-36" tabindex="-1"></a>  <span class="co"># rename it if gt_id==pred_id</span></span>
+<span id="cb44-37"><a href="method-evaluation.html#cb44-37" tabindex="-1"></a>  <span class="cf">if</span>( </span>
+<span id="cb44-38"><a href="method-evaluation.html#cb44-38" tabindex="-1"></a>    (<span class="fu">names</span>(predictions) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_equal</span>(gt_id) <span class="sc">%&gt;%</span> <span class="fu">any</span>() )</span>
+<span id="cb44-39"><a href="method-evaluation.html#cb44-39" tabindex="-1"></a>    <span class="sc">&amp;&amp;</span> (gt_id<span class="sc">==</span>pred_id)</span>
+<span id="cb44-40"><a href="method-evaluation.html#cb44-40" tabindex="-1"></a>  ){</span>
+<span id="cb44-41"><a href="method-evaluation.html#cb44-41" tabindex="-1"></a>    predictions <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span> </span>
+<span id="cb44-42"><a href="method-evaluation.html#cb44-42" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">rename_with</span>(</span>
+<span id="cb44-43"><a href="method-evaluation.html#cb44-43" tabindex="-1"></a>        <span class="at">.cols =</span> dplyr<span class="sc">::</span><span class="fu">all_of</span>(gt_id)</span>
+<span id="cb44-44"><a href="method-evaluation.html#cb44-44" tabindex="-1"></a>        , <span class="at">.fn =</span> <span class="cf">function</span>(x){<span class="st">&quot;prediction_idxxx&quot;</span>}</span>
+<span id="cb44-45"><a href="method-evaluation.html#cb44-45" tabindex="-1"></a>      )</span>
+<span id="cb44-46"><a href="method-evaluation.html#cb44-46" tabindex="-1"></a>    pred_id <span class="ot">&lt;-</span> <span class="st">&quot;prediction_idxxx&quot;</span></span>
+<span id="cb44-47"><a href="method-evaluation.html#cb44-47" tabindex="-1"></a>  }<span class="cf">else</span> <span class="cf">if</span>( <span class="sc">!</span>(<span class="fu">names</span>(predictions) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_equal</span>(pred_id) <span class="sc">%&gt;%</span> <span class="fu">any</span>()) ){</span>
+<span id="cb44-48"><a href="method-evaluation.html#cb44-48" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;predictions  data must contain `pred_id` column&quot;</span>)</span>
+<span id="cb44-49"><a href="method-evaluation.html#cb44-49" tabindex="-1"></a>  }</span>
+<span id="cb44-50"><a href="method-evaluation.html#cb44-50" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb44-51"><a href="method-evaluation.html#cb44-51" tabindex="-1"></a>    <span class="at">predictions =</span> predictions</span>
+<span id="cb44-52"><a href="method-evaluation.html#cb44-52" tabindex="-1"></a>    , <span class="at">pred_id =</span> pred_id</span>
+<span id="cb44-53"><a href="method-evaluation.html#cb44-53" tabindex="-1"></a>  ))</span>
+<span id="cb44-54"><a href="method-evaluation.html#cb44-54" tabindex="-1"></a>}</span>
+<span id="cb44-55"><a href="method-evaluation.html#cb44-55" tabindex="-1"></a><span class="co"># match the instance</span></span>
+<span id="cb44-56"><a href="method-evaluation.html#cb44-56" tabindex="-1"></a>ground_truth_single_match <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb44-57"><a href="method-evaluation.html#cb44-57" tabindex="-1"></a>  gt_inst</span>
+<span id="cb44-58"><a href="method-evaluation.html#cb44-58" tabindex="-1"></a>  , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb44-59"><a href="method-evaluation.html#cb44-59" tabindex="-1"></a>  , predictions</span>
+<span id="cb44-60"><a href="method-evaluation.html#cb44-60" tabindex="-1"></a>  , <span class="at">pred_id =</span> <span class="st">&quot;pred_pile_id&quot;</span></span>
+<span id="cb44-61"><a href="method-evaluation.html#cb44-61" tabindex="-1"></a>  , <span class="at">min_iou_pct =</span> <span class="fl">0.5</span></span>
+<span id="cb44-62"><a href="method-evaluation.html#cb44-62" tabindex="-1"></a>) {</span>
+<span id="cb44-63"><a href="method-evaluation.html#cb44-63" tabindex="-1"></a>  <span class="co"># check it</span></span>
+<span id="cb44-64"><a href="method-evaluation.html#cb44-64" tabindex="-1"></a>  check_ans <span class="ot">&lt;-</span> <span class="fu">check_gt_str</span>(</span>
+<span id="cb44-65"><a href="method-evaluation.html#cb44-65" tabindex="-1"></a>    <span class="at">gt_inst =</span> gt_inst</span>
+<span id="cb44-66"><a href="method-evaluation.html#cb44-66" tabindex="-1"></a>    , <span class="at">gt_id =</span> gt_id</span>
+<span id="cb44-67"><a href="method-evaluation.html#cb44-67" tabindex="-1"></a>    , <span class="at">predictions =</span> predictions</span>
+<span id="cb44-68"><a href="method-evaluation.html#cb44-68" tabindex="-1"></a>    , <span class="at">pred_id =</span> pred_id</span>
+<span id="cb44-69"><a href="method-evaluation.html#cb44-69" tabindex="-1"></a>  )</span>
+<span id="cb44-70"><a href="method-evaluation.html#cb44-70" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">nrow</span>(gt_inst)<span class="sc">!=</span><span class="dv">1</span> ){<span class="fu">stop</span>(<span class="st">&quot;ground truth must be spatial `sf` data with a single record&quot;</span>)}</span>
+<span id="cb44-71"><a href="method-evaluation.html#cb44-71" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> check_ans<span class="sc">$</span>predictions</span>
+<span id="cb44-72"><a href="method-evaluation.html#cb44-72" tabindex="-1"></a>  pred_id <span class="ot">&lt;-</span> check_ans<span class="sc">$</span>pred_id</span>
+<span id="cb44-73"><a href="method-evaluation.html#cb44-73" tabindex="-1"></a>  <span class="co"># intersection</span></span>
+<span id="cb44-74"><a href="method-evaluation.html#cb44-74" tabindex="-1"></a>    i_temp <span class="ot">&lt;-</span></span>
+<span id="cb44-75"><a href="method-evaluation.html#cb44-75" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_intersection</span>(predictions,gt_inst) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-76"><a href="method-evaluation.html#cb44-76" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">i_area =</span> sf<span class="sc">::</span><span class="fu">st_area</span>(.) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>())</span>
+<span id="cb44-77"><a href="method-evaluation.html#cb44-77" tabindex="-1"></a>    <span class="cf">if</span>(<span class="fu">nrow</span>(i_temp)<span class="sc">==</span><span class="dv">0</span>){<span class="fu">return</span>(<span class="cn">NULL</span>)}</span>
+<span id="cb44-78"><a href="method-evaluation.html#cb44-78" tabindex="-1"></a>    </span>
+<span id="cb44-79"><a href="method-evaluation.html#cb44-79" tabindex="-1"></a>  <span class="co"># union</span></span>
+<span id="cb44-80"><a href="method-evaluation.html#cb44-80" tabindex="-1"></a>    u_temp <span class="ot">&lt;-</span></span>
+<span id="cb44-81"><a href="method-evaluation.html#cb44-81" tabindex="-1"></a>      i_temp <span class="sc">%&gt;%</span> </span>
+<span id="cb44-82"><a href="method-evaluation.html#cb44-82" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-83"><a href="method-evaluation.html#cb44-83" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">inner_join</span>(predictions <span class="sc">%&gt;%</span> sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geom1&quot;</span>), <span class="at">by =</span> pred_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-84"><a href="method-evaluation.html#cb44-84" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">inner_join</span>(gt_inst <span class="sc">%&gt;%</span> sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geom2&quot;</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(gt_id)), <span class="at">by =</span> gt_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-85"><a href="method-evaluation.html#cb44-85" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-86"><a href="method-evaluation.html#cb44-86" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb44-87"><a href="method-evaluation.html#cb44-87" tabindex="-1"></a>        <span class="at">u_area =</span> sf<span class="sc">::</span><span class="fu">st_union</span>(geom1, geom2) <span class="sc">%&gt;%</span> sf<span class="sc">::</span><span class="fu">st_area</span>() <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb44-88"><a href="method-evaluation.html#cb44-88" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-89"><a href="method-evaluation.html#cb44-89" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-90"><a href="method-evaluation.html#cb44-90" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(geom1,geom2)) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-91"><a href="method-evaluation.html#cb44-91" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-92"><a href="method-evaluation.html#cb44-92" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb44-93"><a href="method-evaluation.html#cb44-93" tabindex="-1"></a>        <span class="at">iou =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb44-94"><a href="method-evaluation.html#cb44-94" tabindex="-1"></a>          <span class="fu">is.na</span>(u_area) <span class="sc">|</span> <span class="fu">is.nan</span>(u_area) <span class="sc">~</span> <span class="cn">NA</span></span>
+<span id="cb44-95"><a href="method-evaluation.html#cb44-95" tabindex="-1"></a>          , T <span class="sc">~</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(i_area,<span class="dv">0</span>)<span class="sc">/</span>u_area</span>
+<span id="cb44-96"><a href="method-evaluation.html#cb44-96" tabindex="-1"></a>        )</span>
+<span id="cb44-97"><a href="method-evaluation.html#cb44-97" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-98"><a href="method-evaluation.html#cb44-98" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(iou) <span class="sc">&amp;</span> iou<span class="sc">&gt;=</span>min_iou_pct)</span>
+<span id="cb44-99"><a href="method-evaluation.html#cb44-99" tabindex="-1"></a>    <span class="cf">if</span>(<span class="fu">nrow</span>(u_temp)<span class="sc">==</span><span class="dv">0</span>){<span class="fu">return</span>(<span class="cn">NULL</span>)}</span>
+<span id="cb44-100"><a href="method-evaluation.html#cb44-100" tabindex="-1"></a>    </span>
+<span id="cb44-101"><a href="method-evaluation.html#cb44-101" tabindex="-1"></a>  <span class="co"># return</span></span>
+<span id="cb44-102"><a href="method-evaluation.html#cb44-102" tabindex="-1"></a>  <span class="fu">return</span>(</span>
+<span id="cb44-103"><a href="method-evaluation.html#cb44-103" tabindex="-1"></a>    u_temp <span class="sc">%&gt;%</span> </span>
+<span id="cb44-104"><a href="method-evaluation.html#cb44-104" tabindex="-1"></a>      <span class="co"># pick the highest iou</span></span>
+<span id="cb44-105"><a href="method-evaluation.html#cb44-105" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(iou)) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-106"><a href="method-evaluation.html#cb44-106" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-107"><a href="method-evaluation.html#cb44-107" tabindex="-1"></a>      <span class="co"># column clean</span></span>
+<span id="cb44-108"><a href="method-evaluation.html#cb44-108" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(</span>
+<span id="cb44-109"><a href="method-evaluation.html#cb44-109" tabindex="-1"></a>        <span class="fu">c</span>(</span>
+<span id="cb44-110"><a href="method-evaluation.html#cb44-110" tabindex="-1"></a>          gt_id, <span class="st">&quot;i_area&quot;</span>, <span class="st">&quot;u_area&quot;</span>, <span class="st">&quot;iou&quot;</span></span>
+<span id="cb44-111"><a href="method-evaluation.html#cb44-111" tabindex="-1"></a>          , base<span class="sc">::</span><span class="fu">setdiff</span>(</span>
+<span id="cb44-112"><a href="method-evaluation.html#cb44-112" tabindex="-1"></a>            <span class="fu">names</span>(predictions)</span>
+<span id="cb44-113"><a href="method-evaluation.html#cb44-113" tabindex="-1"></a>            , <span class="fu">c</span>(<span class="st">&quot;geometry&quot;</span>, <span class="st">&quot;geom&quot;</span>, gt_id, <span class="st">&quot;i_area&quot;</span>, <span class="st">&quot;u_area&quot;</span>, <span class="st">&quot;iou&quot;</span>) </span>
+<span id="cb44-114"><a href="method-evaluation.html#cb44-114" tabindex="-1"></a>          )</span>
+<span id="cb44-115"><a href="method-evaluation.html#cb44-115" tabindex="-1"></a>        )</span>
+<span id="cb44-116"><a href="method-evaluation.html#cb44-116" tabindex="-1"></a>      ))</span>
+<span id="cb44-117"><a href="method-evaluation.html#cb44-117" tabindex="-1"></a>  )</span>
+<span id="cb44-118"><a href="method-evaluation.html#cb44-118" tabindex="-1"></a>}</span></code></pre></div>
+<p>let’s generate some fake predictions to test</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="method-evaluation.html#cb45-1" tabindex="-1"></a>predictions_temp <span class="ot">&lt;-</span> </span>
+<span id="cb45-2"><a href="method-evaluation.html#cb45-2" tabindex="-1"></a>  slash_piles_polys <span class="sc">%&gt;%</span> </span>
+<span id="cb45-3"><a href="method-evaluation.html#cb45-3" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">slice_sample</span>(<span class="at">prop =</span> <span class="fl">0.7</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb45-4"><a href="method-evaluation.html#cb45-4" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_centroid</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb45-5"><a href="method-evaluation.html#cb45-5" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">rand=</span><span class="fu">as.integer</span>(<span class="fu">runif</span>(<span class="at">n=</span>dplyr<span class="sc">::</span><span class="fu">n</span>(), <span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">3</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-6"><a href="method-evaluation.html#cb45-6" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(rand,pile_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-7"><a href="method-evaluation.html#cb45-7" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geometry&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-8"><a href="method-evaluation.html#cb45-8" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb45-9"><a href="method-evaluation.html#cb45-9" tabindex="-1"></a>      <span class="at">geometry =</span> sf<span class="sc">::</span><span class="fu">st_buffer</span>(geometry, rand)</span>
+<span id="cb45-10"><a href="method-evaluation.html#cb45-10" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-11"><a href="method-evaluation.html#cb45-11" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geometry&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-12"><a href="method-evaluation.html#cb45-12" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb45-13"><a href="method-evaluation.html#cb45-13" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_sample</span>(</span>
+<span id="cb45-14"><a href="method-evaluation.html#cb45-14" tabindex="-1"></a>        slash_piles_polys <span class="sc">%&gt;%</span> </span>
+<span id="cb45-15"><a href="method-evaluation.html#cb45-15" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_bbox</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb45-16"><a href="method-evaluation.html#cb45-16" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_as_sfc</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb45-17"><a href="method-evaluation.html#cb45-17" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_as_sf</span>()</span>
+<span id="cb45-18"><a href="method-evaluation.html#cb45-18" tabindex="-1"></a>        , <span class="at">size =</span> <span class="dv">33</span></span>
+<span id="cb45-19"><a href="method-evaluation.html#cb45-19" tabindex="-1"></a>        , <span class="at">type =</span> <span class="st">&quot;random&quot;</span></span>
+<span id="cb45-20"><a href="method-evaluation.html#cb45-20" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span></span>
+<span id="cb45-21"><a href="method-evaluation.html#cb45-21" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_as_sf</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb45-22"><a href="method-evaluation.html#cb45-22" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">rand=</span><span class="fu">as.integer</span>(<span class="fu">runif</span>(<span class="at">n=</span>dplyr<span class="sc">::</span><span class="fu">n</span>(), <span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">6</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-23"><a href="method-evaluation.html#cb45-23" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(rand) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-24"><a href="method-evaluation.html#cb45-24" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geometry&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-25"><a href="method-evaluation.html#cb45-25" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb45-26"><a href="method-evaluation.html#cb45-26" tabindex="-1"></a>        <span class="at">geometry =</span> sf<span class="sc">::</span><span class="fu">st_buffer</span>(geometry, rand)</span>
+<span id="cb45-27"><a href="method-evaluation.html#cb45-27" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-28"><a href="method-evaluation.html#cb45-28" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geometry&quot;</span>)</span>
+<span id="cb45-29"><a href="method-evaluation.html#cb45-29" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb45-30"><a href="method-evaluation.html#cb45-30" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">pred_id =</span> dplyr<span class="sc">::</span><span class="fu">row_number</span>() <span class="sc">%&gt;%</span> <span class="fu">as.character</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb45-31"><a href="method-evaluation.html#cb45-31" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id,pile_id) <span class="co"># storing the pile_id so we know which ones might be matches</span></span></code></pre></div>
+<p>check out the fake predictions compared to the ground truth pile footprints</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="method-evaluation.html#cb46-1" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb46-2"><a href="method-evaluation.html#cb46-2" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(<span class="at">data =</span> slash_piles_polys, <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">color =</span> <span class="st">&quot;ground truth&quot;</span>), <span class="at">fill =</span> <span class="cn">NA</span>) <span class="sc">+</span> </span>
+<span id="cb46-3"><a href="method-evaluation.html#cb46-3" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(<span class="at">data =</span> predictions_temp, <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">color =</span> <span class="st">&quot;fake predictions&quot;</span>), <span class="at">fill =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
+<span id="cb46-4"><a href="method-evaluation.html#cb46-4" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span><span class="fu">c</span>(<span class="st">&quot;brown&quot;</span>,<span class="st">&quot;blue&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb46-5"><a href="method-evaluation.html#cb46-5" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(<span class="at">color=</span><span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb46-6"><a href="method-evaluation.html#cb46-6" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_void</span>()</span></code></pre></div>
+<p><img src="manitou_slash_piles_files/figure-html/unnamed-chunk-38-1.png" width="1008" /></p>
+<p>test for a single ground truth instance</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="method-evaluation.html#cb47-1" tabindex="-1"></a><span class="fu">ground_truth_single_match</span>(</span>
+<span id="cb47-2"><a href="method-evaluation.html#cb47-2" tabindex="-1"></a>  <span class="at">gt_inst =</span> slash_piles_polys <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(pile_id<span class="sc">==</span>purrr<span class="sc">::</span><span class="fu">discard</span>(predictions_temp<span class="sc">$</span>pile_id, is.na)[<span class="dv">1</span>])</span>
+<span id="cb47-3"><a href="method-evaluation.html#cb47-3" tabindex="-1"></a>  , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb47-4"><a href="method-evaluation.html#cb47-4" tabindex="-1"></a>  , <span class="at">predictions =</span> predictions_temp</span>
+<span id="cb47-5"><a href="method-evaluation.html#cb47-5" tabindex="-1"></a>  , <span class="at">pred_id =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb47-6"><a href="method-evaluation.html#cb47-6" tabindex="-1"></a>  , <span class="at">min_iou_pct =</span> <span class="fl">0.01</span></span>
+<span id="cb47-7"><a href="method-evaluation.html#cb47-7" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>## # A tibble: 1 × 5
+##   pile_id i_area u_area   iou pred_id
+##     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
+## 1      67   10.6   13.2 0.799 1</code></pre>
+<p>now we need to make a function that matches the instances iteratively allowing for only a single match from the predictions (i.e. one prediction can only go to one ground truth instance), and returns all instances labeled as true positive (correctly matched with a prediction), commission (predictions which do not match a ground truth instance; false positive), or omission (ground truth instances for which no predictions match; false negative)</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="method-evaluation.html#cb49-1" tabindex="-1"></a>ground_truth_prediction_match <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb49-2"><a href="method-evaluation.html#cb49-2" tabindex="-1"></a>  <span class="co"># ground_truth should be sorted already</span></span>
+<span id="cb49-3"><a href="method-evaluation.html#cb49-3" tabindex="-1"></a>  ground_truth</span>
+<span id="cb49-4"><a href="method-evaluation.html#cb49-4" tabindex="-1"></a>  , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb49-5"><a href="method-evaluation.html#cb49-5" tabindex="-1"></a>  <span class="co"># predictions just needs treeID</span></span>
+<span id="cb49-6"><a href="method-evaluation.html#cb49-6" tabindex="-1"></a>  , predictions</span>
+<span id="cb49-7"><a href="method-evaluation.html#cb49-7" tabindex="-1"></a>  , <span class="at">pred_id =</span> <span class="st">&quot;pred_pile_id&quot;</span></span>
+<span id="cb49-8"><a href="method-evaluation.html#cb49-8" tabindex="-1"></a>  , <span class="at">min_iou_pct =</span> <span class="fl">0.5</span></span>
+<span id="cb49-9"><a href="method-evaluation.html#cb49-9" tabindex="-1"></a>) {</span>
+<span id="cb49-10"><a href="method-evaluation.html#cb49-10" tabindex="-1"></a>  <span class="co"># check it</span></span>
+<span id="cb49-11"><a href="method-evaluation.html#cb49-11" tabindex="-1"></a>  check_ans <span class="ot">&lt;-</span> <span class="fu">check_gt_str</span>(</span>
+<span id="cb49-12"><a href="method-evaluation.html#cb49-12" tabindex="-1"></a>    <span class="at">gt_inst =</span> ground_truth</span>
+<span id="cb49-13"><a href="method-evaluation.html#cb49-13" tabindex="-1"></a>    , <span class="at">gt_id =</span> gt_id</span>
+<span id="cb49-14"><a href="method-evaluation.html#cb49-14" tabindex="-1"></a>    , <span class="at">predictions =</span> predictions</span>
+<span id="cb49-15"><a href="method-evaluation.html#cb49-15" tabindex="-1"></a>    , <span class="at">pred_id =</span> pred_id</span>
+<span id="cb49-16"><a href="method-evaluation.html#cb49-16" tabindex="-1"></a>  )</span>
+<span id="cb49-17"><a href="method-evaluation.html#cb49-17" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> check_ans<span class="sc">$</span>predictions</span>
+<span id="cb49-18"><a href="method-evaluation.html#cb49-18" tabindex="-1"></a>  pred_id <span class="ot">&lt;-</span> check_ans<span class="sc">$</span>pred_id</span>
+<span id="cb49-19"><a href="method-evaluation.html#cb49-19" tabindex="-1"></a>  <span class="co"># set up a blank data frame</span></span>
+<span id="cb49-20"><a href="method-evaluation.html#cb49-20" tabindex="-1"></a>  return_df <span class="ot">&lt;-</span></span>
+<span id="cb49-21"><a href="method-evaluation.html#cb49-21" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb49-22"><a href="method-evaluation.html#cb49-22" tabindex="-1"></a>      <span class="at">i_area =</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb49-23"><a href="method-evaluation.html#cb49-23" tabindex="-1"></a>      , <span class="at">u_area =</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb49-24"><a href="method-evaluation.html#cb49-24" tabindex="-1"></a>      , <span class="at">iou =</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb49-25"><a href="method-evaluation.html#cb49-25" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-26"><a href="method-evaluation.html#cb49-26" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_cols</span>(</span>
+<span id="cb49-27"><a href="method-evaluation.html#cb49-27" tabindex="-1"></a>      ground_truth <span class="sc">%&gt;%</span> </span>
+<span id="cb49-28"><a href="method-evaluation.html#cb49-28" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb49-29"><a href="method-evaluation.html#cb49-29" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(gt_id)) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-30"><a href="method-evaluation.html#cb49-30" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="dv">0</span>)</span>
+<span id="cb49-31"><a href="method-evaluation.html#cb49-31" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-32"><a href="method-evaluation.html#cb49-32" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_cols</span>(</span>
+<span id="cb49-33"><a href="method-evaluation.html#cb49-33" tabindex="-1"></a>      predictions <span class="sc">%&gt;%</span> </span>
+<span id="cb49-34"><a href="method-evaluation.html#cb49-34" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb49-35"><a href="method-evaluation.html#cb49-35" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(pred_id)) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-36"><a href="method-evaluation.html#cb49-36" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="dv">0</span>)</span>
+<span id="cb49-37"><a href="method-evaluation.html#cb49-37" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-38"><a href="method-evaluation.html#cb49-38" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">relocate</span>(tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(gt_id))</span>
+<span id="cb49-39"><a href="method-evaluation.html#cb49-39" tabindex="-1"></a>  </span>
+<span id="cb49-40"><a href="method-evaluation.html#cb49-40" tabindex="-1"></a>  <span class="co"># save names to select</span></span>
+<span id="cb49-41"><a href="method-evaluation.html#cb49-41" tabindex="-1"></a>  nms_temp <span class="ot">&lt;-</span> <span class="fu">names</span>(return_df)</span>
+<span id="cb49-42"><a href="method-evaluation.html#cb49-42" tabindex="-1"></a>  </span>
+<span id="cb49-43"><a href="method-evaluation.html#cb49-43" tabindex="-1"></a>  <span class="co"># start with tallest tree and match to get true positives</span></span>
+<span id="cb49-44"><a href="method-evaluation.html#cb49-44" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(ground_truth)) {</span>
+<span id="cb49-45"><a href="method-evaluation.html#cb49-45" tabindex="-1"></a>      match_temp <span class="ot">&lt;-</span> <span class="fu">ground_truth_single_match</span>(</span>
+<span id="cb49-46"><a href="method-evaluation.html#cb49-46" tabindex="-1"></a>        <span class="at">gt_inst =</span> ground_truth <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">slice</span>(i)</span>
+<span id="cb49-47"><a href="method-evaluation.html#cb49-47" tabindex="-1"></a>        , <span class="at">gt_id =</span> gt_id</span>
+<span id="cb49-48"><a href="method-evaluation.html#cb49-48" tabindex="-1"></a>        , <span class="at">predictions =</span> predictions <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(pred_id)) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">anti_join</span>(return_df,<span class="at">by=</span>pred_id)</span>
+<span id="cb49-49"><a href="method-evaluation.html#cb49-49" tabindex="-1"></a>        , <span class="at">pred_id =</span> pred_id</span>
+<span id="cb49-50"><a href="method-evaluation.html#cb49-50" tabindex="-1"></a>        , <span class="at">min_iou_pct =</span> min_iou_pct</span>
+<span id="cb49-51"><a href="method-evaluation.html#cb49-51" tabindex="-1"></a>      )</span>
+<span id="cb49-52"><a href="method-evaluation.html#cb49-52" tabindex="-1"></a>      <span class="co"># add to return</span></span>
+<span id="cb49-53"><a href="method-evaluation.html#cb49-53" tabindex="-1"></a>      <span class="cf">if</span>(<span class="sc">!</span><span class="fu">is.null</span>(match_temp)){</span>
+<span id="cb49-54"><a href="method-evaluation.html#cb49-54" tabindex="-1"></a>        return_df <span class="ot">&lt;-</span> return_df <span class="sc">%&gt;%</span> </span>
+<span id="cb49-55"><a href="method-evaluation.html#cb49-55" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(match_temp <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(nms_temp))</span>
+<span id="cb49-56"><a href="method-evaluation.html#cb49-56" tabindex="-1"></a>      }</span>
+<span id="cb49-57"><a href="method-evaluation.html#cb49-57" tabindex="-1"></a>      match_temp <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb49-58"><a href="method-evaluation.html#cb49-58" tabindex="-1"></a>    }</span>
+<span id="cb49-59"><a href="method-evaluation.html#cb49-59" tabindex="-1"></a>  <span class="co"># label tps</span></span>
+<span id="cb49-60"><a href="method-evaluation.html#cb49-60" tabindex="-1"></a>  return_df <span class="ot">&lt;-</span> return_df <span class="sc">%&gt;%</span> </span>
+<span id="cb49-61"><a href="method-evaluation.html#cb49-61" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">match_grp =</span> <span class="st">&quot;true positive&quot;</span>)</span>
+<span id="cb49-62"><a href="method-evaluation.html#cb49-62" tabindex="-1"></a>  <span class="co"># add omissions</span></span>
+<span id="cb49-63"><a href="method-evaluation.html#cb49-63" tabindex="-1"></a>  return_df <span class="ot">&lt;-</span></span>
+<span id="cb49-64"><a href="method-evaluation.html#cb49-64" tabindex="-1"></a>    return_df <span class="sc">%&gt;%</span> </span>
+<span id="cb49-65"><a href="method-evaluation.html#cb49-65" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb49-66"><a href="method-evaluation.html#cb49-66" tabindex="-1"></a>      ground_truth <span class="sc">%&gt;%</span> </span>
+<span id="cb49-67"><a href="method-evaluation.html#cb49-67" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb49-68"><a href="method-evaluation.html#cb49-68" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">anti_join</span>(return_df,<span class="at">by=</span>gt_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-69"><a href="method-evaluation.html#cb49-69" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(gt_id)) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-70"><a href="method-evaluation.html#cb49-70" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">match_grp =</span> <span class="st">&quot;omission&quot;</span>)</span>
+<span id="cb49-71"><a href="method-evaluation.html#cb49-71" tabindex="-1"></a>    )</span>
+<span id="cb49-72"><a href="method-evaluation.html#cb49-72" tabindex="-1"></a>  <span class="co"># add commissions</span></span>
+<span id="cb49-73"><a href="method-evaluation.html#cb49-73" tabindex="-1"></a>  return_df <span class="ot">&lt;-</span></span>
+<span id="cb49-74"><a href="method-evaluation.html#cb49-74" tabindex="-1"></a>    return_df <span class="sc">%&gt;%</span> </span>
+<span id="cb49-75"><a href="method-evaluation.html#cb49-75" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb49-76"><a href="method-evaluation.html#cb49-76" tabindex="-1"></a>      predictions <span class="sc">%&gt;%</span> </span>
+<span id="cb49-77"><a href="method-evaluation.html#cb49-77" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb49-78"><a href="method-evaluation.html#cb49-78" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">anti_join</span>(return_df,<span class="at">by=</span>pred_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-79"><a href="method-evaluation.html#cb49-79" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(dplyr<span class="sc">::</span><span class="fu">all_of</span>(pred_id)) <span class="sc">%&gt;%</span> </span>
+<span id="cb49-80"><a href="method-evaluation.html#cb49-80" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">match_grp =</span> <span class="st">&quot;commission&quot;</span>)</span>
+<span id="cb49-81"><a href="method-evaluation.html#cb49-81" tabindex="-1"></a>    )</span>
+<span id="cb49-82"><a href="method-evaluation.html#cb49-82" tabindex="-1"></a>  <span class="co"># make match_grp factor</span></span>
+<span id="cb49-83"><a href="method-evaluation.html#cb49-83" tabindex="-1"></a>  return_df <span class="ot">&lt;-</span> return_df <span class="sc">%&gt;%</span> </span>
+<span id="cb49-84"><a href="method-evaluation.html#cb49-84" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb49-85"><a href="method-evaluation.html#cb49-85" tabindex="-1"></a>      <span class="at">match_grp =</span> <span class="fu">factor</span>(</span>
+<span id="cb49-86"><a href="method-evaluation.html#cb49-86" tabindex="-1"></a>        match_grp</span>
+<span id="cb49-87"><a href="method-evaluation.html#cb49-87" tabindex="-1"></a>        , <span class="at">ordered =</span> T</span>
+<span id="cb49-88"><a href="method-evaluation.html#cb49-88" tabindex="-1"></a>        , <span class="at">levels =</span> <span class="fu">c</span>(</span>
+<span id="cb49-89"><a href="method-evaluation.html#cb49-89" tabindex="-1"></a>          <span class="st">&quot;true positive&quot;</span></span>
+<span id="cb49-90"><a href="method-evaluation.html#cb49-90" tabindex="-1"></a>          , <span class="st">&quot;commission&quot;</span></span>
+<span id="cb49-91"><a href="method-evaluation.html#cb49-91" tabindex="-1"></a>          , <span class="st">&quot;omission&quot;</span></span>
+<span id="cb49-92"><a href="method-evaluation.html#cb49-92" tabindex="-1"></a>        )</span>
+<span id="cb49-93"><a href="method-evaluation.html#cb49-93" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>()</span>
+<span id="cb49-94"><a href="method-evaluation.html#cb49-94" tabindex="-1"></a>    )</span>
+<span id="cb49-95"><a href="method-evaluation.html#cb49-95" tabindex="-1"></a>  </span>
+<span id="cb49-96"><a href="method-evaluation.html#cb49-96" tabindex="-1"></a>  <span class="co"># return</span></span>
+<span id="cb49-97"><a href="method-evaluation.html#cb49-97" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">nrow</span>(return_df)<span class="sc">==</span><span class="dv">0</span>){</span>
+<span id="cb49-98"><a href="method-evaluation.html#cb49-98" tabindex="-1"></a>    <span class="fu">warning</span>(<span class="st">&quot;no records found for ground truth to predition matching&quot;</span>)</span>
+<span id="cb49-99"><a href="method-evaluation.html#cb49-99" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb49-100"><a href="method-evaluation.html#cb49-100" tabindex="-1"></a>  }<span class="cf">else</span>{</span>
+<span id="cb49-101"><a href="method-evaluation.html#cb49-101" tabindex="-1"></a>    <span class="fu">return</span>(return_df)</span>
+<span id="cb49-102"><a href="method-evaluation.html#cb49-102" tabindex="-1"></a>  }</span>
+<span id="cb49-103"><a href="method-evaluation.html#cb49-103" tabindex="-1"></a>  </span>
+<span id="cb49-104"><a href="method-evaluation.html#cb49-104" tabindex="-1"></a>}</span></code></pre></div>
+<p>let’s see how we did given the full list of fake predictions and ground truth data</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="method-evaluation.html#cb50-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="ot">&lt;-</span> <span class="fu">ground_truth_prediction_match</span>(</span>
+<span id="cb50-2"><a href="method-evaluation.html#cb50-2" tabindex="-1"></a>  <span class="at">ground_truth =</span> slash_piles_polys <span class="sc">%&gt;%</span> </span>
+<span id="cb50-3"><a href="method-evaluation.html#cb50-3" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(field_diameter_m)) <span class="co"># this is so the algorithm starts with the largest</span></span>
+<span id="cb50-4"><a href="method-evaluation.html#cb50-4" tabindex="-1"></a>  , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb50-5"><a href="method-evaluation.html#cb50-5" tabindex="-1"></a>  , <span class="at">predictions =</span> predictions_temp</span>
+<span id="cb50-6"><a href="method-evaluation.html#cb50-6" tabindex="-1"></a>  , <span class="at">pred_id =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb50-7"><a href="method-evaluation.html#cb50-7" tabindex="-1"></a>  , <span class="at">min_iou_pct =</span> <span class="fl">0.1</span></span>
+<span id="cb50-8"><a href="method-evaluation.html#cb50-8" tabindex="-1"></a>)</span>
+<span id="cb50-9"><a href="method-evaluation.html#cb50-9" tabindex="-1"></a><span class="co"># huh?</span></span>
+<span id="cb50-10"><a href="method-evaluation.html#cb50-10" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 223
+## Columns: 6
+## $ pile_id   &lt;dbl&gt; 197, 189, 132, 111, 131, 42, 144, 169, 180, 128, 136, 135, 6…
+## $ i_area    &lt;dbl&gt; 12.560629, 12.560629, 12.011957, 11.787696, 11.131328, 3.048…
+## $ u_area    &lt;dbl&gt; 38.611505, 30.782327, 14.863479, 12.670969, 12.691045, 3.986…
+## $ iou       &lt;dbl&gt; 0.3253079, 0.4080468, 0.8081524, 0.9302916, 0.8771009, 0.764…
+## $ pred_id   &lt;chr&gt; &quot;36&quot;, &quot;115&quot;, &quot;54&quot;, &quot;112&quot;, &quot;110&quot;, &quot;84&quot;, &quot;109&quot;, &quot;42&quot;, &quot;61&quot;, &quot;8…
+## $ match_grp &lt;ord&gt; true positive, true positive, true positive, true positive, …</code></pre>
+<p>how did our predictions do for this test example?</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="method-evaluation.html#cb52-1" tabindex="-1"></a><span class="co"># what did we get?</span></span>
+<span id="cb52-2"><a href="method-evaluation.html#cb52-2" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb52-3"><a href="method-evaluation.html#cb52-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(match_grp) <span class="sc">%&gt;%</span> </span>
+<span id="cb52-4"><a href="method-evaluation.html#cb52-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">pct =</span> (n<span class="sc">/</span><span class="fu">sum</span>(n)) <span class="sc">%&gt;%</span> scales<span class="sc">::</span><span class="fu">percent</span>(<span class="at">accuracy=</span><span class="fl">0.1</span>))</span></code></pre></div>
+<pre><code>## # A tibble: 3 × 3
+##   match_grp         n pct  
+##   &lt;ord&gt;         &lt;int&gt; &lt;chr&gt;
+## 1 omission         60 26.9%
+## 2 commission       36 16.1%
+## 3 true positive   127 57.0%</code></pre>
+<p>let’s look at that spatially</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="method-evaluation.html#cb54-1" tabindex="-1"></a>pal_match_grp <span class="ot">=</span> <span class="fu">c</span>(</span>
+<span id="cb54-2"><a href="method-evaluation.html#cb54-2" tabindex="-1"></a>  <span class="st">&quot;omission&quot;</span><span class="ot">=</span>viridis<span class="sc">::</span><span class="fu">cividis</span>(<span class="dv">3</span>)[<span class="dv">1</span>]</span>
+<span id="cb54-3"><a href="method-evaluation.html#cb54-3" tabindex="-1"></a>  , <span class="st">&quot;commission&quot;</span><span class="ot">=</span> <span class="st">&quot;black&quot;</span> <span class="co">#viridis::cividis(3)[2]</span></span>
+<span id="cb54-4"><a href="method-evaluation.html#cb54-4" tabindex="-1"></a>  , <span class="st">&quot;true positive&quot;</span><span class="ot">=</span>viridis<span class="sc">::</span><span class="fu">cividis</span>(<span class="dv">3</span>)[<span class="dv">3</span>]</span>
+<span id="cb54-5"><a href="method-evaluation.html#cb54-5" tabindex="-1"></a>)</span>
+<span id="cb54-6"><a href="method-evaluation.html#cb54-6" tabindex="-1"></a><span class="co"># plot it</span></span>
+<span id="cb54-7"><a href="method-evaluation.html#cb54-7" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb54-8"><a href="method-evaluation.html#cb54-8" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb54-9"><a href="method-evaluation.html#cb54-9" tabindex="-1"></a>    <span class="at">data =</span> </span>
+<span id="cb54-10"><a href="method-evaluation.html#cb54-10" tabindex="-1"></a>      slash_piles_polys <span class="sc">%&gt;%</span> </span>
+<span id="cb54-11"><a href="method-evaluation.html#cb54-11" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb54-12"><a href="method-evaluation.html#cb54-12" tabindex="-1"></a>          ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb54-13"><a href="method-evaluation.html#cb54-13" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id,match_grp)</span>
+<span id="cb54-14"><a href="method-evaluation.html#cb54-14" tabindex="-1"></a>          , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb54-15"><a href="method-evaluation.html#cb54-15" tabindex="-1"></a>        )</span>
+<span id="cb54-16"><a href="method-evaluation.html#cb54-16" tabindex="-1"></a>    , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">fill =</span> match_grp)</span>
+<span id="cb54-17"><a href="method-evaluation.html#cb54-17" tabindex="-1"></a>    , <span class="at">color =</span> <span class="cn">NA</span> ,<span class="at">alpha=</span><span class="fl">0.7</span></span>
+<span id="cb54-18"><a href="method-evaluation.html#cb54-18" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb54-19"><a href="method-evaluation.html#cb54-19" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb54-20"><a href="method-evaluation.html#cb54-20" tabindex="-1"></a>    <span class="at">data =</span></span>
+<span id="cb54-21"><a href="method-evaluation.html#cb54-21" tabindex="-1"></a>      predictions_temp <span class="sc">%&gt;%</span></span>
+<span id="cb54-22"><a href="method-evaluation.html#cb54-22" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb54-23"><a href="method-evaluation.html#cb54-23" tabindex="-1"></a>          ground_truth_prediction_match_ans <span class="sc">%&gt;%</span></span>
+<span id="cb54-24"><a href="method-evaluation.html#cb54-24" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id,match_grp)</span>
+<span id="cb54-25"><a href="method-evaluation.html#cb54-25" tabindex="-1"></a>          , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb54-26"><a href="method-evaluation.html#cb54-26" tabindex="-1"></a>        )</span>
+<span id="cb54-27"><a href="method-evaluation.html#cb54-27" tabindex="-1"></a>    , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">fill =</span> match_grp, <span class="at">color =</span> match_grp)</span>
+<span id="cb54-28"><a href="method-evaluation.html#cb54-28" tabindex="-1"></a>    , <span class="at">alpha =</span> <span class="dv">0</span></span>
+<span id="cb54-29"><a href="method-evaluation.html#cb54-29" tabindex="-1"></a>    , <span class="at">lwd =</span> <span class="fl">1.1</span></span>
+<span id="cb54-30"><a href="method-evaluation.html#cb54-30" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb54-31"><a href="method-evaluation.html#cb54-31" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> pal_match_grp, <span class="at">name =</span> <span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb54-32"><a href="method-evaluation.html#cb54-32" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_color_manual</span>(<span class="at">values =</span> pal_match_grp, <span class="at">name =</span> <span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb54-33"><a href="method-evaluation.html#cb54-33" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb54-34"><a href="method-evaluation.html#cb54-34" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">guides</span>(</span>
+<span id="cb54-35"><a href="method-evaluation.html#cb54-35" tabindex="-1"></a>    <span class="at">fill =</span> ggplot2<span class="sc">::</span><span class="fu">guide_legend</span>(<span class="at">override.aes =</span> <span class="fu">list</span>(<span class="at">color =</span> <span class="fu">c</span>(<span class="cn">NA</span>,<span class="cn">NA</span>,pal_match_grp[<span class="st">&quot;commission&quot;</span>])))</span>
+<span id="cb54-36"><a href="method-evaluation.html#cb54-36" tabindex="-1"></a>    , <span class="at">color =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb54-37"><a href="method-evaluation.html#cb54-37" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="manitou_slash_piles_files/figure-html/unnamed-chunk-43-1.png" width="1008" /></p>
+<p>let’s quickly look at the IoU values on the true positives</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="method-evaluation.html#cb55-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(iou) <span class="sc">%&gt;%</span> <span class="fu">summary</span>()</span></code></pre></div>
+<pre><code>##       iou        
+##  Min.   :0.1136  
+##  1st Qu.:0.4429  
+##  Median :0.5109  
+##  Mean   :0.5240  
+##  3rd Qu.:0.6081  
+##  Max.   :0.9303  
+##  NA&#39;s   :96</code></pre>
+</div>
+<div id="detect_metrics_form" class="section level2 hasAnchor" number="3.2">
+<h2><span class="header-section-number">3.2</span> Detection Accuracy Metrics<a href="method-evaluation.html#detect_metrics_form" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Detection accuracy metrics are calculated by aggregating raw TP, FP, and FN counts to quantify the method’s ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (<span class="math inline">\(TP\)</span>) instances correctly match ground truth instances with a prediction, commission tree predictions do not match a ground truth tree (false positive; <span class="math inline">\(FP\)</span>), and omissions are ground truth instances for which no predictions match (false negative; <span class="math inline">\(FN\)</span>)</p>
+<p><span class="math display">\[\textrm{omission rate} = \frac{FN}{TP+FN}\]</span></p>
+<p><span class="math display">\[\textrm{commission rate} = \frac{FP}{TP+FP}\]</span></p>
+<p><span class="math display">\[\textrm{precision} = \frac{TP}{TP+FP}\]</span></p>
+<p><span class="math display">\[\textrm{recall} = \frac{TP}{TP+FN}\]</span></p>
+<p><span class="math display">\[
+\textrm{F-score} = 2 \times \frac{\bigl(precision \times recall \bigr)}{\bigl(precision + recall \bigr)}
+\]</span></p>
+<p>let’s make a function to calculate these detection accuracy metrics based on aggregated TP, FP, and FN counts</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="method-evaluation.html#cb57-1" tabindex="-1"></a><span class="co"># first function takes df with cols tp_n, fp_n, and fn_n to calculate rates</span></span>
+<span id="cb57-2"><a href="method-evaluation.html#cb57-2" tabindex="-1"></a>confusion_matrix_scores_fn <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb57-3"><a href="method-evaluation.html#cb57-3" tabindex="-1"></a>  df <span class="sc">%&gt;%</span> </span>
+<span id="cb57-4"><a href="method-evaluation.html#cb57-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb57-5"><a href="method-evaluation.html#cb57-5" tabindex="-1"></a>    <span class="at">omission_rate =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb57-6"><a href="method-evaluation.html#cb57-6" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fn_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span> <span class="co"># if there are no actual piles, there is nothing to miss</span></span>
+<span id="cb57-7"><a href="method-evaluation.html#cb57-7" tabindex="-1"></a>      , dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fn_n,<span class="dv">0</span>) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">1</span> <span class="co"># every single actual pile was missed</span></span>
+<span id="cb57-8"><a href="method-evaluation.html#cb57-8" tabindex="-1"></a>      , dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fn_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb57-9"><a href="method-evaluation.html#cb57-9" tabindex="-1"></a>      , T <span class="sc">~</span> fn_n<span class="sc">/</span>(tp_n<span class="sc">+</span>fn_n)</span>
+<span id="cb57-10"><a href="method-evaluation.html#cb57-10" tabindex="-1"></a>    ) <span class="co"># False Negative Rate or Miss Rate</span></span>
+<span id="cb57-11"><a href="method-evaluation.html#cb57-11" tabindex="-1"></a>    , <span class="at">commission_rate =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb57-12"><a href="method-evaluation.html#cb57-12" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span> <span class="co"># if no predictions are made, the model could not have made any commission errors</span></span>
+<span id="cb57-13"><a href="method-evaluation.html#cb57-13" tabindex="-1"></a>      , dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb57-14"><a href="method-evaluation.html#cb57-14" tabindex="-1"></a>      , T <span class="sc">~</span> fp_n<span class="sc">/</span>(tp_n<span class="sc">+</span>fp_n)</span>
+<span id="cb57-15"><a href="method-evaluation.html#cb57-15" tabindex="-1"></a>    ) <span class="co"># False Positive Rate</span></span>
+<span id="cb57-16"><a href="method-evaluation.html#cb57-16" tabindex="-1"></a>    , <span class="at">precision =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb57-17"><a href="method-evaluation.html#cb57-17" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">1</span> <span class="co"># if no predictions are made, the model made zero incorrect positive claims</span></span>
+<span id="cb57-18"><a href="method-evaluation.html#cb57-18" tabindex="-1"></a>      , dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fp_n,<span class="dv">0</span>) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb57-19"><a href="method-evaluation.html#cb57-19" tabindex="-1"></a>      , T <span class="sc">~</span> tp_n<span class="sc">/</span>(tp_n<span class="sc">+</span>fp_n)</span>
+<span id="cb57-20"><a href="method-evaluation.html#cb57-20" tabindex="-1"></a>    )</span>
+<span id="cb57-21"><a href="method-evaluation.html#cb57-21" tabindex="-1"></a>    , <span class="at">recall =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb57-22"><a href="method-evaluation.html#cb57-22" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fn_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">1</span> <span class="co"># if there are no actual piles, there is nothing to miss</span></span>
+<span id="cb57-23"><a href="method-evaluation.html#cb57-23" tabindex="-1"></a>      , dplyr<span class="sc">::</span><span class="fu">coalesce</span>(tp_n,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(fn_n,<span class="dv">0</span>) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span> <span class="co"># every single actual pile was missed</span></span>
+<span id="cb57-24"><a href="method-evaluation.html#cb57-24" tabindex="-1"></a>      , T <span class="sc">~</span> tp_n<span class="sc">/</span>(tp_n<span class="sc">+</span>fn_n)</span>
+<span id="cb57-25"><a href="method-evaluation.html#cb57-25" tabindex="-1"></a>    )</span>
+<span id="cb57-26"><a href="method-evaluation.html#cb57-26" tabindex="-1"></a>    , <span class="at">f_score =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb57-27"><a href="method-evaluation.html#cb57-27" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">coalesce</span>(precision,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(recall,<span class="dv">0</span>) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb57-28"><a href="method-evaluation.html#cb57-28" tabindex="-1"></a>      , T <span class="sc">~</span> <span class="dv">2</span> <span class="sc">*</span> ( (precision<span class="sc">*</span>recall)<span class="sc">/</span>(precision<span class="sc">+</span>recall) )</span>
+<span id="cb57-29"><a href="method-evaluation.html#cb57-29" tabindex="-1"></a>    )    </span>
+<span id="cb57-30"><a href="method-evaluation.html#cb57-30" tabindex="-1"></a>  ) </span>
+<span id="cb57-31"><a href="method-evaluation.html#cb57-31" tabindex="-1"></a>}</span></code></pre></div>
+<p>test it</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="method-evaluation.html#cb58-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb58-2"><a href="method-evaluation.html#cb58-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb58-3"><a href="method-evaluation.html#cb58-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">count</span>(match_grp) <span class="sc">%&gt;%</span> </span>
+<span id="cb58-4"><a href="method-evaluation.html#cb58-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb58-5"><a href="method-evaluation.html#cb58-5" tabindex="-1"></a>    <span class="at">match_grp =</span> dplyr<span class="sc">::</span><span class="fu">case_match</span>(</span>
+<span id="cb58-6"><a href="method-evaluation.html#cb58-6" tabindex="-1"></a>      match_grp</span>
+<span id="cb58-7"><a href="method-evaluation.html#cb58-7" tabindex="-1"></a>      , <span class="st">&quot;true positive&quot;</span><span class="sc">~</span><span class="st">&quot;tp&quot;</span></span>
+<span id="cb58-8"><a href="method-evaluation.html#cb58-8" tabindex="-1"></a>      , <span class="st">&quot;commission&quot;</span><span class="sc">~</span><span class="st">&quot;fp&quot;</span></span>
+<span id="cb58-9"><a href="method-evaluation.html#cb58-9" tabindex="-1"></a>      , <span class="st">&quot;omission&quot;</span><span class="sc">~</span><span class="st">&quot;fn&quot;</span></span>
+<span id="cb58-10"><a href="method-evaluation.html#cb58-10" tabindex="-1"></a>    )</span>
+<span id="cb58-11"><a href="method-evaluation.html#cb58-11" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb58-12"><a href="method-evaluation.html#cb58-12" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(</span>
+<span id="cb58-13"><a href="method-evaluation.html#cb58-13" tabindex="-1"></a>    <span class="at">names_from =</span> match_grp</span>
+<span id="cb58-14"><a href="method-evaluation.html#cb58-14" tabindex="-1"></a>    , <span class="at">values_from =</span> <span class="fu">c</span>(n)</span>
+<span id="cb58-15"><a href="method-evaluation.html#cb58-15" tabindex="-1"></a>    , <span class="at">names_glue =</span> <span class="st">&quot;{match_grp}_{.value}&quot;</span></span>
+<span id="cb58-16"><a href="method-evaluation.html#cb58-16" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb58-17"><a href="method-evaluation.html#cb58-17" tabindex="-1"></a>  <span class="fu">confusion_matrix_scores_fn</span>()  </span></code></pre></div>
+<pre><code>## # A tibble: 1 × 8
+##    fn_n  fp_n  tp_n omission_rate commission_rate precision recall f_score
+##   &lt;int&gt; &lt;int&gt; &lt;int&gt;         &lt;dbl&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+## 1    60    36   127         0.321           0.221     0.779  0.679   0.726</code></pre>
+</div>
+<div id="quant_metrics_form" class="section level2 hasAnchor" number="3.3">
+<h2><span class="header-section-number">3.3</span> Quantification Accuracy Metrics<a href="method-evaluation.html#quant_metrics_form" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Quantification accuracy metrics such as RMSE, MAPE, and Mean Error of pile form measurements (e.g. height, diameter) are calculated by aggregating the differences between the estimated pile attributes and the ground truth values for instances classified as True Positives. These metrics tell us about the method’s ability to accurately quantify the form of the piles it successfully identified</p>
+<p>to prepare our results for analysis, we will develop a function that aggregates the single-pile-level data into a single record for each parameter combination. this function will calculate detection performance metrics such as F-score, precision, and recall (using the <code>confusion_matrix_scores_fn()</code> we defined above), as well as quantification accuracy metrics including Root Mean Squared Error (RMSE), Mean Error (ME), and Mean Absolute Percentage Error (MAPE) to assess the accuracy of our pile form measurements. this could be a valuable function for any future analysis comparing predictions to ground truth data.</p>
+<p>here are the quantification accuracy metric formulas:</p>
+<p><span class="math display">\[
+\textrm{RMSE} = \sqrt{ \frac{  \sum_{i=1}^{N} (y_{i} - \hat{y_{i}})^{2}}{N}}
+\]</span></p>
+<p><span class="math display">\[
+\textrm{ME} = \frac{  \sum_{i=1}^{N} (\hat{y_{i}} - y_{i})}{N}
+\]</span></p>
+<p><span class="math display">\[
+\textrm{MAPE} = \frac{1}{N} \sum_{i=1}^{N} \left| \frac{y_{i} - \hat{y_{i}}}{y_{i}} \right|
+\]</span></p>
+<p>Where <span class="math inline">\(N\)</span> is equal to the total number of correctly matched piles, <span class="math inline">\(y_i\)</span> is the ground truth measured value and <span class="math inline">\(\hat{y_i}\)</span> is the predicted value of <span class="math inline">\(i\)</span></p>
+<p>we could also calculate Relative RMSE (RRMSE)</p>
+<p><span class="math display">\[
+\textrm{RRMSE} = \frac{\text{RMSE}}{\bar{y}} \times 100\%
+\]</span></p>
+<p>where, <span class="math inline">\(\bar{y}\)</span> represents the mean of the ground truth values. the interpretations of RMSE and RRMSE are:</p>
+<ul>
+<li>RMSE: Measures the average magnitude of the differences between predicted and the actual observed values, expressed in the same units as the metric.</li>
+<li>RRMSE: Expresses RMSE as a percentage of the mean of the observed values, providing a scale-independent measure to compare model accuracy across different datasets or models.</li>
+</ul>
+<p>for this analysis, we’ll show how to calculate RRMSE but we’ll only investigate MAPE</p>
+<ul>
+<li>Use MAPE when: You need an easily understandable metric for comparing prediction accuracy across different series or models with varying scales, particularly when zeros or near-zero actual values are not present in your data.</li>
+<li>Use RRMSE when: You need a metric that is more robust to small or zero actual values and you want to penalize larger errors more heavily due to the squaring of errors in its calculation.</li>
+</ul>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="method-evaluation.html#cb60-1" tabindex="-1"></a><span class="co"># aggregate results from ground_truth_prediction_match()</span></span>
+<span id="cb60-2"><a href="method-evaluation.html#cb60-2" tabindex="-1"></a>agg_ground_truth_match <span class="ot">&lt;-</span> <span class="cf">function</span>(ground_truth_prediction_match_ans) {</span>
+<span id="cb60-3"><a href="method-evaluation.html#cb60-3" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">nrow</span>(ground_truth_prediction_match_ans)<span class="sc">==</span><span class="dv">0</span>){<span class="fu">return</span>(<span class="cn">NULL</span>)}</span>
+<span id="cb60-4"><a href="method-evaluation.html#cb60-4" tabindex="-1"></a>  <span class="cf">if</span>( <span class="sc">!</span>(<span class="fu">names</span>(ground_truth_prediction_match_ans) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_equal</span>(<span class="st">&quot;match_grp&quot;</span>) <span class="sc">%&gt;%</span> <span class="fu">any</span>()) ){<span class="fu">stop</span>(<span class="st">&quot;ground_truth_prediction_match_ans must contain `match_grp` column&quot;</span>)}</span>
+<span id="cb60-5"><a href="method-evaluation.html#cb60-5" tabindex="-1"></a>  </span>
+<span id="cb60-6"><a href="method-evaluation.html#cb60-6" tabindex="-1"></a>  <span class="co"># check for difference columns (contains &quot;_diff&quot;) and calc rmse for only those to return a single line df with colums for each diff_rmse</span></span>
+<span id="cb60-7"><a href="method-evaluation.html#cb60-7" tabindex="-1"></a>    <span class="cf">if</span>(</span>
+<span id="cb60-8"><a href="method-evaluation.html#cb60-8" tabindex="-1"></a>      (ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb60-9"><a href="method-evaluation.html#cb60-9" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;diff_&quot;</span>) <span class="sc">|</span> tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;pct_diff_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-10"><a href="method-evaluation.html#cb60-10" tabindex="-1"></a>        <span class="fu">ncol</span>() )<span class="sc">&gt;</span><span class="dv">0</span></span>
+<span id="cb60-11"><a href="method-evaluation.html#cb60-11" tabindex="-1"></a>    ){</span>
+<span id="cb60-12"><a href="method-evaluation.html#cb60-12" tabindex="-1"></a>      <span class="co"># get rmse and mean difference/error for all columns with &quot;_diff&quot; but not &quot;pct_diff&quot;</span></span>
+<span id="cb60-13"><a href="method-evaluation.html#cb60-13" tabindex="-1"></a>      <span class="co"># get mape for all columns with &quot;pct_diff&quot; but not &quot;diff_&quot;</span></span>
+<span id="cb60-14"><a href="method-evaluation.html#cb60-14" tabindex="-1"></a>      rmse_df <span class="ot">&lt;-</span> ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb60-15"><a href="method-evaluation.html#cb60-15" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb60-16"><a href="method-evaluation.html#cb60-16" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb60-17"><a href="method-evaluation.html#cb60-17" tabindex="-1"></a>          tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;diff_&quot;</span>)</span>
+<span id="cb60-18"><a href="method-evaluation.html#cb60-18" tabindex="-1"></a>          <span class="sc">|</span> tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;pct_diff_&quot;</span>)</span>
+<span id="cb60-19"><a href="method-evaluation.html#cb60-19" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
+<span id="cb60-20"><a href="method-evaluation.html#cb60-20" tabindex="-1"></a>        tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(dplyr<span class="sc">::</span><span class="fu">everything</span>(), <span class="at">values_drop_na =</span> T) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-21"><a href="method-evaluation.html#cb60-21" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">group_by</span>(name) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-22"><a href="method-evaluation.html#cb60-22" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb60-23"><a href="method-evaluation.html#cb60-23" tabindex="-1"></a>          <span class="at">sq =</span> <span class="fu">sum</span>(value<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> T)</span>
+<span id="cb60-24"><a href="method-evaluation.html#cb60-24" tabindex="-1"></a>          , <span class="at">mean =</span> <span class="fu">mean</span>(value, <span class="at">na.rm =</span> T)</span>
+<span id="cb60-25"><a href="method-evaluation.html#cb60-25" tabindex="-1"></a>          , <span class="at">sumabs =</span> <span class="fu">sum</span>(<span class="fu">abs</span>(value), <span class="at">na.rm =</span> T)</span>
+<span id="cb60-26"><a href="method-evaluation.html#cb60-26" tabindex="-1"></a>          , <span class="at">nomiss =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(value))</span>
+<span id="cb60-27"><a href="method-evaluation.html#cb60-27" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-28"><a href="method-evaluation.html#cb60-28" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb60-29"><a href="method-evaluation.html#cb60-29" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb60-30"><a href="method-evaluation.html#cb60-30" tabindex="-1"></a>          <span class="at">rmse =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb60-31"><a href="method-evaluation.html#cb60-31" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">coalesce</span>(nomiss,<span class="dv">0</span>)<span class="sc">==</span><span class="dv">0</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb60-32"><a href="method-evaluation.html#cb60-32" tabindex="-1"></a>            , T <span class="sc">~</span> <span class="fu">sqrt</span>(sq<span class="sc">/</span>nomiss)</span>
+<span id="cb60-33"><a href="method-evaluation.html#cb60-33" tabindex="-1"></a>          )</span>
+<span id="cb60-34"><a href="method-evaluation.html#cb60-34" tabindex="-1"></a>          , <span class="at">mape =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb60-35"><a href="method-evaluation.html#cb60-35" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">coalesce</span>(nomiss,<span class="dv">0</span>)<span class="sc">==</span><span class="dv">0</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb60-36"><a href="method-evaluation.html#cb60-36" tabindex="-1"></a>            , T <span class="sc">~</span> sumabs<span class="sc">/</span>nomiss</span>
+<span id="cb60-37"><a href="method-evaluation.html#cb60-37" tabindex="-1"></a>          )</span>
+<span id="cb60-38"><a href="method-evaluation.html#cb60-38" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-39"><a href="method-evaluation.html#cb60-39" tabindex="-1"></a>        <span class="co"># NA nonsense values</span></span>
+<span id="cb60-40"><a href="method-evaluation.html#cb60-40" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb60-41"><a href="method-evaluation.html#cb60-41" tabindex="-1"></a>          <span class="at">mape =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb60-42"><a href="method-evaluation.html#cb60-42" tabindex="-1"></a>            stringr<span class="sc">::</span><span class="fu">str_starts</span>(name, <span class="st">&quot;pct_diff_&quot;</span>) <span class="sc">~</span> mape</span>
+<span id="cb60-43"><a href="method-evaluation.html#cb60-43" tabindex="-1"></a>            , T <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb60-44"><a href="method-evaluation.html#cb60-44" tabindex="-1"></a>          )</span>
+<span id="cb60-45"><a href="method-evaluation.html#cb60-45" tabindex="-1"></a>          , <span class="at">rmse =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb60-46"><a href="method-evaluation.html#cb60-46" tabindex="-1"></a>            stringr<span class="sc">::</span><span class="fu">str_starts</span>(name, <span class="st">&quot;pct_diff_&quot;</span>) <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb60-47"><a href="method-evaluation.html#cb60-47" tabindex="-1"></a>            , T <span class="sc">~</span> rmse</span>
+<span id="cb60-48"><a href="method-evaluation.html#cb60-48" tabindex="-1"></a>          )</span>
+<span id="cb60-49"><a href="method-evaluation.html#cb60-49" tabindex="-1"></a>          , <span class="at">mean =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb60-50"><a href="method-evaluation.html#cb60-50" tabindex="-1"></a>            stringr<span class="sc">::</span><span class="fu">str_starts</span>(name, <span class="st">&quot;pct_diff_&quot;</span>) <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="cn">NA</span>)</span>
+<span id="cb60-51"><a href="method-evaluation.html#cb60-51" tabindex="-1"></a>            , T <span class="sc">~</span> mean</span>
+<span id="cb60-52"><a href="method-evaluation.html#cb60-52" tabindex="-1"></a>          )</span>
+<span id="cb60-53"><a href="method-evaluation.html#cb60-53" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-54"><a href="method-evaluation.html#cb60-54" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(name,rmse,mean,mape) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-55"><a href="method-evaluation.html#cb60-55" tabindex="-1"></a>        tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(</span>
+<span id="cb60-56"><a href="method-evaluation.html#cb60-56" tabindex="-1"></a>          <span class="at">names_from =</span> name</span>
+<span id="cb60-57"><a href="method-evaluation.html#cb60-57" tabindex="-1"></a>          , <span class="at">values_from =</span> <span class="fu">c</span>(rmse,mean,mape)</span>
+<span id="cb60-58"><a href="method-evaluation.html#cb60-58" tabindex="-1"></a>          , <span class="at">names_glue =</span> <span class="st">&quot;{name}_{.value}&quot;</span></span>
+<span id="cb60-59"><a href="method-evaluation.html#cb60-59" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-60"><a href="method-evaluation.html#cb60-60" tabindex="-1"></a>        <span class="co"># remove columns with NA in all rows</span></span>
+<span id="cb60-61"><a href="method-evaluation.html#cb60-61" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>( dplyr<span class="sc">::</span><span class="fu">where</span>( <span class="sc">~!</span><span class="fu">all</span>(<span class="fu">is.na</span>(.x)) ) )</span>
+<span id="cb60-62"><a href="method-evaluation.html#cb60-62" tabindex="-1"></a>      </span>
+<span id="cb60-63"><a href="method-evaluation.html#cb60-63" tabindex="-1"></a>      <span class="cf">if</span>(</span>
+<span id="cb60-64"><a href="method-evaluation.html#cb60-64" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">coalesce</span>(<span class="fu">nrow</span>(rmse_df),<span class="dv">0</span>)<span class="sc">==</span><span class="dv">0</span></span>
+<span id="cb60-65"><a href="method-evaluation.html#cb60-65" tabindex="-1"></a>        <span class="sc">||</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(<span class="fu">ncol</span>(rmse_df),<span class="dv">0</span>)<span class="sc">==</span><span class="dv">0</span></span>
+<span id="cb60-66"><a href="method-evaluation.html#cb60-66" tabindex="-1"></a>      ){</span>
+<span id="cb60-67"><a href="method-evaluation.html#cb60-67" tabindex="-1"></a>        <span class="co"># empty df</span></span>
+<span id="cb60-68"><a href="method-evaluation.html#cb60-68" tabindex="-1"></a>        rmse_df <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tibble</span>()</span>
+<span id="cb60-69"><a href="method-evaluation.html#cb60-69" tabindex="-1"></a>      }</span>
+<span id="cb60-70"><a href="method-evaluation.html#cb60-70" tabindex="-1"></a>    }<span class="cf">else</span>{</span>
+<span id="cb60-71"><a href="method-evaluation.html#cb60-71" tabindex="-1"></a>      <span class="co"># empty df</span></span>
+<span id="cb60-72"><a href="method-evaluation.html#cb60-72" tabindex="-1"></a>      rmse_df <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tibble</span>()</span>
+<span id="cb60-73"><a href="method-evaluation.html#cb60-73" tabindex="-1"></a>    }</span>
+<span id="cb60-74"><a href="method-evaluation.html#cb60-74" tabindex="-1"></a>  </span>
+<span id="cb60-75"><a href="method-evaluation.html#cb60-75" tabindex="-1"></a>  <span class="co"># count by match group</span></span>
+<span id="cb60-76"><a href="method-evaluation.html#cb60-76" tabindex="-1"></a>    agg <span class="ot">&lt;-</span></span>
+<span id="cb60-77"><a href="method-evaluation.html#cb60-77" tabindex="-1"></a>      ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb60-78"><a href="method-evaluation.html#cb60-78" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb60-79"><a href="method-evaluation.html#cb60-79" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">count</span>(match_grp) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-80"><a href="method-evaluation.html#cb60-80" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb60-81"><a href="method-evaluation.html#cb60-81" tabindex="-1"></a>        <span class="at">match_grp =</span> dplyr<span class="sc">::</span><span class="fu">case_match</span>(</span>
+<span id="cb60-82"><a href="method-evaluation.html#cb60-82" tabindex="-1"></a>          match_grp</span>
+<span id="cb60-83"><a href="method-evaluation.html#cb60-83" tabindex="-1"></a>          , <span class="st">&quot;true positive&quot;</span><span class="sc">~</span><span class="st">&quot;tp&quot;</span></span>
+<span id="cb60-84"><a href="method-evaluation.html#cb60-84" tabindex="-1"></a>          , <span class="st">&quot;commission&quot;</span><span class="sc">~</span><span class="st">&quot;fp&quot;</span></span>
+<span id="cb60-85"><a href="method-evaluation.html#cb60-85" tabindex="-1"></a>          , <span class="st">&quot;omission&quot;</span><span class="sc">~</span><span class="st">&quot;fn&quot;</span></span>
+<span id="cb60-86"><a href="method-evaluation.html#cb60-86" tabindex="-1"></a>        )</span>
+<span id="cb60-87"><a href="method-evaluation.html#cb60-87" tabindex="-1"></a>      )</span>
+<span id="cb60-88"><a href="method-evaluation.html#cb60-88" tabindex="-1"></a>    <span class="co"># true positive, false positive, false negative rates</span></span>
+<span id="cb60-89"><a href="method-evaluation.html#cb60-89" tabindex="-1"></a>    return_df <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">tibble</span>(<span class="at">match_grp =</span> <span class="fu">c</span>(<span class="st">&quot;tp&quot;</span>,<span class="st">&quot;fp&quot;</span>,<span class="st">&quot;fn&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-90"><a href="method-evaluation.html#cb60-90" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(agg, <span class="at">by =</span> <span class="st">&quot;match_grp&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-91"><a href="method-evaluation.html#cb60-91" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(dplyr<span class="sc">::</span><span class="fu">across</span>(<span class="at">.cols =</span> <span class="fu">c</span>(n), <span class="at">.fn =</span> <span class="sc">~</span>dplyr<span class="sc">::</span><span class="fu">coalesce</span>(.x,<span class="dv">0</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb60-92"><a href="method-evaluation.html#cb60-92" tabindex="-1"></a>      tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(</span>
+<span id="cb60-93"><a href="method-evaluation.html#cb60-93" tabindex="-1"></a>        <span class="at">names_from =</span> match_grp</span>
+<span id="cb60-94"><a href="method-evaluation.html#cb60-94" tabindex="-1"></a>        , <span class="at">values_from =</span> <span class="fu">c</span>(n)</span>
+<span id="cb60-95"><a href="method-evaluation.html#cb60-95" tabindex="-1"></a>        , <span class="at">names_glue =</span> <span class="st">&quot;{match_grp}_{.value}&quot;</span></span>
+<span id="cb60-96"><a href="method-evaluation.html#cb60-96" tabindex="-1"></a>      )</span>
+<span id="cb60-97"><a href="method-evaluation.html#cb60-97" tabindex="-1"></a>    <span class="co"># rates, precision, recall, f-score</span></span>
+<span id="cb60-98"><a href="method-evaluation.html#cb60-98" tabindex="-1"></a>    return_df <span class="ot">&lt;-</span> <span class="fu">confusion_matrix_scores_fn</span>(return_df)</span>
+<span id="cb60-99"><a href="method-evaluation.html#cb60-99" tabindex="-1"></a>    <span class="co"># add rmse</span></span>
+<span id="cb60-100"><a href="method-evaluation.html#cb60-100" tabindex="-1"></a>    <span class="cf">if</span>(<span class="fu">nrow</span>(rmse_df)<span class="sc">&gt;</span><span class="dv">0</span>){</span>
+<span id="cb60-101"><a href="method-evaluation.html#cb60-101" tabindex="-1"></a>      return_df <span class="ot">&lt;-</span> return_df <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">bind_cols</span>(rmse_df)</span>
+<span id="cb60-102"><a href="method-evaluation.html#cb60-102" tabindex="-1"></a>    }</span>
+<span id="cb60-103"><a href="method-evaluation.html#cb60-103" tabindex="-1"></a>  <span class="co"># return</span></span>
+<span id="cb60-104"><a href="method-evaluation.html#cb60-104" tabindex="-1"></a>  <span class="fu">return</span>(return_df)</span>
+<span id="cb60-105"><a href="method-evaluation.html#cb60-105" tabindex="-1"></a>}</span></code></pre></div>
+<p>There is a lot going on in our <code>agg_ground_truth_match()</code> function but it’s application is straightforward enough:</p>
+<ul>
+<li>The minimum required input is a data frame of the raw instance matches with a column named <code>match_grp</code> which is string/factor with the levels “true positive”, “commission”, and “omission” as returned by the <code>ground_truth_prediction_match()</code> function</li>
+<li>Optionally, if the data contain columns with the prefix “diff_” the mean error (ME) is calculated for those columns with the return having the suffix “_mean” and the RMSE is calculated for those columns with the return having the suffix “_rmse”
+<ul>
+<li>interpretation of the ME is enhanced if these “diff_” columns are calculated as the predicted value minus the actual value (e.g. <code>pred_diameter_m - gt_diameter_m</code>)</li>
+</ul></li>
+<li>Optionally, if the data contain columns with the prefix “pct_diff_” the mean absolute percent error (MAPE) is calculated for those columns with the return having the suffix “_mape”
+<ul>
+<li>these “pct_diff_” columns are calculated as the actual value minus the predicted value divided by the actual value (e.g. <code>(gt_diameter_m - pred_diameter_m)/gt_diameter_m</code>)</li>
+</ul></li>
+</ul>
+<p>first, let’s look at the <code>agg_ground_truth_match()</code> return using an example minimum required input data frame of the raw instance matches with a column named <code>match_grp</code> which is string/factor with the levels “true positive”, “commission”, and “omission”</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="method-evaluation.html#cb61-1" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb61-2"><a href="method-evaluation.html#cb61-2" tabindex="-1"></a>  <span class="at">match_grp =</span> <span class="fu">c</span>(</span>
+<span id="cb61-3"><a href="method-evaluation.html#cb61-3" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">&quot;true positive&quot;</span>, <span class="at">times =</span> <span class="dv">9</span>)</span>
+<span id="cb61-4"><a href="method-evaluation.html#cb61-4" tabindex="-1"></a>    , <span class="fu">rep</span>(<span class="st">&quot;commission&quot;</span>, <span class="at">times =</span> <span class="dv">2</span>)</span>
+<span id="cb61-5"><a href="method-evaluation.html#cb61-5" tabindex="-1"></a>    , <span class="fu">rep</span>(<span class="st">&quot;omission&quot;</span>, <span class="at">times =</span> <span class="dv">4</span>)</span>
+<span id="cb61-6"><a href="method-evaluation.html#cb61-6" tabindex="-1"></a>  )</span>
+<span id="cb61-7"><a href="method-evaluation.html#cb61-7" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb61-8"><a href="method-evaluation.html#cb61-8" tabindex="-1"></a><span class="fu">agg_ground_truth_match</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb61-9"><a href="method-evaluation.html#cb61-9" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 1
+## Columns: 8
+## $ tp_n            &lt;dbl&gt; 9
+## $ fp_n            &lt;dbl&gt; 2
+## $ fn_n            &lt;dbl&gt; 4
+## $ omission_rate   &lt;dbl&gt; 0.3076923
+## $ commission_rate &lt;dbl&gt; 0.1818182
+## $ precision       &lt;dbl&gt; 0.8181818
+## $ recall          &lt;dbl&gt; 0.6923077
+## $ f_score         &lt;dbl&gt; 0.75</code></pre>
+<p>now, let’s look at the <code>agg_ground_truth_match()</code> output using our fake pile prediction instance match example made by our <code>ground_truth_prediction_match()</code> function as input.</p>
+<p>Before <code>agg_ground_truth_match()</code>, we’ll add area of the fake predicted piles and area of the ground truth piles to ensure we get RMSE, MAPE, and ME quantification accuracy metrics in the result</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="method-evaluation.html#cb63-1" tabindex="-1"></a><span class="co"># first, we&#39;ll add pile area from the respective spatial data</span></span>
+<span id="cb63-2"><a href="method-evaluation.html#cb63-2" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="ot">&lt;-</span> ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb63-3"><a href="method-evaluation.html#cb63-3" tabindex="-1"></a>  <span class="co"># join on gt area data</span></span>
+<span id="cb63-4"><a href="method-evaluation.html#cb63-4" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb63-5"><a href="method-evaluation.html#cb63-5" tabindex="-1"></a>    slash_piles_polys <span class="sc">%&gt;%</span> </span>
+<span id="cb63-6"><a href="method-evaluation.html#cb63-6" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-7"><a href="method-evaluation.html#cb63-7" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">gt_area_m2 =</span> sf<span class="sc">::</span><span class="fu">st_area</span>(.) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-8"><a href="method-evaluation.html#cb63-8" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb63-9"><a href="method-evaluation.html#cb63-9" tabindex="-1"></a>    , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb63-10"><a href="method-evaluation.html#cb63-10" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-11"><a href="method-evaluation.html#cb63-11" tabindex="-1"></a>  <span class="co"># join on pred area data</span></span>
+<span id="cb63-12"><a href="method-evaluation.html#cb63-12" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb63-13"><a href="method-evaluation.html#cb63-13" tabindex="-1"></a>    predictions_temp <span class="sc">%&gt;%</span> </span>
+<span id="cb63-14"><a href="method-evaluation.html#cb63-14" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-15"><a href="method-evaluation.html#cb63-15" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">pred_area_m2 =</span> sf<span class="sc">::</span><span class="fu">st_area</span>(.) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-16"><a href="method-evaluation.html#cb63-16" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb63-17"><a href="method-evaluation.html#cb63-17" tabindex="-1"></a>    , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb63-18"><a href="method-evaluation.html#cb63-18" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-19"><a href="method-evaluation.html#cb63-19" tabindex="-1"></a>  <span class="co"># calculate difference columns</span></span>
+<span id="cb63-20"><a href="method-evaluation.html#cb63-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb63-21"><a href="method-evaluation.html#cb63-21" tabindex="-1"></a>    <span class="at">diff_area_m2 =</span> pred_area_m2<span class="sc">-</span>gt_area_m2</span>
+<span id="cb63-22"><a href="method-evaluation.html#cb63-22" tabindex="-1"></a>    , <span class="at">pct_diff_area_m2 =</span> (gt_area_m2<span class="sc">-</span>pred_area_m2)<span class="sc">/</span>gt_area_m2</span>
+<span id="cb63-23"><a href="method-evaluation.html#cb63-23" tabindex="-1"></a>  )</span>
+<span id="cb63-24"><a href="method-evaluation.html#cb63-24" tabindex="-1"></a><span class="co"># agg_ground_truth_match()</span></span>
+<span id="cb63-25"><a href="method-evaluation.html#cb63-25" tabindex="-1"></a><span class="fu">agg_ground_truth_match</span>(ground_truth_prediction_match_ans) <span class="sc">%&gt;%</span> </span>
+<span id="cb63-26"><a href="method-evaluation.html#cb63-26" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 1
+## Columns: 11
+## $ tp_n                  &lt;dbl&gt; 127
+## $ fp_n                  &lt;dbl&gt; 36
+## $ fn_n                  &lt;dbl&gt; 60
+## $ omission_rate         &lt;dbl&gt; 0.3208556
+## $ commission_rate       &lt;dbl&gt; 0.2208589
+## $ precision             &lt;dbl&gt; 0.7791411
+## $ recall                &lt;dbl&gt; 0.6791444
+## $ f_score               &lt;dbl&gt; 0.7257143
+## $ diff_area_m2_rmse     &lt;dbl&gt; 9.738452
+## $ diff_area_m2_mean     &lt;dbl&gt; 0.7120349
+## $ pct_diff_area_m2_mape &lt;dbl&gt; 0.7468178</code></pre>
+<p>the <code>agg_ground_truth_match()</code> allows for multiple “diff_” and “pct_diff_” columns to aggregate quantification accuracy metrics for different measurements</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="method-evaluation.html#cb65-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb65-2"><a href="method-evaluation.html#cb65-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb65-3"><a href="method-evaluation.html#cb65-3" tabindex="-1"></a>    <span class="co"># fake one</span></span>
+<span id="cb65-4"><a href="method-evaluation.html#cb65-4" tabindex="-1"></a>    <span class="at">pred_other_measurement =</span> <span class="fu">runif</span>(<span class="at">n=</span>dplyr<span class="sc">::</span><span class="fu">n</span>(),<span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">11</span>)</span>
+<span id="cb65-5"><a href="method-evaluation.html#cb65-5" tabindex="-1"></a>    , <span class="at">pred_other_measurement =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(pred_id),<span class="cn">NA</span>,pred_other_measurement)</span>
+<span id="cb65-6"><a href="method-evaluation.html#cb65-6" tabindex="-1"></a>    <span class="co"># fake one</span></span>
+<span id="cb65-7"><a href="method-evaluation.html#cb65-7" tabindex="-1"></a>    , <span class="at">gt_other_measurement =</span> <span class="fu">runif</span>(<span class="at">n=</span>dplyr<span class="sc">::</span><span class="fu">n</span>(),<span class="at">min =</span> <span class="dv">3</span>, <span class="at">max =</span> <span class="dv">13</span>)</span>
+<span id="cb65-8"><a href="method-evaluation.html#cb65-8" tabindex="-1"></a>    , <span class="at">gt_other_measurement =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(pile_id),<span class="cn">NA</span>,gt_other_measurement)</span>
+<span id="cb65-9"><a href="method-evaluation.html#cb65-9" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb65-10"><a href="method-evaluation.html#cb65-10" tabindex="-1"></a>  <span class="co"># calculate difference columns</span></span>
+<span id="cb65-11"><a href="method-evaluation.html#cb65-11" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb65-12"><a href="method-evaluation.html#cb65-12" tabindex="-1"></a>    <span class="at">diff_other_measurement =</span> pred_other_measurement<span class="sc">-</span>gt_other_measurement</span>
+<span id="cb65-13"><a href="method-evaluation.html#cb65-13" tabindex="-1"></a>    , <span class="at">pct_diff_other_measurement =</span> (gt_other_measurement<span class="sc">-</span>pred_other_measurement)<span class="sc">/</span>gt_other_measurement</span>
+<span id="cb65-14"><a href="method-evaluation.html#cb65-14" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb65-15"><a href="method-evaluation.html#cb65-15" tabindex="-1"></a>  <span class="fu">agg_ground_truth_match</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb65-16"><a href="method-evaluation.html#cb65-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 1
+## Columns: 14
+## $ tp_n                            &lt;dbl&gt; 127
+## $ fp_n                            &lt;dbl&gt; 36
+## $ fn_n                            &lt;dbl&gt; 60
+## $ omission_rate                   &lt;dbl&gt; 0.3208556
+## $ commission_rate                 &lt;dbl&gt; 0.2208589
+## $ precision                       &lt;dbl&gt; 0.7791411
+## $ recall                          &lt;dbl&gt; 0.6791444
+## $ f_score                         &lt;dbl&gt; 0.7257143
+## $ diff_area_m2_rmse               &lt;dbl&gt; 9.738452
+## $ diff_other_measurement_rmse     &lt;dbl&gt; 4.41821
+## $ diff_area_m2_mean               &lt;dbl&gt; 0.7120349
+## $ diff_other_measurement_mean     &lt;dbl&gt; -1.915537
+## $ pct_diff_area_m2_mape           &lt;dbl&gt; 0.7468178
+## $ pct_diff_other_measurement_mape &lt;dbl&gt; 0.5199562</code></pre>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="training-data.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="ptcld_process.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

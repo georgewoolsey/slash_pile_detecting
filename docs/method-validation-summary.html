@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Section 13 Method Validation: Summary | Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Section 13 Method Validation: Summary | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Section 13 Method Validation: Summary | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="method-validation-arnf-machine-piles.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script src="libs/. - 1_d2f159-1/data_stars_1b1597e.txt"></script>
+<script src="libs/joda-0.0.1/joda.js"></script>
+<script src="libs/joda-0.0.1/addImageQuery-bindings.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="training-data.html"><a href="training-data.html"><i class="fa fa-check"></i><b>2</b> Training Data</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="training-data.html"><a href="training-data.html#site-introduction"><i class="fa fa-check"></i><b>2.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="2.2" data-path="training-data.html"><a href="training-data.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a></li>
+<li class="chapter" data-level="2.3" data-path="training-data.html"><a href="training-data.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="training-data.html"><a href="training-data.html#example-ratio-based-index"><i class="fa fa-check"></i><b>2.3.1</b> Example ratio-based index</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="training-data.html"><a href="training-data.html#study-area-imagery"><i class="fa fa-check"></i><b>2.4</b> Study area imagery</a></li>
+<li class="chapter" data-level="2.5" data-path="training-data.html"><a href="training-data.html#point-cloud-data"><i class="fa fa-check"></i><b>2.5</b> Point Cloud Data</a></li>
+<li class="chapter" data-level="2.6" data-path="training-data.html"><a href="training-data.html#check-out-one-pile"><i class="fa fa-check"></i><b>2.6</b> Check out one pile</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="method-evaluation.html"><a href="method-evaluation.html"><i class="fa fa-check"></i><b>3</b> Method Evaluation</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="method-evaluation.html"><a href="method-evaluation.html#iou_match"><i class="fa fa-check"></i><b>3.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="3.2" data-path="method-evaluation.html"><a href="method-evaluation.html#detect_metrics_form"><i class="fa fa-check"></i><b>3.2</b> Detection Accuracy Metrics</a></li>
+<li class="chapter" data-level="3.3" data-path="method-evaluation.html"><a href="method-evaluation.html#quant_metrics_form"><i class="fa fa-check"></i><b>3.3</b> Quantification Accuracy Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>4</b> Point Cloud Processing and Pile Segmentation</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>4.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#dtm-and-chm-piles"><i class="fa fa-check"></i><b>4.1.1</b> DTM and CHM + piles</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="raster_watershed.html"><a href="raster_watershed.html"><i class="fa fa-check"></i><b>5</b> Structural Detection from CHM</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="raster_watershed.html"><a href="raster_watershed.html#method-demonstration"><i class="fa fa-check"></i><b>5.1</b> Method Demonstration</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="raster_watershed.html"><a href="raster_watershed.html#geometric-filtering-irregularity-filtering"><i class="fa fa-check"></i><b>5.1.1</b> Geometric filtering: Irregularity Filtering</a></li>
+<li class="chapter" data-level="5.1.2" data-path="raster_watershed.html"><a href="raster_watershed.html#area-filtering"><i class="fa fa-check"></i><b>5.1.2</b> Area Filtering</a></li>
+<li class="chapter" data-level="5.1.3" data-path="raster_watershed.html"><a href="raster_watershed.html#geometric-filtering-circularity-filtering"><i class="fa fa-check"></i><b>5.1.3</b> Geometric filtering: Circularity Filtering</a></li>
+<li class="chapter" data-level="5.1.4" data-path="raster_watershed.html"><a href="raster_watershed.html#area-and-volume-from-chm"><i class="fa fa-check"></i><b>5.1.4</b> Area and Volume from CHM</a></li>
+<li class="chapter" data-level="5.1.5" data-path="raster_watershed.html"><a href="raster_watershed.html#shape-refinement"><i class="fa fa-check"></i><b>5.1.5</b> Shape Refinement</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="raster_watershed.html"><a href="raster_watershed.html#instance-matching"><i class="fa fa-check"></i><b>5.2</b> Instance Matching</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="raster_watershed.html"><a href="raster_watershed.html#example-area"><i class="fa fa-check"></i><b>5.2.1</b> Example Area</a></li>
+<li class="chapter" data-level="5.2.2" data-path="raster_watershed.html"><a href="raster_watershed.html#full-study-area"><i class="fa fa-check"></i><b>5.2.2</b> Full Study Area</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="raster_watershed.html"><a href="raster_watershed.html#slash_pile_detect_watershed"><i class="fa fa-check"></i><b>5.3</b> Watershed Pile Detection Function</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="data_fusion.html"><a href="data_fusion.html"><i class="fa fa-check"></i><b>6</b> Data Fusion</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="data_fusion.html"><a href="data_fusion.html#rgb-indices"><i class="fa fa-check"></i><b>6.1</b> RGB Indices</a>
+<ul>
+<li class="chapter" data-level="6.1.1" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-functions"><i class="fa fa-check"></i><b>6.1.1</b> Spectral Index Functions</a></li>
+<li class="chapter" data-level="6.1.2" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-of-polygons"><i class="fa fa-check"></i><b>6.1.2</b> Spectral Index of Polygons</a></li>
+</ul></li>
+<li class="chapter" data-level="6.2" data-path="data_fusion.html"><a href="data_fusion.html#ground-truth-pile-spectral-summary"><i class="fa fa-check"></i><b>6.2</b> Ground Truth Pile Spectral Summary</a>
+<ul>
+<li class="chapter" data-level="6.2.1" data-path="data_fusion.html"><a href="data_fusion.html#voting-system"><i class="fa fa-check"></i><b>6.2.1</b> Voting System</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="data_fusion.html"><a href="data_fusion.html#polygon_spectral_filtering"><i class="fa fa-check"></i><b>6.3</b> Candidate Polygon Spectral Filtering Function</a></li>
+<li class="chapter" data-level="6.4" data-path="data_fusion.html"><a href="data_fusion.html#data-fusion-example"><i class="fa fa-check"></i><b>6.4</b> Data Fusion Example</a>
+<ul>
+<li class="chapter" data-level="6.4.1" data-path="data_fusion.html"><a href="data_fusion.html#instance-matching-1"><i class="fa fa-check"></i><b>6.4.1</b> Instance Matching</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="wshed_params_test.html"><a href="wshed_params_test.html"><i class="fa fa-check"></i><b>7</b> Sensitivity Testing Method</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="wshed_params_test.html"><a href="wshed_params_test.html#all_the_combos"><i class="fa fa-check"></i><b>7.1</b> Workflow over parameter combinations</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-workflow"><i class="fa fa-check"></i><b>7.1.1</b> Test Workflow</a></li>
+<li class="chapter" data-level="7.1.2" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-instance-matching"><i class="fa fa-check"></i><b>7.1.2</b> Test Instance Matching</a></li>
+<li class="chapter" data-level="7.1.3" data-path="wshed_params_test.html"><a href="wshed_params_test.html#test-accuracy"><i class="fa fa-check"></i><b>7.1.3</b> Test Accuracy</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="chm_sens_test.html"><a href="chm_sens_test.html"><i class="fa fa-check"></i><b>8</b> Sensitivity Testing Results</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#process-raw-point-cloud-1"><i class="fa fa-check"></i><b>8.1</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="8.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#structural-only-parameter-testing"><i class="fa fa-check"></i><b>8.2</b> Structural Only: Parameter Testing</a>
+<ul>
+<li class="chapter" data-level="8.2.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#validation-over-parameter-combinations"><i class="fa fa-check"></i><b>8.2.1</b> Validation over parameter combinations</a></li>
+<li class="chapter" data-level="8.2.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#aggregate-validation-metrics-to-parameter-combination"><i class="fa fa-check"></i><b>8.2.2</b> Aggregate Validation Metrics to Parameter Combination</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion-parameter-testing"><i class="fa fa-check"></i><b>8.3</b> Data Fusion: Parameter Testing</a>
+<ul>
+<li class="chapter" data-level="8.3.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#aggregate-validation-metrics-to-parameter-combination-1"><i class="fa fa-check"></i><b>8.3.1</b> Aggregate Validation Metrics to Parameter Combination</a></li>
+</ul></li>
+<li class="chapter" data-level="8.4" data-path="chm_sens_test.html"><a href="chm_sens_test.html#read-data-for-analysis"><i class="fa fa-check"></i><b>8.4</b> Read Data for Analysis</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#structural-only"><i class="fa fa-check"></i><b>8.4.1</b> Structural Only</a></li>
+<li class="chapter" data-level="8.4.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion"><i class="fa fa-check"></i><b>8.4.2</b> Data Fusion</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="chm_sens_test.html"><a href="chm_sens_test.html#allthetests"><i class="fa fa-check"></i><b>8.5</b> Structural Only: Sensitivity Testing</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#detect_trends"><i class="fa fa-check"></i><b>8.5.1</b> Main Effects: pile detection</a></li>
+<li class="chapter" data-level="8.5.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#quant_trends"><i class="fa fa-check"></i><b>8.5.2</b> Main Effects: form quantification</a></li>
+<li class="chapter" data-level="8.5.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#best-settings"><i class="fa fa-check"></i><b>8.5.3</b> Best settings</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="chm_sens_test.html"><a href="chm_sens_test.html#data-fusion-sensitivity-testing"><i class="fa fa-check"></i><b>8.6</b> Data Fusion: Sensitivity Testing</a>
+<ul>
+<li class="chapter" data-level="8.6.1" data-path="chm_sens_test.html"><a href="chm_sens_test.html#main-effects-pile-detection"><i class="fa fa-check"></i><b>8.6.1</b> Main Effects: pile detection</a></li>
+<li class="chapter" data-level="8.6.2" data-path="chm_sens_test.html"><a href="chm_sens_test.html#main-effects-form-quantification"><i class="fa fa-check"></i><b>8.6.2</b> Main Effects: form quantification</a></li>
+<li class="chapter" data-level="8.6.3" data-path="chm_sens_test.html"><a href="chm_sens_test.html#balanced_acc_assess"><i class="fa fa-check"></i><b>8.6.3</b> Top settings</a></li>
+</ul></li>
+<li class="chapter" data-level="8.7" data-path="chm_sens_test.html"><a href="chm_sens_test.html#save-the-data"><i class="fa fa-check"></i><b>8.7</b> save the data</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="stats_method.html"><a href="stats_method.html"><i class="fa fa-check"></i><b>9</b> Statistical Testing of Method Settings</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="stats_method.html"><a href="stats_method.html#bayesian-glm---f-score"><i class="fa fa-check"></i><b>9.1</b> Bayesian GLM - F-score</a>
+<ul>
+<li class="chapter" data-level="9.1.1" data-path="stats_method.html"><a href="stats_method.html#model-selection"><i class="fa fa-check"></i><b>9.1.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.1.2" data-path="stats_method.html"><a href="stats_method.html#modeling"><i class="fa fa-check"></i><b>9.1.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.1.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks"><i class="fa fa-check"></i><b>9.1.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.1.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects"><i class="fa fa-check"></i><b>9.1.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.1.5" data-path="stats_method.html"><a href="stats_method.html#f_score_epred"><i class="fa fa-check"></i><b>9.1.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.2" data-path="stats_method.html"><a href="stats_method.html#mod_diam_mape"><i class="fa fa-check"></i><b>9.2</b> Bayesian GLM - Diameter MAPE</a>
+<ul>
+<li class="chapter" data-level="9.2.1" data-path="stats_method.html"><a href="stats_method.html#model-selection-1"><i class="fa fa-check"></i><b>9.2.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.2.2" data-path="stats_method.html"><a href="stats_method.html#mod_diam_mape2"><i class="fa fa-check"></i><b>9.2.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.2.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks-1"><i class="fa fa-check"></i><b>9.2.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.2.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects-1"><i class="fa fa-check"></i><b>9.2.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.2.5" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-expectation"><i class="fa fa-check"></i><b>9.2.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="stats_method.html"><a href="stats_method.html#bayesian-glm---height-mape"><i class="fa fa-check"></i><b>9.3</b> Bayesian GLM - Height MAPE</a>
+<ul>
+<li class="chapter" data-level="9.3.1" data-path="stats_method.html"><a href="stats_method.html#model-selection-2"><i class="fa fa-check"></i><b>9.3.1</b> Model selection</a></li>
+<li class="chapter" data-level="9.3.2" data-path="stats_method.html"><a href="stats_method.html#modeling-1"><i class="fa fa-check"></i><b>9.3.2</b> Modeling</a></li>
+<li class="chapter" data-level="9.3.3" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-checks-2"><i class="fa fa-check"></i><b>9.3.3</b> Posterior Predictive Checks</a></li>
+<li class="chapter" data-level="9.3.4" data-path="stats_method.html"><a href="stats_method.html#conditional-effects-2"><i class="fa fa-check"></i><b>9.3.4</b> Conditional Effects</a></li>
+<li class="chapter" data-level="9.3.5" data-path="stats_method.html"><a href="stats_method.html#posterior-predictive-expectation-1"><i class="fa fa-check"></i><b>9.3.5</b> Posterior Predictive Expectation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.4" data-path="stats_method.html"><a href="stats_method.html#hey_balanced_acc"><i class="fa fa-check"></i><b>9.4</b> Balanced Accuracy Bayesian Optimization</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="stats_method.html"><a href="stats_method.html#balanced-accuracy-selection"><i class="fa fa-check"></i><b>9.4.1</b> Balanced Accuracy Selection</a></li>
+<li class="chapter" data-level="9.4.2" data-path="stats_method.html"><a href="stats_method.html#overall-across-chm-resolution-2"><i class="fa fa-check"></i><b>9.4.2</b> Overall (across CHM resolution)</a></li>
+<li class="chapter" data-level="9.4.3" data-path="stats_method.html"><a href="stats_method.html#by-chm-resolution-2"><i class="fa fa-check"></i><b>9.4.3</b> by CHM resolution</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="stats_method.html"><a href="stats_method.html#training_detect_final"><i class="fa fa-check"></i><b>9.5</b> Balanced Accuracy Validation</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="stats_method.html"><a href="stats_method.html#detection"><i class="fa fa-check"></i><b>9.5.1</b> Detection</a></li>
+<li class="chapter" data-level="9.5.2" data-path="stats_method.html"><a href="stats_method.html#instance-match-accuracy-assessment"><i class="fa fa-check"></i><b>9.5.2</b> Instance Match &amp; Accuracy Assessment</a></li>
+<li class="chapter" data-level="9.5.3" data-path="stats_method.html"><a href="stats_method.html#training_detect_final_volcomp"><i class="fa fa-check"></i><b>9.5.3</b> Volume Comparison</a></li>
+<li class="chapter" data-level="9.5.4" data-path="stats_method.html"><a href="stats_method.html#stand-level-aggregation"><i class="fa fa-check"></i><b>9.5.4</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html"><i class="fa fa-check"></i><b>10</b> Method Validation: Pinyon-Juniper</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#site-introduction-1"><i class="fa fa-check"></i><b>10.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="10.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#data-processing"><i class="fa fa-check"></i><b>10.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="10.2.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#vector-data"><i class="fa fa-check"></i><b>10.2.1</b> Vector Data</a></li>
+<li class="chapter" data-level="10.2.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#rgb-data"><i class="fa fa-check"></i><b>10.2.2</b> RGB Data</a></li>
+<li class="chapter" data-level="10.2.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#process-raw-point-cloud-2"><i class="fa fa-check"></i><b>10.2.3</b> Process Raw Point Cloud</a></li>
+</ul></li>
+<li class="chapter" data-level="10.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#pj_detect_fusion"><i class="fa fa-check"></i><b>10.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="10.3.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#structural-candidate-segments"><i class="fa fa-check"></i><b>10.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="10.3.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#accuracy-of-these-structural-settings"><i class="fa fa-check"></i><b>10.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="10.3.3" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#spect_filtering_final_pj"><i class="fa fa-check"></i><b>10.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="10.3.4" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#detection-and-quantification-accuracy"><i class="fa fa-check"></i><b>10.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="10.3.5" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#validation_detect_final_volcomp"><i class="fa fa-check"></i><b>10.3.5</b> Volume Comparison</a></li>
+<li class="chapter" data-level="10.3.6" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#stand-level-aggregation-1"><i class="fa fa-check"></i><b>10.3.6</b> Stand-level Aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="10.4" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#pj_detect_struct"><i class="fa fa-check"></i><b>10.4</b> Pile Detection: Structural Only</a>
+<ul>
+<li class="chapter" data-level="10.4.1" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#structural-detection"><i class="fa fa-check"></i><b>10.4.1</b> Structural Detection</a></li>
+<li class="chapter" data-level="10.4.2" data-path="method-validation-pinyon-juniper.html"><a href="method-validation-pinyon-juniper.html#detection-and-quantification-accuracy-1"><i class="fa fa-check"></i><b>10.4.2</b> Detection and Quantification Accuracy</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html"><i class="fa fa-check"></i><b>11</b> Method Validation: BHEF Machine Piles</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#site-introduction-2"><i class="fa fa-check"></i><b>11.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="11.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#data-processing-1"><i class="fa fa-check"></i><b>11.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="11.2.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#rgb-data-1"><i class="fa fa-check"></i><b>11.2.1</b> RGB Data</a></li>
+<li class="chapter" data-level="11.2.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#process-raw-point-cloud-3"><i class="fa fa-check"></i><b>11.2.2</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="11.2.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#vector-data-1"><i class="fa fa-check"></i><b>11.2.3</b> Vector Data</a></li>
+</ul></li>
+<li class="chapter" data-level="11.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#bhef_detect_fusion"><i class="fa fa-check"></i><b>11.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="11.3.1" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#structural-candidate-segments-1"><i class="fa fa-check"></i><b>11.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="11.3.2" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#accuracy-of-these-structural-settings-1"><i class="fa fa-check"></i><b>11.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="11.3.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#spect_filtering_final_bhef"><i class="fa fa-check"></i><b>11.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="11.3.4" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#detection-and-quantification-accuracy-2"><i class="fa fa-check"></i><b>11.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="11.3.5" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#stand-level-aggregation-2"><i class="fa fa-check"></i><b>11.3.5</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html"><i class="fa fa-check"></i><b>12</b> Method Validation: ARNF Machine Piles</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#site-introduction-3"><i class="fa fa-check"></i><b>12.1</b> Site Introduction</a></li>
+<li class="chapter" data-level="12.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#data-processing-2"><i class="fa fa-check"></i><b>12.2</b> Data Processing</a>
+<ul>
+<li class="chapter" data-level="12.2.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#process-raw-point-cloud-4"><i class="fa fa-check"></i><b>12.2.1</b> Process Raw Point Cloud</a></li>
+<li class="chapter" data-level="12.2.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#vector-data-2"><i class="fa fa-check"></i><b>12.2.2</b> Vector Data</a></li>
+<li class="chapter" data-level="12.2.3" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#rgb-data-2"><i class="fa fa-check"></i><b>12.2.3</b> RGB Data</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#arnf_detect_fusion"><i class="fa fa-check"></i><b>12.3</b> Pile Detection: Data Fusion</a>
+<ul>
+<li class="chapter" data-level="12.3.1" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#structural-candidate-segments-2"><i class="fa fa-check"></i><b>12.3.1</b> Structural Candidate Segments</a></li>
+<li class="chapter" data-level="12.3.2" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#accuracy-of-these-structural-settings-2"><i class="fa fa-check"></i><b>12.3.2</b> Accuracy of these structural settings</a></li>
+<li class="chapter" data-level="12.3.3" data-path="method-validation-bhef-machine-piles.html"><a href="method-validation-bhef-machine-piles.html#spect_filtering_final_bhef"><i class="fa fa-check"></i><b>12.3.3</b> Spectral Filtering of Candidate Segments</a></li>
+<li class="chapter" data-level="12.3.4" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#detection-and-quantification-accuracy-3"><i class="fa fa-check"></i><b>12.3.4</b> Detection and Quantification Accuracy</a></li>
+<li class="chapter" data-level="12.3.5" data-path="method-validation-arnf-machine-piles.html"><a href="method-validation-arnf-machine-piles.html#stand-level-aggregation-3"><i class="fa fa-check"></i><b>12.3.5</b> Stand-level Aggregation</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="method-validation-summary.html"><a href="method-validation-summary.html"><i class="fa fa-check"></i><b>13</b> Method Validation: Summary</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="method-validation-summary" class="section level1 hasAnchor" number="13">
+<h1><span class="header-section-number">Section 13</span> Method Validation: Summary<a href="method-validation-summary.html#method-validation-summary" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Lastly, we will examine the aggregated performance achieved by the data fusion approach across all tested study sites. This comparison involves three distinct metric types:</p>
+<ol style="list-style-type: decimal">
+<li><a href="method-evaluation.html#detect_metrics_form">Detection Accuracy Metrics</a>: These metrics are calculated by aggregating the raw counts of True Positives (TP), False Positives (FP), and False Negatives (FN) from all sites. They quantify the method’s ability to successfully locate and identify the piles.</li>
+<li><a href="method-evaluation.html#quant_metrics_form">Quantification Accuracy Metrics</a>: Calculated for instances classified as TP, these metrics (e.g., RMSE, MAPE, Mean Error) aggregate the differences between the predicted pile attributes (Area, Diameter) and the ground truth values. These metrics assess the method’s ability to accurately quantify the form of the piles it successfully identified.</li>
+<li>Overall Total Quantification Comparison: This involves summarizing the predicted and ground truth pile form measurements (area, diameter) for all instances across the entire study area, regardless of whether individual piles were successfully matched between datasets. This overall comparison provides crucial insight into the method’s aggregated performance in predicting total pile size in an area. Such totals are often required for administrative needs like submitting burn permits which do not typically focus on individual pile quantification differences.</li>
+</ol>
+<p>For all form quantification performance assessment, we will rely solely on comparison against image-annotated footprints by comparing predicted diameter and area against the image-annotated values. This consistency is required because image-annotated data is available for all sites, whereas field-measured height and diameter data were only available for the training site.</p>
+<p>We already provided this information when introducing our method validation but here it is again:</p>
+<p>The following table provides an overview of the four sites utilized in this study, detailing the unique characteristics of each location and how those features were expected to influence our methodology. We structured the validation effort to compare performance across a wide spectrum of pile sizes, construction methods, and surrounding vegetation types, which required specific parameter adaptations for each site. This summary highlights the distinct ecological and structural challenges inherent to each evaluation site.</p>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Site Name</th>
+<th align="left">Pile Type</th>
+<th align="left">Data Use</th>
+<th align="left">Unique Features &amp; Ecology</th>
+<th align="left">Methodology Parameter Influence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>PSINF Ponderosa Pine Training Site</strong></td>
+<td align="left">Mostly Hand Piles (some smaller machine piles)</td>
+<td align="left">Training</td>
+<td align="left">Located in the Pike and San Isabel National Forest (PSINF). Ponderosa pine stand with mixed ground cover and varying canopy density.</td>
+<td align="left">This site was used to fully develop and tune all detection parameters, including setting initial values for structural thresholds (like minimum area and convexity).</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>TRFO-BLM Pinyon-Juniper Validation Site</strong></td>
+<td align="left">Hand Piles</td>
+<td align="left">Validation</td>
+<td align="left">Located on Bureau of Land Management (BLM) land in the Colorado Southwest District managed by the Tres Rios Field Office (TRFO-BLM). Arid environment with sparse, senescent (dry/dead) pinyon-juniper vegetation. Piles are smaller, simpler, and hand-stacked.</td>
+<td align="left">The dry, senescent vegetation is expected to spectrally mimic dead wood, reducing the effectiveness of the spectral filter. This shifts the primary detection burden to the geometric parameters (area, height) to control false positives.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>BHEF Ponderosa Pine Validation Site</strong></td>
+<td align="left">Massive Machine Piles</td>
+<td align="left">Validation</td>
+<td align="left">Located in the Black Hills Experimental Forest (BHEF). Piles are massive, mechanically built, and highly irregular. Tree regeneration is expected based on local precipitation and forest type.</td>
+<td align="left">The large, irregular geometry requires setting high minimum size thresholds and highly tolerant convexity parameters. The presence of young, green regeneration requires a highly restrictive spectral filter to distinguish dead slash from live biomass.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>ARNF Ponderosa Pine Validation Site</strong></td>
+<td align="left">Massive Machine Piles</td>
+<td align="left">Validation</td>
+<td align="left">Located in the Arapahoe and Roosevelt National Forest (ARNF). Ponderosa pine forest with a climate similar to the training site and drier than BHEF. Piles are massive but more circular and regular. Less regeneration is expected due to more recent treatment.</td>
+<td align="left">The more regular, circular geometry allows for tighter geometric filters (e.g., circle fit IOU). The massive size requires high minimum size thresholds. Reduced expected regeneration means the spectral filter can be less strictly applied than at BHEF.</td>
+</tr>
+</tbody>
+</table>
+<p>read in the file with the aggregated results we wrote in each section</p>
+<div class="sourceCode" id="cb723"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb723-1"><a href="method-validation-summary.html#cb723-1" tabindex="-1"></a><span class="co"># read in the file with the aggregated results we wrote in each section</span></span>
+<span id="cb723-2"><a href="method-validation-summary.html#cb723-2" tabindex="-1"></a>all_agg_ground_truth_match_ans <span class="ot">&lt;-</span> </span>
+<span id="cb723-3"><a href="method-validation-summary.html#cb723-3" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> all_agg_ground_truth_match_ans_fp, <span class="at">quiet =</span> T) <span class="sc">%&gt;%</span> </span>
+<span id="cb723-4"><a href="method-validation-summary.html#cb723-4" tabindex="-1"></a>  <span class="co"># readr::read_csv(file = all_agg_ground_truth_match_ans_fp, progress = F, show_col_types = F) %&gt;% </span></span>
+<span id="cb723-5"><a href="method-validation-summary.html#cb723-5" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb723-6"><a href="method-validation-summary.html#cb723-6" tabindex="-1"></a>    <span class="at">site =</span> <span class="fu">ordered</span>(site) <span class="sc">%&gt;%</span> forcats<span class="sc">::</span><span class="fu">fct_relevel</span>(<span class="st">&quot;PSINF ponderosa pine training site&quot;</span>) <span class="sc">%&gt;%</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>()</span>
+<span id="cb723-7"><a href="method-validation-summary.html#cb723-7" tabindex="-1"></a>    , <span class="at">pct_diff_diameter =</span> (pred_diameter_m<span class="sc">-</span>image_gt_diameter_m)<span class="sc">/</span>image_gt_diameter_m </span>
+<span id="cb723-8"><a href="method-validation-summary.html#cb723-8" tabindex="-1"></a>    , <span class="at">pct_diff_area =</span> (pred_area_m2<span class="sc">-</span>gt_area_m2)<span class="sc">/</span>gt_area_m2 </span>
+<span id="cb723-9"><a href="method-validation-summary.html#cb723-9" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb723-10"><a href="method-validation-summary.html#cb723-10" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(site)</span>
+<span id="cb723-11"><a href="method-validation-summary.html#cb723-11" tabindex="-1"></a><span class="co"># huh?</span></span>
+<span id="cb723-12"><a href="method-validation-summary.html#cb723-12" tabindex="-1"></a>all_agg_ground_truth_match_ans <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 4
+## Columns: 31
+## $ site_area_m2                   &lt;dbl&gt; 51825.21, 1030502.12, 735508.69, 174835…
+## $ site                           &lt;ord&gt; TRFO-BLM pinyon-juniper validation site…
+## $ tp_n                           &lt;dbl&gt; 262, 22, 17, 107
+## $ fp_n                           &lt;dbl&gt; 79, 5, 2, 30
+## $ fn_n                           &lt;dbl&gt; 15, 4, 2, 14
+## $ omission_rate                  &lt;dbl&gt; 0.05415162, 0.15384615, 0.10526316, 0.1…
+## $ commission_rate                &lt;dbl&gt; 0.2316716, 0.1851852, 0.1052632, 0.2189…
+## $ precision                      &lt;dbl&gt; 0.7683284, 0.8148148, 0.8947368, 0.7810…
+## $ recall                         &lt;dbl&gt; 0.9458484, 0.8461538, 0.8947368, 0.8842…
+## $ f_score                        &lt;dbl&gt; 0.8478964, 0.8301887, 0.8947368, 0.8294…
+## $ diff_area_m2_rmse              &lt;dbl&gt; 1.967614, 49.433509, 84.344929, 2.100498
+## $ diff_field_diameter_m_rmse     &lt;dbl&gt; 1.7995497, NA, NA, 0.5539741
+## $ diff_height_m_rmse             &lt;dbl&gt; 1.2064009, NA, NA, 0.6546709
+## $ diff_image_diameter_m_rmse     &lt;dbl&gt; 0.4527556, 4.0095773, 2.4229219, 0.4440…
+## $ diff_area_m2_mean              &lt;dbl&gt; -1.1914491, -17.9769566, -56.4997462, -…
+## $ diff_field_diameter_m_mean     &lt;dbl&gt; -1.7127948, NA, NA, 0.2124978
+## $ diff_height_m_mean             &lt;dbl&gt; -1.1668889, NA, NA, -0.2023439
+## $ diff_image_diameter_m_mean     &lt;dbl&gt; -0.2584928, -1.5220128, -1.7228389, -0.…
+## $ pct_diff_area_m2_mape          &lt;dbl&gt; 0.14541068, 0.08594908, 0.15073981, 0.1…
+## $ pct_diff_field_diameter_m_mape &lt;dbl&gt; 0.3055677, NA, NA, 0.1121629
+## $ pct_diff_height_m_mape         &lt;dbl&gt; 0.5146757, NA, NA, 0.1548135
+## $ pct_diff_image_diameter_m_mape &lt;dbl&gt; 0.08139310, 0.06837243, 0.06580834, 0.0…
+## $ image_gt_diameter_m            &lt;dbl&gt; 1155.4669, 545.7089, 492.8276, 463.7905
+## $ pred_diameter_m                &lt;dbl&gt; 1274.2344, 539.3018, 448.9317, 486.6239
+## $ gt_area_m2                     &lt;dbl&gt; 2942.573, 5198.640, 7770.433, 1185.542
+## $ pred_area_m2                   &lt;dbl&gt; 2846.445, 4808.925, 6335.122, 1121.190
+## $ pred_volume_m3                 &lt;dbl&gt; 1613.947, 5066.225, 22369.854, 952.529
+## $ pred_height_m                  &lt;dbl&gt; 427.64159, 72.98016, 144.57194, 263.021…
+## $ pct_diff_diameter              &lt;dbl&gt; 0.10278747, -0.01174094, -0.08906938, 0…
+## $ pct_diff_area                  &lt;dbl&gt; -0.03266808, -0.07496482, -0.18471433, …
+## $ geom                           &lt;POINT [m]&gt; POINT (-1097708 1720721), POINT (-60821…</code></pre>
+<p>Let’s map the study sites on a single map</p>
+<div class="sourceCode" id="cb725"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb725-1"><a href="method-validation-summary.html#cb725-1" tabindex="-1"></a>sites_pal <span class="ot">&lt;-</span> RColorBrewer<span class="sc">::</span><span class="fu">brewer.pal</span>(<span class="at">n =</span> <span class="fu">nrow</span>(all_agg_ground_truth_match_ans), <span class="at">name =</span> <span class="st">&quot;Dark2&quot;</span>)</span>
+<span id="cb725-2"><a href="method-validation-summary.html#cb725-2" tabindex="-1"></a><span class="co"># option to put satellite imagery as base layer of mapview maps</span></span>
+<span id="cb725-3"><a href="method-validation-summary.html#cb725-3" tabindex="-1"></a>mapview<span class="sc">::</span><span class="fu">mapviewOptions</span>(</span>
+<span id="cb725-4"><a href="method-validation-summary.html#cb725-4" tabindex="-1"></a>  <span class="at">homebutton =</span> T</span>
+<span id="cb725-5"><a href="method-validation-summary.html#cb725-5" tabindex="-1"></a>  <span class="co"># , basemaps = c(&quot;Esri.WorldImagery&quot;,&quot;OpenStreetMap&quot;)</span></span>
+<span id="cb725-6"><a href="method-validation-summary.html#cb725-6" tabindex="-1"></a>  , <span class="at">basemaps =</span> <span class="fu">c</span>(<span class="st">&quot;OpenStreetMap&quot;</span>, <span class="st">&quot;Esri.WorldImagery&quot;</span>)</span>
+<span id="cb725-7"><a href="method-validation-summary.html#cb725-7" tabindex="-1"></a>)</span>
+<span id="cb725-8"><a href="method-validation-summary.html#cb725-8" tabindex="-1"></a><span class="co"># map it</span></span>
+<span id="cb725-9"><a href="method-validation-summary.html#cb725-9" tabindex="-1"></a>mapview<span class="sc">::</span><span class="fu">mapview</span>(</span>
+<span id="cb725-10"><a href="method-validation-summary.html#cb725-10" tabindex="-1"></a>  all_agg_ground_truth_match_ans</span>
+<span id="cb725-11"><a href="method-validation-summary.html#cb725-11" tabindex="-1"></a>  , <span class="at">zcol=</span><span class="st">&quot;site&quot;</span></span>
+<span id="cb725-12"><a href="method-validation-summary.html#cb725-12" tabindex="-1"></a>  , <span class="at">col.regions =</span> sites_pal</span>
+<span id="cb725-13"><a href="method-validation-summary.html#cb725-13" tabindex="-1"></a>  , <span class="at">cex =</span> <span class="dv">8</span></span>
+<span id="cb725-14"><a href="method-validation-summary.html#cb725-14" tabindex="-1"></a>  , <span class="at">layer.name =</span> <span class="st">&quot;study sites&quot;</span></span>
+<span id="cb725-15"><a href="method-validation-summary.html#cb725-15" tabindex="-1"></a>)</span></code></pre></div>
+<div class="leaflet html-widget html-fill-item" id="htmlwidget-824cb18d8f355d193ee5" style="width:1008px;height:672px;"></div>
+<script type="application/json" data-for="htmlwidget-824cb18d8f355d193ee5">{"x":{"options":{"minZoom":1,"maxZoom":52,"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"preferCanvas":false,"bounceAtZoomLimits":false,"maxBounds":[[[-90,-370]],[[90,370]]]},"calls":[{"method":"addProviderTiles","args":["OpenStreetMap","OpenStreetMap","OpenStreetMap",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"addProviderTiles","args":["Esri.WorldImagery","Esri.WorldImagery","Esri.WorldImagery",{"errorTileUrl":"","noWrap":false,"detectRetina":false,"pane":"tilePane"}]},{"method":"createMapPane","args":["point",440]},{"method":"addCircleMarkers","args":[[37.86458213640704,44.14386903524497,40.96975655799478,39.00984467480216],[-108.6340981882682,-103.6350979487754,-105.5252666518098,-105.0044671906483],8,null,"study sites",{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}},"pane":"point","stroke":true,"color":"#333333","weight":1,"opacity":[0.9,0.9,0.9,0.9],"fill":true,"fillColor":["#1B9E77","#D95F02","#7570B3","#E7298A"],"fillOpacity":[0.6,0.6,0.6,0.6]},null,null,["<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>1&emsp;<\/td><\/tr><tr><td>1<\/td><th>site_area_m2&emsp;<\/th><td>  51825.21&emsp;<\/td><\/tr><tr><td>2<\/td><th>site&emsp;<\/th><td>TRFO-BLM pinyon-juniper validation site&emsp;<\/td><\/tr><tr><td>3<\/td><th>tp_n&emsp;<\/th><td>262&emsp;<\/td><\/tr><tr><td>4<\/td><th>fp_n&emsp;<\/th><td>79&emsp;<\/td><\/tr><tr><td>5<\/td><th>fn_n&emsp;<\/th><td>15&emsp;<\/td><\/tr><tr><td>6<\/td><th>omission_rate&emsp;<\/th><td>0.05415162&emsp;<\/td><\/tr><tr><td>7<\/td><th>commission_rate&emsp;<\/th><td>0.2316716&emsp;<\/td><\/tr><tr><td>8<\/td><th>precision&emsp;<\/th><td>0.7683284&emsp;<\/td><\/tr><tr><td>9<\/td><th>recall&emsp;<\/th><td>0.9458484&emsp;<\/td><\/tr><tr><td>10<\/td><th>f_score&emsp;<\/th><td>0.8478964&emsp;<\/td><\/tr><tr><td>11<\/td><th>diff_area_m2_rmse&emsp;<\/th><td> 1.967614&emsp;<\/td><\/tr><tr><td>12<\/td><th>diff_field_diameter_m_rmse&emsp;<\/th><td>1.7995497&emsp;<\/td><\/tr><tr><td>13<\/td><th>diff_height_m_rmse&emsp;<\/th><td>1.2064009&emsp;<\/td><\/tr><tr><td>14<\/td><th>diff_image_diameter_m_rmse&emsp;<\/th><td>0.4527556&emsp;<\/td><\/tr><tr><td>15<\/td><th>diff_area_m2_mean&emsp;<\/th><td> -1.1914491&emsp;<\/td><\/tr><tr><td>16<\/td><th>diff_field_diameter_m_mean&emsp;<\/th><td>-1.7127948&emsp;<\/td><\/tr><tr><td>17<\/td><th>diff_height_m_mean&emsp;<\/th><td>-1.1668889&emsp;<\/td><\/tr><tr><td>18<\/td><th>diff_image_diameter_m_mean&emsp;<\/th><td>-0.2584928&emsp;<\/td><\/tr><tr><td>19<\/td><th>pct_diff_area_m2_mape&emsp;<\/th><td>0.14541068&emsp;<\/td><\/tr><tr><td>20<\/td><th>pct_diff_field_diameter_m_mape&emsp;<\/th><td>0.3055677&emsp;<\/td><\/tr><tr><td>21<\/td><th>pct_diff_height_m_mape&emsp;<\/th><td>0.5146757&emsp;<\/td><\/tr><tr><td>22<\/td><th>pct_diff_image_diameter_m_mape&emsp;<\/th><td>0.08139310&emsp;<\/td><\/tr><tr><td>23<\/td><th>image_gt_diameter_m&emsp;<\/th><td>1155.4669&emsp;<\/td><\/tr><tr><td>24<\/td><th>pred_diameter_m&emsp;<\/th><td>1274.2344&emsp;<\/td><\/tr><tr><td>25<\/td><th>gt_area_m2&emsp;<\/th><td>2942.573&emsp;<\/td><\/tr><tr><td>26<\/td><th>pred_area_m2&emsp;<\/th><td>2846.445&emsp;<\/td><\/tr><tr><td>27<\/td><th>pred_volume_m3&emsp;<\/th><td> 1613.947&emsp;<\/td><\/tr><tr><td>28<\/td><th>pred_height_m&emsp;<\/th><td>427.64159&emsp;<\/td><\/tr><tr><td>29<\/td><th>pct_diff_diameter&emsp;<\/th><td> 0.10278747&emsp;<\/td><\/tr><tr><td>30<\/td><th>pct_diff_area&emsp;<\/th><td>-0.03266808&emsp;<\/td><\/tr><tr><td>31<\/td><th>geom&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>2&emsp;<\/td><\/tr><tr><td>1<\/td><th>site_area_m2&emsp;<\/th><td>1030502.12&emsp;<\/td><\/tr><tr><td>2<\/td><th>site&emsp;<\/th><td>BHEF ponderosa pine validation site&emsp;<\/td><\/tr><tr><td>3<\/td><th>tp_n&emsp;<\/th><td> 22&emsp;<\/td><\/tr><tr><td>4<\/td><th>fp_n&emsp;<\/th><td> 5&emsp;<\/td><\/tr><tr><td>5<\/td><th>fn_n&emsp;<\/th><td> 4&emsp;<\/td><\/tr><tr><td>6<\/td><th>omission_rate&emsp;<\/th><td>0.15384615&emsp;<\/td><\/tr><tr><td>7<\/td><th>commission_rate&emsp;<\/th><td>0.1851852&emsp;<\/td><\/tr><tr><td>8<\/td><th>precision&emsp;<\/th><td>0.8148148&emsp;<\/td><\/tr><tr><td>9<\/td><th>recall&emsp;<\/th><td>0.8461538&emsp;<\/td><\/tr><tr><td>10<\/td><th>f_score&emsp;<\/th><td>0.8301887&emsp;<\/td><\/tr><tr><td>11<\/td><th>diff_area_m2_rmse&emsp;<\/th><td>49.433509&emsp;<\/td><\/tr><tr><td>12<\/td><th>diff_field_diameter_m_rmse&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>13<\/td><th>diff_height_m_rmse&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>14<\/td><th>diff_image_diameter_m_rmse&emsp;<\/th><td>4.0095773&emsp;<\/td><\/tr><tr><td>15<\/td><th>diff_area_m2_mean&emsp;<\/th><td>-17.9769566&emsp;<\/td><\/tr><tr><td>16<\/td><th>diff_field_diameter_m_mean&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>17<\/td><th>diff_height_m_mean&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>18<\/td><th>diff_image_diameter_m_mean&emsp;<\/th><td>-1.5220128&emsp;<\/td><\/tr><tr><td>19<\/td><th>pct_diff_area_m2_mape&emsp;<\/th><td>0.08594908&emsp;<\/td><\/tr><tr><td>20<\/td><th>pct_diff_field_diameter_m_mape&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>21<\/td><th>pct_diff_height_m_mape&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>22<\/td><th>pct_diff_image_diameter_m_mape&emsp;<\/th><td>0.06837243&emsp;<\/td><\/tr><tr><td>23<\/td><th>image_gt_diameter_m&emsp;<\/th><td> 545.7089&emsp;<\/td><\/tr><tr><td>24<\/td><th>pred_diameter_m&emsp;<\/th><td> 539.3018&emsp;<\/td><\/tr><tr><td>25<\/td><th>gt_area_m2&emsp;<\/th><td>5198.640&emsp;<\/td><\/tr><tr><td>26<\/td><th>pred_area_m2&emsp;<\/th><td>4808.925&emsp;<\/td><\/tr><tr><td>27<\/td><th>pred_volume_m3&emsp;<\/th><td> 5066.225&emsp;<\/td><\/tr><tr><td>28<\/td><th>pred_height_m&emsp;<\/th><td> 72.98016&emsp;<\/td><\/tr><tr><td>29<\/td><th>pct_diff_diameter&emsp;<\/th><td>-0.01174094&emsp;<\/td><\/tr><tr><td>30<\/td><th>pct_diff_area&emsp;<\/th><td>-0.07496482&emsp;<\/td><\/tr><tr><td>31<\/td><th>geom&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>3&emsp;<\/td><\/tr><tr><td>1<\/td><th>site_area_m2&emsp;<\/th><td> 735508.69&emsp;<\/td><\/tr><tr><td>2<\/td><th>site&emsp;<\/th><td>ARNF ponderosa pine validation site&emsp;<\/td><\/tr><tr><td>3<\/td><th>tp_n&emsp;<\/th><td> 17&emsp;<\/td><\/tr><tr><td>4<\/td><th>fp_n&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>5<\/td><th>fn_n&emsp;<\/th><td> 2&emsp;<\/td><\/tr><tr><td>6<\/td><th>omission_rate&emsp;<\/th><td>0.10526316&emsp;<\/td><\/tr><tr><td>7<\/td><th>commission_rate&emsp;<\/th><td>0.1052632&emsp;<\/td><\/tr><tr><td>8<\/td><th>precision&emsp;<\/th><td>0.8947368&emsp;<\/td><\/tr><tr><td>9<\/td><th>recall&emsp;<\/th><td>0.8947368&emsp;<\/td><\/tr><tr><td>10<\/td><th>f_score&emsp;<\/th><td>0.8947368&emsp;<\/td><\/tr><tr><td>11<\/td><th>diff_area_m2_rmse&emsp;<\/th><td>84.344929&emsp;<\/td><\/tr><tr><td>12<\/td><th>diff_field_diameter_m_rmse&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>13<\/td><th>diff_height_m_rmse&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>14<\/td><th>diff_image_diameter_m_rmse&emsp;<\/th><td>2.4229219&emsp;<\/td><\/tr><tr><td>15<\/td><th>diff_area_m2_mean&emsp;<\/th><td>-56.4997462&emsp;<\/td><\/tr><tr><td>16<\/td><th>diff_field_diameter_m_mean&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>17<\/td><th>diff_height_m_mean&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>18<\/td><th>diff_image_diameter_m_mean&emsp;<\/th><td>-1.7228389&emsp;<\/td><\/tr><tr><td>19<\/td><th>pct_diff_area_m2_mape&emsp;<\/th><td>0.15073981&emsp;<\/td><\/tr><tr><td>20<\/td><th>pct_diff_field_diameter_m_mape&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>21<\/td><th>pct_diff_height_m_mape&emsp;<\/th><td>NA&emsp;<\/td><\/tr><tr><td>22<\/td><th>pct_diff_image_diameter_m_mape&emsp;<\/th><td>0.06580834&emsp;<\/td><\/tr><tr><td>23<\/td><th>image_gt_diameter_m&emsp;<\/th><td> 492.8276&emsp;<\/td><\/tr><tr><td>24<\/td><th>pred_diameter_m&emsp;<\/th><td> 448.9317&emsp;<\/td><\/tr><tr><td>25<\/td><th>gt_area_m2&emsp;<\/th><td>7770.433&emsp;<\/td><\/tr><tr><td>26<\/td><th>pred_area_m2&emsp;<\/th><td>6335.122&emsp;<\/td><\/tr><tr><td>27<\/td><th>pred_volume_m3&emsp;<\/th><td>22369.854&emsp;<\/td><\/tr><tr><td>28<\/td><th>pred_height_m&emsp;<\/th><td>144.57194&emsp;<\/td><\/tr><tr><td>29<\/td><th>pct_diff_diameter&emsp;<\/th><td>-0.08906938&emsp;<\/td><\/tr><tr><td>30<\/td><th>pct_diff_area&emsp;<\/th><td>-0.18471433&emsp;<\/td><\/tr><tr><td>31<\/td><th>geom&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>","<div class='scrollableContainer'><table class=mapview-popup id='popup'><tr class='coord'><td><\/td><th><b>Feature ID&emsp;<\/b><\/th><td>4&emsp;<\/td><\/tr><tr><td>1<\/td><th>site_area_m2&emsp;<\/th><td> 174835.96&emsp;<\/td><\/tr><tr><td>2<\/td><th>site&emsp;<\/th><td>PSINF ponderosa pine training site&emsp;<\/td><\/tr><tr><td>3<\/td><th>tp_n&emsp;<\/th><td>107&emsp;<\/td><\/tr><tr><td>4<\/td><th>fp_n&emsp;<\/th><td>30&emsp;<\/td><\/tr><tr><td>5<\/td><th>fn_n&emsp;<\/th><td>14&emsp;<\/td><\/tr><tr><td>6<\/td><th>omission_rate&emsp;<\/th><td>0.11570248&emsp;<\/td><\/tr><tr><td>7<\/td><th>commission_rate&emsp;<\/th><td>0.2189781&emsp;<\/td><\/tr><tr><td>8<\/td><th>precision&emsp;<\/th><td>0.7810219&emsp;<\/td><\/tr><tr><td>9<\/td><th>recall&emsp;<\/th><td>0.8842975&emsp;<\/td><\/tr><tr><td>10<\/td><th>f_score&emsp;<\/th><td>0.8294574&emsp;<\/td><\/tr><tr><td>11<\/td><th>diff_area_m2_rmse&emsp;<\/th><td> 2.100498&emsp;<\/td><\/tr><tr><td>12<\/td><th>diff_field_diameter_m_rmse&emsp;<\/th><td>0.5539741&emsp;<\/td><\/tr><tr><td>13<\/td><th>diff_height_m_rmse&emsp;<\/th><td>0.6546709&emsp;<\/td><\/tr><tr><td>14<\/td><th>diff_image_diameter_m_rmse&emsp;<\/th><td>0.4440600&emsp;<\/td><\/tr><tr><td>15<\/td><th>diff_area_m2_mean&emsp;<\/th><td> -0.6315793&emsp;<\/td><\/tr><tr><td>16<\/td><th>diff_field_diameter_m_mean&emsp;<\/th><td> 0.2124978&emsp;<\/td><\/tr><tr><td>17<\/td><th>diff_height_m_mean&emsp;<\/th><td>-0.2023439&emsp;<\/td><\/tr><tr><td>18<\/td><th>diff_image_diameter_m_mean&emsp;<\/th><td>-0.1723016&emsp;<\/td><\/tr><tr><td>19<\/td><th>pct_diff_area_m2_mape&emsp;<\/th><td>0.12012811&emsp;<\/td><\/tr><tr><td>20<\/td><th>pct_diff_field_diameter_m_mape&emsp;<\/th><td>0.1121629&emsp;<\/td><\/tr><tr><td>21<\/td><th>pct_diff_height_m_mape&emsp;<\/th><td>0.1548135&emsp;<\/td><\/tr><tr><td>22<\/td><th>pct_diff_image_diameter_m_mape&emsp;<\/th><td>0.07706101&emsp;<\/td><\/tr><tr><td>23<\/td><th>image_gt_diameter_m&emsp;<\/th><td> 463.7905&emsp;<\/td><\/tr><tr><td>24<\/td><th>pred_diameter_m&emsp;<\/th><td> 486.6239&emsp;<\/td><\/tr><tr><td>25<\/td><th>gt_area_m2&emsp;<\/th><td>1185.542&emsp;<\/td><\/tr><tr><td>26<\/td><th>pred_area_m2&emsp;<\/th><td>1121.190&emsp;<\/td><\/tr><tr><td>27<\/td><th>pred_volume_m3&emsp;<\/th><td>  952.529&emsp;<\/td><\/tr><tr><td>28<\/td><th>pred_height_m&emsp;<\/th><td>263.02139&emsp;<\/td><\/tr><tr><td>29<\/td><th>pct_diff_diameter&emsp;<\/th><td> 0.04923211&emsp;<\/td><\/tr><tr><td>30<\/td><th>pct_diff_area&emsp;<\/th><td>-0.05428061&emsp;<\/td><\/tr><tr><td>31<\/td><th>geom&emsp;<\/th><td>sfc_POINT&emsp;<\/td><\/tr><\/table><\/div>"],{"maxWidth":800,"minWidth":50,"autoPan":true,"keepInView":false,"closeButton":true,"closeOnClick":true,"className":""},["TRFO-BLM pinyon-juniper validation site","BHEF ponderosa pine validation site","ARNF ponderosa pine validation site","PSINF ponderosa pine training site"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addScaleBar","args":[{"maxWidth":100,"metric":true,"imperial":true,"updateWhenIdle":true,"position":"bottomleft"}]},{"method":"addHomeButton","args":[-108.6340981882682,37.86458213640704,-103.6350979487754,44.14386903524497,true,"study sites","Zoom to study sites","<strong> study sites <\/strong>","bottomright"]},{"method":"addLayersControl","args":[["OpenStreetMap","Esri.WorldImagery"],"study sites",{"collapsed":true,"autoZIndex":true,"position":"topleft"}]},{"method":"addLegend","args":[{"colors":["#1B9E77","#D95F02","#7570B3","#E7298A"],"labels":["TRFO-BLM pinyon-juniper validation site","BHEF ponderosa pine validation site","ARNF ponderosa pine validation site","PSINF ponderosa pine training site"],"na_color":null,"na_label":"NA","opacity":1,"position":"topright","type":"factor","title":"study sites","extra":null,"layerId":null,"className":"info legend","group":"study sites"}]}],"limits":{"lat":[37.86458213640704,44.14386903524497],"lng":[-108.6340981882682,-103.6350979487754]},"fitBounds":[37.86458213640704,-108.6340981882682,44.14386903524497,-103.6350979487754,[]]},"evals":[],"jsHooks":{"render":[{"code":"function(el, x, data) {\n  return (\n      function(el, x, data) {\n      // get the leaflet map\n      var map = this; //HTMLWidgets.find('#' + el.id);\n      // we need a new div element because we have to handle\n      // the mouseover output separately\n      // debugger;\n      function addElement () {\n      // generate new div Element\n      var newDiv = $(document.createElement('div'));\n      // append at end of leaflet htmlwidget container\n      $(el).append(newDiv);\n      //provide ID and style\n      newDiv.addClass('lnlt');\n      newDiv.css({\"position\":\"relative\",\"bottomleft\":\"0px\",\"background-color\":\"rgba(255, 255, 255, 0.7)\",\"box-shadow\":\"0 0 2px #bbb\",\"background-clip\":\"padding-box\",\"margin\":\"0\",\"padding-left\":\"5px\",\"padding-right\":\"5px\",\"color\":\"#333\",\"font-size\":\"9px\",\"font-family\":\"\\\"Helvetica Neue\\\", Arial, Helvetica, sans-serif\",\"text-align\":\"left\",\"z-index\":\"700\"});\n      return newDiv;\n      }\n\n\n      // check for already existing lnlt class to not duplicate\n      var lnlt = $(el).find('.lnlt');\n\n      if(!lnlt.length) {\n      lnlt = addElement();\n\n      // grab the special div we generated in the beginning\n      // and put the mousmove output there\n\n      map.on('mousemove', function (e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                           ' lon: ' + (e.latlng.lng).toFixed(5) +\n                           ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                           ' | zoom: ' + map.getZoom() +\n                           ' | x: ' + L.CRS.EPSG3857.project(e.latlng).x.toFixed(0) +\n                           ' | y: ' + L.CRS.EPSG3857.project(e.latlng).y.toFixed(0) +\n                           ' | epsg: 3857 ' +\n                           ' | proj4: +proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs ');\n      } else {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      }\n      });\n\n      // remove the lnlt div when mouse leaves map\n      map.on('mouseout', function (e) {\n      var strip = document.querySelector('.lnlt');\n      if( strip !==null) strip.remove();\n      });\n\n      };\n\n      //$(el).keypress(67, function(e) {\n      map.on('preclick', function(e) {\n      if (e.originalEvent.ctrlKey) {\n      if (document.querySelector('.lnlt') === null) lnlt = addElement();\n      lnlt.text(\n                      ' lon: ' + (e.latlng.lng).toFixed(5) +\n                      ' | lat: ' + (e.latlng.lat).toFixed(5) +\n                      ' | zoom: ' + map.getZoom() + ' ');\n      var txt = document.querySelector('.lnlt').textContent;\n      console.log(txt);\n      //txt.innerText.focus();\n      //txt.select();\n      setClipboardText('\"' + txt + '\"');\n      }\n      });\n\n      }\n      ).call(this.getMap(), el, x, data);\n}","data":null},{"code":"function(el, x, data) {\n  return (function(el,x,data){\n           var map = this;\n\n           map.on('keypress', function(e) {\n               console.log(e.originalEvent.code);\n               var key = e.originalEvent.code;\n               if (key === 'KeyE') {\n                   var bb = this.getBounds();\n                   var txt = JSON.stringify(bb);\n                   console.log(txt);\n\n                   setClipboardText('\\'' + txt + '\\'');\n               }\n           })\n        }).call(this.getMap(), el, x, data);\n}","data":null}]}}</script>
+<p>static map for printing</p>
+<p>let’s make a pretty image for use in the journal article. we’ll use the <code>ggmap</code> package to get a nice background map and do some transformation to actually work with the map. We’ll add a map scale using <code>ggspatial</code></p>
+<div class="sourceCode" id="cb726"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb726-1"><a href="method-validation-summary.html#cb726-1" tabindex="-1"></a><span class="fu">library</span>(ggmap)</span>
+<span id="cb726-2"><a href="method-validation-summary.html#cb726-2" tabindex="-1"></a><span class="fu">library</span>(ggspatial)</span>
+<span id="cb726-3"><a href="method-validation-summary.html#cb726-3" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-4"><a href="method-validation-summary.html#cb726-4" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-5"><a href="method-validation-summary.html#cb726-5" tabindex="-1"></a><span class="co"># Make each plot individually by landscape as solution to small multiples</span></span>
+<span id="cb726-6"><a href="method-validation-summary.html#cb726-6" tabindex="-1"></a><span class="co"># this block defines function</span></span>
+<span id="cb726-7"><a href="method-validation-summary.html#cb726-7" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-8"><a href="method-validation-summary.html#cb726-8" tabindex="-1"></a><span class="do">##################hack to align plots for ggmap</span></span>
+<span id="cb726-9"><a href="method-validation-summary.html#cb726-9" tabindex="-1"></a>ggmap_bbox_fn <span class="ot">&lt;-</span> <span class="cf">function</span>(map, <span class="at">my_crs=</span><span class="dv">3857</span>) {</span>
+<span id="cb726-10"><a href="method-validation-summary.html#cb726-10" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">inherits</span>(map, <span class="st">&quot;ggmap&quot;</span>)) <span class="fu">stop</span>(<span class="st">&quot;map must be a ggmap object&quot;</span>)</span>
+<span id="cb726-11"><a href="method-validation-summary.html#cb726-11" tabindex="-1"></a>    <span class="co"># Extract the bounding box (in lat/lon) from the ggmap to a numeric vector, </span></span>
+<span id="cb726-12"><a href="method-validation-summary.html#cb726-12" tabindex="-1"></a>    <span class="co"># and set the names to what sf::st_bbox expects:</span></span>
+<span id="cb726-13"><a href="method-validation-summary.html#cb726-13" tabindex="-1"></a>    map_bbox <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">unlist</span>(<span class="fu">attr</span>(map, <span class="st">&quot;bb&quot;</span>)), <span class="fu">c</span>(<span class="st">&quot;ymin&quot;</span>, <span class="st">&quot;xmin&quot;</span>, <span class="st">&quot;ymax&quot;</span>, <span class="st">&quot;xmax&quot;</span>))</span>
+<span id="cb726-14"><a href="method-validation-summary.html#cb726-14" tabindex="-1"></a>    <span class="co"># Convert the bbox to an sf polygon, transform it to 3857, </span></span>
+<span id="cb726-15"><a href="method-validation-summary.html#cb726-15" tabindex="-1"></a>    <span class="co"># and convert back to a bbox (convoluted, but it works)</span></span>
+<span id="cb726-16"><a href="method-validation-summary.html#cb726-16" tabindex="-1"></a>    bbox_3857 <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(<span class="fu">st_transform</span>(<span class="fu">st_as_sfc</span>(<span class="fu">st_bbox</span>(map_bbox, <span class="at">crs =</span> <span class="dv">4326</span>)), my_crs))</span>
+<span id="cb726-17"><a href="method-validation-summary.html#cb726-17" tabindex="-1"></a>    <span class="co"># Overwrite the bbox of the ggmap object with the transformed coordinates </span></span>
+<span id="cb726-18"><a href="method-validation-summary.html#cb726-18" tabindex="-1"></a>    <span class="fu">attr</span>(map, <span class="st">&quot;bb&quot;</span>)<span class="sc">$</span>ll.lat <span class="ot">&lt;-</span> bbox_3857[<span class="st">&quot;ymin&quot;</span>]</span>
+<span id="cb726-19"><a href="method-validation-summary.html#cb726-19" tabindex="-1"></a>    <span class="fu">attr</span>(map, <span class="st">&quot;bb&quot;</span>)<span class="sc">$</span>ll.lon <span class="ot">&lt;-</span> bbox_3857[<span class="st">&quot;xmin&quot;</span>]</span>
+<span id="cb726-20"><a href="method-validation-summary.html#cb726-20" tabindex="-1"></a>    <span class="fu">attr</span>(map, <span class="st">&quot;bb&quot;</span>)<span class="sc">$</span>ur.lat <span class="ot">&lt;-</span> bbox_3857[<span class="st">&quot;ymax&quot;</span>]</span>
+<span id="cb726-21"><a href="method-validation-summary.html#cb726-21" tabindex="-1"></a>    <span class="fu">attr</span>(map, <span class="st">&quot;bb&quot;</span>)<span class="sc">$</span>ur.lon <span class="ot">&lt;-</span> bbox_3857[<span class="st">&quot;xmax&quot;</span>]</span>
+<span id="cb726-22"><a href="method-validation-summary.html#cb726-22" tabindex="-1"></a>    map</span>
+<span id="cb726-23"><a href="method-validation-summary.html#cb726-23" tabindex="-1"></a>}</span>
+<span id="cb726-24"><a href="method-validation-summary.html#cb726-24" tabindex="-1"></a>plt_crs <span class="ot">&lt;-</span> <span class="dv">3857</span></span>
+<span id="cb726-25"><a href="method-validation-summary.html#cb726-25" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-26"><a href="method-validation-summary.html#cb726-26" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-27"><a href="method-validation-summary.html#cb726-27" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb726-28"><a href="method-validation-summary.html#cb726-28" tabindex="-1"></a>my_ggmap_basemap <span class="ot">&lt;-</span> <span class="cf">function</span>(sf_data, <span class="at">zoom_level =</span> <span class="dv">14</span>, <span class="at">buffer_box =</span> <span class="dv">2600</span>, <span class="at">my_crs =</span> plt_crs, <span class="at">scale_location =</span> <span class="st">&quot;bl&quot;</span>, <span class="at">my_maptype =</span> <span class="st">&quot;stamen_terrain&quot;</span>) {</span>
+<span id="cb726-29"><a href="method-validation-summary.html#cb726-29" tabindex="-1"></a>  </span>
+<span id="cb726-30"><a href="method-validation-summary.html#cb726-30" tabindex="-1"></a>  <span class="co"># # should zoom in?</span></span>
+<span id="cb726-31"><a href="method-validation-summary.html#cb726-31" tabindex="-1"></a>  <span class="co"># zoom_level &lt;- 14 # 11</span></span>
+<span id="cb726-32"><a href="method-validation-summary.html#cb726-32" tabindex="-1"></a>  <span class="co"># # should buffer extend?</span></span>
+<span id="cb726-33"><a href="method-validation-summary.html#cb726-33" tabindex="-1"></a>  <span class="co"># buffer_box &lt;- 2600 # 20000</span></span>
+<span id="cb726-34"><a href="method-validation-summary.html#cb726-34" tabindex="-1"></a>  <span class="co"># bounding box</span></span>
+<span id="cb726-35"><a href="method-validation-summary.html#cb726-35" tabindex="-1"></a>  bb_temp <span class="ot">&lt;-</span></span>
+<span id="cb726-36"><a href="method-validation-summary.html#cb726-36" tabindex="-1"></a>    sf_data <span class="sc">%&gt;%</span> </span>
+<span id="cb726-37"><a href="method-validation-summary.html#cb726-37" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_bbox</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb726-38"><a href="method-validation-summary.html#cb726-38" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_as_sfc</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb726-39"><a href="method-validation-summary.html#cb726-39" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">5070</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb726-40"><a href="method-validation-summary.html#cb726-40" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_buffer</span>(<span class="fu">as.numeric</span>(buffer_box)) <span class="sc">%&gt;%</span> </span>
+<span id="cb726-41"><a href="method-validation-summary.html#cb726-41" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">4326</span>) <span class="sc">%&gt;%</span> <span class="co"># same as get_map return</span></span>
+<span id="cb726-42"><a href="method-validation-summary.html#cb726-42" tabindex="-1"></a>    sf<span class="sc">::</span><span class="fu">st_bbox</span>()</span>
+<span id="cb726-43"><a href="method-validation-summary.html#cb726-43" tabindex="-1"></a>  <span class="co"># set bbox for get call</span></span>
+<span id="cb726-44"><a href="method-validation-summary.html#cb726-44" tabindex="-1"></a>  bbox_temp <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb726-45"><a href="method-validation-summary.html#cb726-45" tabindex="-1"></a>    <span class="at">bottom =</span> bb_temp[[<span class="dv">2</span>]]</span>
+<span id="cb726-46"><a href="method-validation-summary.html#cb726-46" tabindex="-1"></a>    , <span class="at">top =</span> bb_temp[[<span class="dv">4</span>]]</span>
+<span id="cb726-47"><a href="method-validation-summary.html#cb726-47" tabindex="-1"></a>    , <span class="at">right =</span> bb_temp[[<span class="dv">3</span>]]</span>
+<span id="cb726-48"><a href="method-validation-summary.html#cb726-48" tabindex="-1"></a>    , <span class="at">left =</span> bb_temp[[<span class="dv">1</span>]]</span>
+<span id="cb726-49"><a href="method-validation-summary.html#cb726-49" tabindex="-1"></a>  )</span>
+<span id="cb726-50"><a href="method-validation-summary.html#cb726-50" tabindex="-1"></a>  hey_ggmap <span class="ot">&lt;-</span> ggmap<span class="sc">::</span><span class="fu">get_stadiamap</span>(</span>
+<span id="cb726-51"><a href="method-validation-summary.html#cb726-51" tabindex="-1"></a>    <span class="at">bbox =</span> bbox_temp</span>
+<span id="cb726-52"><a href="method-validation-summary.html#cb726-52" tabindex="-1"></a>    , <span class="at">zoom =</span> zoom_level</span>
+<span id="cb726-53"><a href="method-validation-summary.html#cb726-53" tabindex="-1"></a>    , <span class="at">maptype =</span> my_maptype <span class="co">#&quot;stamen_terrain&quot; #&quot;stamen_toner_lite&quot;</span></span>
+<span id="cb726-54"><a href="method-validation-summary.html#cb726-54" tabindex="-1"></a>    , <span class="at">crop =</span> T</span>
+<span id="cb726-55"><a href="method-validation-summary.html#cb726-55" tabindex="-1"></a>  )</span>
+<span id="cb726-56"><a href="method-validation-summary.html#cb726-56" tabindex="-1"></a></span>
+<span id="cb726-57"><a href="method-validation-summary.html#cb726-57" tabindex="-1"></a>  <span class="co"># ggmap::ggmap(hey_ggmap)</span></span>
+<span id="cb726-58"><a href="method-validation-summary.html#cb726-58" tabindex="-1"></a>  <span class="co"># apply align function</span></span>
+<span id="cb726-59"><a href="method-validation-summary.html#cb726-59" tabindex="-1"></a>  hey_ggmap_aligned <span class="ot">&lt;-</span> <span class="fu">ggmap_bbox_fn</span>(hey_ggmap, my_crs) <span class="co"># Use the function</span></span>
+<span id="cb726-60"><a href="method-validation-summary.html#cb726-60" tabindex="-1"></a>  <span class="co"># plot</span></span>
+<span id="cb726-61"><a href="method-validation-summary.html#cb726-61" tabindex="-1"></a>  plt_basemap <span class="ot">&lt;-</span></span>
+<span id="cb726-62"><a href="method-validation-summary.html#cb726-62" tabindex="-1"></a>    ggmap<span class="sc">::</span><span class="fu">ggmap</span>(hey_ggmap_aligned) <span class="sc">+</span> </span>
+<span id="cb726-63"><a href="method-validation-summary.html#cb726-63" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">coord_sf</span>(</span>
+<span id="cb726-64"><a href="method-validation-summary.html#cb726-64" tabindex="-1"></a>      <span class="at">expand =</span> <span class="cn">FALSE</span></span>
+<span id="cb726-65"><a href="method-validation-summary.html#cb726-65" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb726-66"><a href="method-validation-summary.html#cb726-66" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb726-67"><a href="method-validation-summary.html#cb726-67" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb726-68"><a href="method-validation-summary.html#cb726-68" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb726-69"><a href="method-validation-summary.html#cb726-69" tabindex="-1"></a>      , <span class="at">plot.title =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-70"><a href="method-validation-summary.html#cb726-70" tabindex="-1"></a>      , <span class="at">strip.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-71"><a href="method-validation-summary.html#cb726-71" tabindex="-1"></a>      , <span class="at">axis.title =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-72"><a href="method-validation-summary.html#cb726-72" tabindex="-1"></a>      , <span class="at">axis.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-73"><a href="method-validation-summary.html#cb726-73" tabindex="-1"></a>      , <span class="at">axis.ticks =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-74"><a href="method-validation-summary.html#cb726-74" tabindex="-1"></a>      , <span class="at">panel.grid =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb726-75"><a href="method-validation-summary.html#cb726-75" tabindex="-1"></a>      , <span class="at">plot.margin =</span> ggplot2<span class="sc">::</span><span class="fu">margin</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="st">&quot;cm&quot;</span>)</span>
+<span id="cb726-76"><a href="method-validation-summary.html#cb726-76" tabindex="-1"></a>    )</span>
+<span id="cb726-77"><a href="method-validation-summary.html#cb726-77" tabindex="-1"></a>  <span class="cf">if</span>(scale_location <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;bl&quot;</span>, <span class="st">&quot;br&quot;</span>, <span class="st">&quot;tr&quot;</span>, <span class="st">&quot;tl&quot;</span>)){</span>
+<span id="cb726-78"><a href="method-validation-summary.html#cb726-78" tabindex="-1"></a>    plt_basemap <span class="ot">&lt;-</span> plt_basemap <span class="sc">+</span> </span>
+<span id="cb726-79"><a href="method-validation-summary.html#cb726-79" tabindex="-1"></a>      ggspatial<span class="sc">::</span><span class="fu">annotation_scale</span>(</span>
+<span id="cb726-80"><a href="method-validation-summary.html#cb726-80" tabindex="-1"></a>        <span class="at">location =</span> scale_location</span>
+<span id="cb726-81"><a href="method-validation-summary.html#cb726-81" tabindex="-1"></a>        , <span class="at">style =</span> <span class="st">&quot;ticks&quot;</span></span>
+<span id="cb726-82"><a href="method-validation-summary.html#cb726-82" tabindex="-1"></a>        , <span class="at">pad_x =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">&quot;cm&quot;</span>)</span>
+<span id="cb726-83"><a href="method-validation-summary.html#cb726-83" tabindex="-1"></a>        , <span class="at">pad_y =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">&quot;cm&quot;</span>)</span>
+<span id="cb726-84"><a href="method-validation-summary.html#cb726-84" tabindex="-1"></a>      )</span>
+<span id="cb726-85"><a href="method-validation-summary.html#cb726-85" tabindex="-1"></a>  }</span>
+<span id="cb726-86"><a href="method-validation-summary.html#cb726-86" tabindex="-1"></a>  <span class="fu">return</span>(plt_basemap)</span>
+<span id="cb726-87"><a href="method-validation-summary.html#cb726-87" tabindex="-1"></a>}</span>
+<span id="cb726-88"><a href="method-validation-summary.html#cb726-88" tabindex="-1"></a>plt_basemap <span class="ot">&lt;-</span> <span class="fu">my_ggmap_basemap</span>(</span>
+<span id="cb726-89"><a href="method-validation-summary.html#cb726-89" tabindex="-1"></a>  <span class="at">sf_data =</span> all_agg_ground_truth_match_ans</span>
+<span id="cb726-90"><a href="method-validation-summary.html#cb726-90" tabindex="-1"></a>  , <span class="at">buffer_box =</span> <span class="dv">190000</span></span>
+<span id="cb726-91"><a href="method-validation-summary.html#cb726-91" tabindex="-1"></a>  , <span class="at">zoom_level =</span> <span class="dv">7</span></span>
+<span id="cb726-92"><a href="method-validation-summary.html#cb726-92" tabindex="-1"></a>  , <span class="at">my_maptype =</span> <span class="st">&quot;stamen_terrain&quot;</span></span>
+<span id="cb726-93"><a href="method-validation-summary.html#cb726-93" tabindex="-1"></a>)</span>
+<span id="cb726-94"><a href="method-validation-summary.html#cb726-94" tabindex="-1"></a><span class="co"># plt_basemap</span></span></code></pre></div>
+<p>plot it with the points</p>
+<div class="sourceCode" id="cb727"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb727-1"><a href="method-validation-summary.html#cb727-1" tabindex="-1"></a><span class="co"># plot</span></span>
+<span id="cb727-2"><a href="method-validation-summary.html#cb727-2" tabindex="-1"></a>plt2_temp <span class="ot">&lt;-</span> </span>
+<span id="cb727-3"><a href="method-validation-summary.html#cb727-3" tabindex="-1"></a>  plt_basemap <span class="sc">+</span> </span>
+<span id="cb727-4"><a href="method-validation-summary.html#cb727-4" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb727-5"><a href="method-validation-summary.html#cb727-5" tabindex="-1"></a>      <span class="at">data =</span> all_agg_ground_truth_match_ans <span class="sc">%&gt;%</span> sf<span class="sc">::</span><span class="fu">st_transform</span>(<span class="at">crs=</span>plt_crs)</span>
+<span id="cb727-6"><a href="method-validation-summary.html#cb727-6" tabindex="-1"></a>      , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">fill =</span> site)</span>
+<span id="cb727-7"><a href="method-validation-summary.html#cb727-7" tabindex="-1"></a>      , <span class="at">size =</span> <span class="fl">4.5</span></span>
+<span id="cb727-8"><a href="method-validation-summary.html#cb727-8" tabindex="-1"></a>      , <span class="at">inherit.aes =</span> F</span>
+<span id="cb727-9"><a href="method-validation-summary.html#cb727-9" tabindex="-1"></a>      , <span class="at">shape =</span> <span class="dv">21</span></span>
+<span id="cb727-10"><a href="method-validation-summary.html#cb727-10" tabindex="-1"></a>      , <span class="at">color =</span> <span class="st">&quot;gray88&quot;</span></span>
+<span id="cb727-11"><a href="method-validation-summary.html#cb727-11" tabindex="-1"></a>      , <span class="at">fill =</span> <span class="st">&quot;blue2&quot;</span></span>
+<span id="cb727-12"><a href="method-validation-summary.html#cb727-12" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb727-13"><a href="method-validation-summary.html#cb727-13" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">geom_sf_label</span>(</span>
+<span id="cb727-14"><a href="method-validation-summary.html#cb727-14" tabindex="-1"></a>      <span class="at">data =</span> all_agg_ground_truth_match_ans <span class="sc">%&gt;%</span> sf<span class="sc">::</span><span class="fu">st_transform</span>(<span class="at">crs=</span>plt_crs)</span>
+<span id="cb727-15"><a href="method-validation-summary.html#cb727-15" tabindex="-1"></a>      , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">label =</span> stringr<span class="sc">::</span><span class="fu">str_wrap</span>(site, <span class="at">width =</span> <span class="dv">40</span>))</span>
+<span id="cb727-16"><a href="method-validation-summary.html#cb727-16" tabindex="-1"></a>      , <span class="at">size =</span> <span class="fl">2.5</span></span>
+<span id="cb727-17"><a href="method-validation-summary.html#cb727-17" tabindex="-1"></a>      , <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.055</span></span>
+<span id="cb727-18"><a href="method-validation-summary.html#cb727-18" tabindex="-1"></a>      , <span class="at">vjust =</span> <span class="fl">0.4</span></span>
+<span id="cb727-19"><a href="method-validation-summary.html#cb727-19" tabindex="-1"></a>      , <span class="at">inherit.aes =</span> F</span>
+<span id="cb727-20"><a href="method-validation-summary.html#cb727-20" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb727-21"><a href="method-validation-summary.html#cb727-21" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> sites_pal)</span>
+<span id="cb727-22"><a href="method-validation-summary.html#cb727-22" tabindex="-1"></a>plt2_temp</span></code></pre></div>
+<p><img src="manitou_slash_piles_files/figure-html/unnamed-chunk-657-1.png" width="720" /></p>
+<p>make a quick plot to look across study sites at the aggregated accuracy metrics</p>
+<div class="sourceCode" id="cb728"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb728-1"><a href="method-validation-summary.html#cb728-1" tabindex="-1"></a>all_agg_ground_truth_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb728-2"><a href="method-validation-summary.html#cb728-2" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb728-3"><a href="method-validation-summary.html#cb728-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb728-4"><a href="method-validation-summary.html#cb728-4" tabindex="-1"></a>    site</span>
+<span id="cb728-5"><a href="method-validation-summary.html#cb728-5" tabindex="-1"></a>    <span class="do">## detection</span></span>
+<span id="cb728-6"><a href="method-validation-summary.html#cb728-6" tabindex="-1"></a>    ,omission_rate,commission_rate,precision,recall,f_score</span>
+<span id="cb728-7"><a href="method-validation-summary.html#cb728-7" tabindex="-1"></a>    <span class="do">## quantification</span></span>
+<span id="cb728-8"><a href="method-validation-summary.html#cb728-8" tabindex="-1"></a>    <span class="co"># ,diff_area_m2_rmse,diff_field_diameter_m_rmse,diff_height_m_rmse,diff_image_diameter_m_rmse</span></span>
+<span id="cb728-9"><a href="method-validation-summary.html#cb728-9" tabindex="-1"></a>    <span class="co"># ,diff_area_m2_mean,diff_field_diameter_m_mean,diff_height_m_mean,diff_image_diameter_m_mean</span></span>
+<span id="cb728-10"><a href="method-validation-summary.html#cb728-10" tabindex="-1"></a>    <span class="co"># ,pct_diff_field_diameter_m_mape,pct_diff_height_m_mape</span></span>
+<span id="cb728-11"><a href="method-validation-summary.html#cb728-11" tabindex="-1"></a>    ,pct_diff_area_m2_mape,pct_diff_image_diameter_m_mape</span>
+<span id="cb728-12"><a href="method-validation-summary.html#cb728-12" tabindex="-1"></a>    <span class="do">## totals</span></span>
+<span id="cb728-13"><a href="method-validation-summary.html#cb728-13" tabindex="-1"></a>    <span class="co"># ,image_gt_diameter_m,pred_diameter_m,gt_area_m2,pred_area_m2,site</span></span>
+<span id="cb728-14"><a href="method-validation-summary.html#cb728-14" tabindex="-1"></a>    ,pct_diff_diameter,pct_diff_area</span>
+<span id="cb728-15"><a href="method-validation-summary.html#cb728-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb728-16"><a href="method-validation-summary.html#cb728-16" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(site)) <span class="sc">%&gt;%</span> </span>
+<span id="cb728-17"><a href="method-validation-summary.html#cb728-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb728-18"><a href="method-validation-summary.html#cb728-18" tabindex="-1"></a>    <span class="at">metric_type =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb728-19"><a href="method-validation-summary.html#cb728-19" tabindex="-1"></a>      name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;omission_rate&quot;</span>,<span class="st">&quot;commission_rate&quot;</span>,<span class="st">&quot;precision&quot;</span>,<span class="st">&quot;recall&quot;</span>,<span class="st">&quot;f_score&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Detection Accuracy&quot;</span></span>
+<span id="cb728-20"><a href="method-validation-summary.html#cb728-20" tabindex="-1"></a>      , name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;pct_diff_area_m2_mape&quot;</span>,<span class="st">&quot;pct_diff_image_diameter_m_mape&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Quantification Accuracy&quot;</span></span>
+<span id="cb728-21"><a href="method-validation-summary.html#cb728-21" tabindex="-1"></a>      , name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;pct_diff_diameter&quot;</span>,<span class="st">&quot;pct_diff_area&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Site Aggregate Totals&quot;</span></span>
+<span id="cb728-22"><a href="method-validation-summary.html#cb728-22" tabindex="-1"></a>      , T <span class="sc">~</span> <span class="st">&quot;error&quot;</span></span>
+<span id="cb728-23"><a href="method-validation-summary.html#cb728-23" tabindex="-1"></a>    )</span>
+<span id="cb728-24"><a href="method-validation-summary.html#cb728-24" tabindex="-1"></a>    , <span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(value, <span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb728-25"><a href="method-validation-summary.html#cb728-25" tabindex="-1"></a>    , <span class="at">name =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb728-26"><a href="method-validation-summary.html#cb728-26" tabindex="-1"></a>      name <span class="sc">==</span> <span class="st">&quot;f_score&quot;</span> <span class="sc">~</span> <span class="st">&quot;F-score&quot;</span></span>
+<span id="cb728-27"><a href="method-validation-summary.html#cb728-27" tabindex="-1"></a>      , stringr<span class="sc">::</span><span class="fu">str_starts</span>(name,<span class="st">&quot;pct_diff_&quot;</span>) <span class="sc">&amp;</span> metric_type <span class="sc">==</span> <span class="st">&quot;Site Aggregate Totals&quot;</span> <span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(name,<span class="st">&quot;pct_diff_&quot;</span>,<span class="st">&quot;% Diff. &quot;</span>) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_to_sentence</span>()</span>
+<span id="cb728-28"><a href="method-validation-summary.html#cb728-28" tabindex="-1"></a>      , stringr<span class="sc">::</span><span class="fu">str_ends</span>(name,<span class="st">&quot;_mape&quot;</span>) <span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_extract</span>(name,<span class="st">&quot;(area|diameter)&quot;</span>) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_c</span>(<span class="st">&quot; MAPE&quot;</span>)</span>
+<span id="cb728-29"><a href="method-validation-summary.html#cb728-29" tabindex="-1"></a>      , T <span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(name,<span class="st">&quot;_&quot;</span>,<span class="st">&quot; &quot;</span>) <span class="sc">%&gt;%</span> stringr<span class="sc">::</span><span class="fu">str_to_sentence</span>()</span>
+<span id="cb728-30"><a href="method-validation-summary.html#cb728-30" tabindex="-1"></a>    )</span>
+<span id="cb728-31"><a href="method-validation-summary.html#cb728-31" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb728-32"><a href="method-validation-summary.html#cb728-32" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb728-33"><a href="method-validation-summary.html#cb728-33" tabindex="-1"></a>    <span class="at">label =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb728-34"><a href="method-validation-summary.html#cb728-34" tabindex="-1"></a>      metric_type <span class="sc">==</span> <span class="st">&quot;Site Aggregate Totals&quot;</span> <span class="sc">&amp;</span> value<span class="sc">&gt;</span><span class="dv">0</span> <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;+&quot;</span>, label)</span>
+<span id="cb728-35"><a href="method-validation-summary.html#cb728-35" tabindex="-1"></a>      , T <span class="sc">~</span> label</span>
+<span id="cb728-36"><a href="method-validation-summary.html#cb728-36" tabindex="-1"></a>    )</span>
+<span id="cb728-37"><a href="method-validation-summary.html#cb728-37" tabindex="-1"></a>    <span class="co"># , label_pos = ifelse(value &gt; 0, 0.005, -0.0073)</span></span>
+<span id="cb728-38"><a href="method-validation-summary.html#cb728-38" tabindex="-1"></a>    , <span class="at">name2 =</span> forcats<span class="sc">::</span><span class="fu">fct_cross</span>(<span class="fu">ordered</span>(metric_type),<span class="fu">ordered</span>(name), <span class="at">sep =</span> <span class="st">&quot;: &quot;</span>)</span>
+<span id="cb728-39"><a href="method-validation-summary.html#cb728-39" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb728-40"><a href="method-validation-summary.html#cb728-40" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(metric_type, site) <span class="sc">%&gt;%</span> </span>
+<span id="cb728-41"><a href="method-validation-summary.html#cb728-41" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb728-42"><a href="method-validation-summary.html#cb728-42" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> site, <span class="at">color =</span> metric_type, <span class="at">fill =</span> metric_type)</span>
+<span id="cb728-43"><a href="method-validation-summary.html#cb728-43" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb728-44"><a href="method-validation-summary.html#cb728-44" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_col</span>(</span>
+<span id="cb728-45"><a href="method-validation-summary.html#cb728-45" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.6</span></span>
+<span id="cb728-46"><a href="method-validation-summary.html#cb728-46" tabindex="-1"></a>    , <span class="at">color =</span> <span class="cn">NA</span></span>
+<span id="cb728-47"><a href="method-validation-summary.html#cb728-47" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb728-48"><a href="method-validation-summary.html#cb728-48" tabindex="-1"></a>  <span class="co"># ggplot2::geom_text(</span></span>
+<span id="cb728-49"><a href="method-validation-summary.html#cb728-49" tabindex="-1"></a>  <span class="co">#   mapping = ggplot2::aes(label = label, x = label_pos, fontface = &quot;bold&quot;)</span></span>
+<span id="cb728-50"><a href="method-validation-summary.html#cb728-50" tabindex="-1"></a>  <span class="co">#   , vjust = 0</span></span>
+<span id="cb728-51"><a href="method-validation-summary.html#cb728-51" tabindex="-1"></a>  <span class="co">#   , hjust = 0</span></span>
+<span id="cb728-52"><a href="method-validation-summary.html#cb728-52" tabindex="-1"></a>  <span class="co">#   , color = &quot;white&quot;, size = 3</span></span>
+<span id="cb728-53"><a href="method-validation-summary.html#cb728-53" tabindex="-1"></a>  <span class="co"># ) +</span></span>
+<span id="cb728-54"><a href="method-validation-summary.html#cb728-54" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_text</span>(</span>
+<span id="cb728-55"><a href="method-validation-summary.html#cb728-55" tabindex="-1"></a>    <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
+<span id="cb728-56"><a href="method-validation-summary.html#cb728-56" tabindex="-1"></a>      <span class="at">label =</span> <span class="fu">ifelse</span>(value<span class="sc">&lt;</span><span class="dv">0</span>, label, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb728-57"><a href="method-validation-summary.html#cb728-57" tabindex="-1"></a>      , <span class="at">fontface =</span> <span class="st">&quot;bold&quot;</span></span>
+<span id="cb728-58"><a href="method-validation-summary.html#cb728-58" tabindex="-1"></a>    )</span>
+<span id="cb728-59"><a href="method-validation-summary.html#cb728-59" tabindex="-1"></a>    , <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">2.2</span></span>
+<span id="cb728-60"><a href="method-validation-summary.html#cb728-60" tabindex="-1"></a>    , <span class="at">hjust =</span> <span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb728-61"><a href="method-validation-summary.html#cb728-61" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb728-62"><a href="method-validation-summary.html#cb728-62" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_text</span>(</span>
+<span id="cb728-63"><a href="method-validation-summary.html#cb728-63" tabindex="-1"></a>    <span class="at">mapping =</span> <span class="fu">aes</span>(</span>
+<span id="cb728-64"><a href="method-validation-summary.html#cb728-64" tabindex="-1"></a>      <span class="at">label =</span> <span class="fu">ifelse</span>(value<span class="sc">&gt;=</span><span class="dv">0</span>, label, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb728-65"><a href="method-validation-summary.html#cb728-65" tabindex="-1"></a>      , <span class="at">fontface =</span> <span class="st">&quot;bold&quot;</span></span>
+<span id="cb728-66"><a href="method-validation-summary.html#cb728-66" tabindex="-1"></a>    )</span>
+<span id="cb728-67"><a href="method-validation-summary.html#cb728-67" tabindex="-1"></a>    , <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">2.2</span></span>
+<span id="cb728-68"><a href="method-validation-summary.html#cb728-68" tabindex="-1"></a>    , <span class="at">hjust =</span> <span class="dv">0</span></span>
+<span id="cb728-69"><a href="method-validation-summary.html#cb728-69" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb728-70"><a href="method-validation-summary.html#cb728-70" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">facet_wrap</span>(<span class="at">facets =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(name2), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span> </span>
+<span id="cb728-71"><a href="method-validation-summary.html#cb728-71" tabindex="-1"></a>  harrypotter<span class="sc">::</span><span class="fu">scale_fill_hp_d</span>(<span class="at">option =</span> <span class="st">&quot;ronweasley2&quot;</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb728-72"><a href="method-validation-summary.html#cb728-72" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>percent, <span class="at">expand =</span> ggplot2<span class="sc">::</span><span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="fl">0.1</span>,<span class="fl">0.1</span>))) <span class="sc">+</span></span>
+<span id="cb728-73"><a href="method-validation-summary.html#cb728-73" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">&quot;&quot;</span>, <span class="at">x =</span> <span class="st">&quot;&quot;</span>, <span class="at">y =</span> <span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb728-74"><a href="method-validation-summary.html#cb728-74" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb728-75"><a href="method-validation-summary.html#cb728-75" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb728-76"><a href="method-validation-summary.html#cb728-76" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span></span>
+<span id="cb728-77"><a href="method-validation-summary.html#cb728-77" tabindex="-1"></a>    , <span class="at">strip.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold&quot;</span>)</span>
+<span id="cb728-78"><a href="method-validation-summary.html#cb728-78" tabindex="-1"></a>    , <span class="at">axis.text.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">6</span>)</span>
+<span id="cb728-79"><a href="method-validation-summary.html#cb728-79" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="manitou_slash_piles_files/figure-html/unnamed-chunk-659-1.png" width="1008" /></p>
+<p>and a table</p>
+<div class="sourceCode" id="cb729"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb729-1"><a href="method-validation-summary.html#cb729-1" tabindex="-1"></a>all_agg_ground_truth_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb729-2"><a href="method-validation-summary.html#cb729-2" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb729-3"><a href="method-validation-summary.html#cb729-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb729-4"><a href="method-validation-summary.html#cb729-4" tabindex="-1"></a>    <span class="at">ref_trees =</span> tp_n<span class="sc">+</span>fn_n</span>
+<span id="cb729-5"><a href="method-validation-summary.html#cb729-5" tabindex="-1"></a>    , <span class="at">det_trees =</span> tp_n<span class="sc">+</span>fp_n</span>
+<span id="cb729-6"><a href="method-validation-summary.html#cb729-6" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-7"><a href="method-validation-summary.html#cb729-7" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb729-8"><a href="method-validation-summary.html#cb729-8" tabindex="-1"></a>    site</span>
+<span id="cb729-9"><a href="method-validation-summary.html#cb729-9" tabindex="-1"></a>    , site_area_m2</span>
+<span id="cb729-10"><a href="method-validation-summary.html#cb729-10" tabindex="-1"></a>    , ref_trees</span>
+<span id="cb729-11"><a href="method-validation-summary.html#cb729-11" tabindex="-1"></a>    , det_trees</span>
+<span id="cb729-12"><a href="method-validation-summary.html#cb729-12" tabindex="-1"></a>    , tp_n</span>
+<span id="cb729-13"><a href="method-validation-summary.html#cb729-13" tabindex="-1"></a>    , omission_rate,commission_rate,recall,precision,f_score</span>
+<span id="cb729-14"><a href="method-validation-summary.html#cb729-14" tabindex="-1"></a>    , pct_diff_area_m2_mape</span>
+<span id="cb729-15"><a href="method-validation-summary.html#cb729-15" tabindex="-1"></a>    , pct_diff_area</span>
+<span id="cb729-16"><a href="method-validation-summary.html#cb729-16" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-17"><a href="method-validation-summary.html#cb729-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb729-18"><a href="method-validation-summary.html#cb729-18" tabindex="-1"></a>    <span class="at">site_area_m2 =</span> <span class="fu">round</span>(site_area_m2<span class="sc">/</span><span class="dv">10000</span>) <span class="sc">%&gt;%</span> scales<span class="sc">::</span><span class="fu">comma</span>(<span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb729-19"><a href="method-validation-summary.html#cb729-19" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb729-20"><a href="method-validation-summary.html#cb729-20" tabindex="-1"></a>      <span class="at">.cols =</span> <span class="fu">c</span>(omission_rate,commission_rate,recall,precision,f_score)</span>
+<span id="cb729-21"><a href="method-validation-summary.html#cb729-21" tabindex="-1"></a>      , <span class="at">.fns =</span> <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">percent</span>(.x,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb729-22"><a href="method-validation-summary.html#cb729-22" tabindex="-1"></a>    )</span>
+<span id="cb729-23"><a href="method-validation-summary.html#cb729-23" tabindex="-1"></a>    , <span class="at">pct_diff_area_m2_mape =</span> scales<span class="sc">::</span><span class="fu">percent</span>(pct_diff_area_m2_mape,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb729-24"><a href="method-validation-summary.html#cb729-24" tabindex="-1"></a>    , <span class="at">pct_diff_area =</span> scales<span class="sc">::</span><span class="fu">percent</span>(pct_diff_area,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb729-25"><a href="method-validation-summary.html#cb729-25" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-26"><a href="method-validation-summary.html#cb729-26" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(site)) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-27"><a href="method-validation-summary.html#cb729-27" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb729-28"><a href="method-validation-summary.html#cb729-28" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Data fusion method slash pile segmentation results for each study site&quot;</span></span>
+<span id="cb729-29"><a href="method-validation-summary.html#cb729-29" tabindex="-1"></a>    , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb729-30"><a href="method-validation-summary.html#cb729-30" tabindex="-1"></a>      <span class="st">&quot;site&quot;</span>, <span class="st">&quot;hectares&quot;</span></span>
+<span id="cb729-31"><a href="method-validation-summary.html#cb729-31" tabindex="-1"></a>      , <span class="st">&quot;reference&lt;br&gt;piles&quot;</span>, <span class="st">&quot;detected&lt;br&gt;piles&quot;</span>, <span class="st">&quot;correct&lt;br&gt;piles&quot;</span></span>
+<span id="cb729-32"><a href="method-validation-summary.html#cb729-32" tabindex="-1"></a>      , <span class="st">&quot;omission&lt;br&gt;rate&quot;</span></span>
+<span id="cb729-33"><a href="method-validation-summary.html#cb729-33" tabindex="-1"></a>      , <span class="st">&quot;commission&lt;br&gt;rate&quot;</span></span>
+<span id="cb729-34"><a href="method-validation-summary.html#cb729-34" tabindex="-1"></a>      ,<span class="st">&quot;recall&quot;</span>,<span class="st">&quot;precision&quot;</span>,<span class="st">&quot;F-score&quot;</span></span>
+<span id="cb729-35"><a href="method-validation-summary.html#cb729-35" tabindex="-1"></a>      , <span class="st">&quot;MAPE&lt;br&gt;area m&lt;sup&gt;2&lt;/sup&gt;&quot;</span></span>
+<span id="cb729-36"><a href="method-validation-summary.html#cb729-36" tabindex="-1"></a>      , <span class="st">&quot;% aggregated&lt;br&gt;area difference&quot;</span></span>
+<span id="cb729-37"><a href="method-validation-summary.html#cb729-37" tabindex="-1"></a>    )</span>
+<span id="cb729-38"><a href="method-validation-summary.html#cb729-38" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb729-39"><a href="method-validation-summary.html#cb729-39" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-40"><a href="method-validation-summary.html#cb729-40" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>(<span class="at">font_size =</span> <span class="fl">9.9</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb729-41"><a href="method-validation-summary.html#cb729-41" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)</span></code></pre></div>
+<table class="table" style="font-size: 9.9px; margin-left: auto; margin-right: auto;">
+<caption style="font-size: initial !important;">
+<span id="tab:unnamed-chunk-660">Table 13.1: </span>Data fusion method slash pile segmentation results for each study site
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+hectares
+</th>
+<th style="text-align:right;">
+reference<br>piles
+</th>
+<th style="text-align:right;">
+detected<br>piles
+</th>
+<th style="text-align:right;">
+correct<br>piles
+</th>
+<th style="text-align:left;">
+omission<br>rate
+</th>
+<th style="text-align:left;">
+commission<br>rate
+</th>
+<th style="text-align:left;">
+recall
+</th>
+<th style="text-align:left;">
+precision
+</th>
+<th style="text-align:left;">
+F-score
+</th>
+<th style="text-align:left;">
+MAPE<br>area m<sup>2</sup>
+</th>
+<th style="text-align:left;">
+% aggregated<br>area difference
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+PSINF ponderosa pine training site
+</td>
+<td style="text-align:left;">
+17
+</td>
+<td style="text-align:right;">
+121
+</td>
+<td style="text-align:right;">
+137
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+11.6%
+</td>
+<td style="text-align:left;">
+21.9%
+</td>
+<td style="text-align:left;">
+88.4%
+</td>
+<td style="text-align:left;">
+78.1%
+</td>
+<td style="text-align:left;">
+82.9%
+</td>
+<td style="text-align:left;">
+12.0%
+</td>
+<td style="text-align:left;">
+-5.4%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ARNF ponderosa pine validation site
+</td>
+<td style="text-align:left;">
+74
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:left;">
+10.5%
+</td>
+<td style="text-align:left;">
+10.5%
+</td>
+<td style="text-align:left;">
+89.5%
+</td>
+<td style="text-align:left;">
+89.5%
+</td>
+<td style="text-align:left;">
+89.5%
+</td>
+<td style="text-align:left;">
+15.1%
+</td>
+<td style="text-align:left;">
+-18.5%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BHEF ponderosa pine validation site
+</td>
+<td style="text-align:left;">
+103
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:right;">
+27
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+15.4%
+</td>
+<td style="text-align:left;">
+18.5%
+</td>
+<td style="text-align:left;">
+84.6%
+</td>
+<td style="text-align:left;">
+81.5%
+</td>
+<td style="text-align:left;">
+83.0%
+</td>
+<td style="text-align:left;">
+8.6%
+</td>
+<td style="text-align:left;">
+-7.5%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TRFO-BLM pinyon-juniper validation site
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+277
+</td>
+<td style="text-align:right;">
+341
+</td>
+<td style="text-align:right;">
+262
+</td>
+<td style="text-align:left;">
+5.4%
+</td>
+<td style="text-align:left;">
+23.2%
+</td>
+<td style="text-align:left;">
+94.6%
+</td>
+<td style="text-align:left;">
+76.8%
+</td>
+<td style="text-align:left;">
+84.8%
+</td>
+<td style="text-align:left;">
+14.5%
+</td>
+<td style="text-align:left;">
+-3.3%
+</td>
+</tr>
+</tbody>
+</table>
+<p>The aggregated results across all three study sites, including the complex, out-of-sample validation sites, demonstrate the consistent transferability and dependability of our data fusion slash pile methodology. All sites achieved consistently high detection performance, with F-scores ranging narrowly from 83% to 89%, confirming the method’s overall effectiveness despite vast differences in pile sizes, vegetation, terrain, and construction techniques.</p>
+<p>The specific composition of errors (false positives and false negatives) highlights the success of the site-specific parameter adjustments. The pinyon-juniper validation site (277 piles) recorded the highest F-score (85%), driven by a very high recall rate (95%) which suggests the structural parameters effectively located the many smaller, hand-piled objects, even with less restrictive structural filters. However, this high recall came at the expense of the lowest precision (77%), confirming our observation that the spectral filter failed to exclude numerous false positives (FPs) because the site’s senescent, arid vegetation mimicked the spectral signature of dead wood in piles. In contrast, the BHEF ponderosa pine evaluation site (26 piles) achieved a strong F-score (83%) which is notable given the low pile count amplifies the influence of each error. This site had the lowest recall (85%) due to the complexities of segmenting the massive, irregular pile shapes, but it maintained the highest precision (81%), demonstrating that the strict spectral filtering (<code>spectral_weight</code> set to its maximum value of ‘5’) successfully minimized FPs from the dense ponderosa pine regeneration groups, validating that parameter choice for environments with dense regeneration or shrub cover.</p>
+<p>Consistent pile form quantification accuracy indicates the method reliably extracts of pile form measurements (e.g., area, height) for use in planning the management of the piles. The MAPE on pile area, which measures the average error in sizing individual, successfully matched piles, was below 15% across all sites, ranging from 9% to 15%. This result suggests that the methodology can consistently quantify the form of individual piles with high accuracy regardless of the extensive differences in pile sizes, terrain, and construction forms. The BHEF ponderosa pine evaluation site recorded the lowest MAPE on pile area (9%), meaning the piles it did find were sized most accurately of the sites measured.</p>
+<p>Analysis of the site aggregate totals revealed a systematic underprediction of the total area across all sites. This systematic underestimation, with errors ranging only from -18.5% to -3.3%, is an important result for administrative needs (such as burn permits), as it avoids overstating the total quantity of fuel (area or volume) on a site. The BHEF ponderosa pine evaluation site had the largest aggregate pile area underestimation (-7.5%). This was likely caused by lower recall rates resulting from the watershed algorithm splitting single massive piles due to their irregular elevation profile or from CHM artifacts produced by cloud cover and SfM flight stitching. The pinyon-juniper site had the highest individual pile area MAPE (14.5%), indicating the worst individual sizing accuracy, but it achieved the closest match to the true total pile area over the entire site (-3.3%), implying that the individual sizing errors of the retained piles compensated for each other across the entire site extent.</p>
+
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="method-validation-arnf-machine-piles.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
