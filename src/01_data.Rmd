@@ -1,10 +1,13 @@
-# Training Data
+# Data Overview
 
-## Site Introduction
+We will detail the study sites and summarize the number of piles and the pile size based on available measurements.
 
-The PSINF ponderosa pine training site is located within the Pike and San Isabel National Forest in Colorado, featuring a characteristic ponderosa pine ecosystem. This site contains a mix of both smaller machine piles and primarily hand-stacked slash piles, representing a spectrum of typical slash pile construction techniques. For this and all other study sites, data were collected via Uncrewed Aircraft Systems (UAS), specifically capturing RGB data to produce two main products via Structure-from-Motion (SfM) processing: an RGB orthomosaic and an SfM point cloud. The data from this site was designated for full methodology development and parameter training of our slash pile detection and quantification workflow. All structural, size, and spectral filters were iteratively tuned using this site to establish the baseline configuration.
-
-We also have vector data including ground-truth slash pile point locations with field-measured values of pile height and diameter and image-annotated slash pile perimeters (i.e. polygons). This training data will be used in the development and statistical testing of the methodologies. 
+| Site Name | Pile Type | Validation Data Type | Unique Features & Ecology | Data Collection (UAS Platform & Parameters) |
+| :--- | :--- | :--- | :--- | :--- |
+| **PSINF Mixed Conifer Site** | Hand Piles and smaller machine piles | Image-annotated footprints and field-measured height and diameter | Located in the Pike and San Isabel National Forest (PSINF) in CO, US. Mixed conifer stand with variable ground cover and canopy density. | Switchblade-Elite (Vision Aerial) with 24.2 MP RGB sensor (16 mm lens). Altitude xx m, 90% forward and 85% side overlap, 4 m/s speed. |
+| **TRFO-BLM Pinyon-Juniper Site** | Hand Piles | Image-annotated footprints based on field collected point locations | Located on BLM land in CO, US. Arid environment with dry vegetation including standing dead pinyon-juniper. Piles are smaller, simpler, and hand-stacked. | Freefly Astro with Sony ILX-LR1 (35mm lens). Altitude 243.84 m (terrain following), 85% forward and 80% side overlap. |
+| **BHEF Ponderosa Pine Site** | Machine Piles | Image-annotated footprints | Located in the Black Hills Experimental Forest (BHEF) in SD, US. Piles are massive, mechanically built, and irregularly shaped (e.g. not necessarily circular). Tree regeneration is expected. | DJI Phantom 4 Pro with 20 MP RGB sensor (8.8 mm lens). Altitude 80 m, 90% forward and 85% side overlap, 4 m/s speed. |
+| **ARNF Ponderosa Pine Site** | Machine Piles | Image-annotated footprints | Located in the Arapahoe and Roosevelt National Forest (ARNF) in CO, US. Ponderosa pine forest with a climate similar to PSINF. Machine piles are massive but more circular and regular. Less regeneration is expected. | Switchblade-Elite (Vision Aerial) with 24.2 MP RGB sensor (16 mm lens). Altitude xx m, 90% forward and 85% side overlap, 4 m/s speed. |
 
 Load the standard libraries we use to do work
 
