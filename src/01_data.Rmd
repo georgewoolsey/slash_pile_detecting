@@ -26,7 +26,6 @@ library(kableExtra) # tables
 library(patchwork) # combine plots
 library(corrplot) # correlation plots
 library(ggnewscale) # new scale
-library(rayshader) # Visualize Data in 2D and 3D
 
 # spatial analysis
 library(terra) # raster
@@ -34,14 +33,9 @@ library(sf) # simple features
 library(lidR) # lidar data
 library(rgl) # 3d plots
 library(cloud2trees) # the cloud2trees
-library(glcm) # textures of rasters
-
-# modelling
-library(brms)
-library(tidybayes)
 ```
 
-```{r pkg-ld, include=F, warning=F, message=F}
+```{r, include=F, warning=F, message=F}
 # knit options
 knitr::opts_chunk$set(
   echo = TRUE
@@ -72,91 +66,445 @@ gc()
 all_agg_ground_truth_match_ans_fp <- file.path("../data/","all_agg_ground_truth_match_ans.gpkg")
 ```
 
-## Slash Pile Vector Data
+## Study Units Vector Data
 
-Slash pile field measurements were taken by measuring the height and diameter (longest side of pile) using a laser hypsometer
-
-For volume estimation, we'll model the ground truth slash piles as a paraboloid, specifically a parabolic dome, assuming a perfectly circular base and sides curved smoothly to a peak. Assuming a paraboloid shape is common for quantifying slash pile volume ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)) and may better represent the diverse shapes of real-world slash piles than assuming a conical or half-sphere form. A paraboloid can represent a variety of shapes including those that are taller and more conical, or flatter and more spread out, because it allows the measured height and width to influence the volume calculation independently. This makes the paraboloid potentially more robust for estimating volumes of piles with varying aspect ratios. 
-
-the volume formula for a paraboloid is:
-  
-$$
-V = \frac{1}{8}\pi \cdot width^2 \cdot height
-$$
-
+let's load in all the vector data containing the study units
 
 ```{r}
-# polygons annotated using RGB and field-collected points
-slash_piles_polys <- sf::st_read(
-    "../data/PFDP_Data/PFDP_SlashPiles/manitou_pile_polys.shp"
-    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles_Polygons.shp"
-    , quiet = T
-  ) %>% 
+# PSINF Mixed Conifer Site
+psinf_stand_boundary <- sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
+  sf::st_union() %>% 
+  dplyr::mutate(site = "PSINF Mixed Conifer Site")
+# TRFO-BLM Pinyon-Juniper Site
+pj_stand_boundary <- 
+  sf::st_read("../data/Dawson_data/units/units.shp", quiet=T) %>% 
   dplyr::rename_with(tolower) %>% 
-  sf::st_make_valid() %>% 
-  dplyr::filter(sf::st_is_valid(.)) %>% 
-  # fix multipolygons
-  dplyr::ungroup() %>% 
-  dplyr::mutate(treeID = dplyr::row_number()) %>% 
-  cloud2trees::simplify_multipolygon_crowns() %>% 
-  dplyr::select(-c(treeID, shape_leng, shape_area))
-# slash_piles_polys %>% dplyr::glimpse()
+  dplyr::rename_with(stringr::str_squish) %>% 
+  dplyr::rename_with(make.names) %>% 
+  dplyr::rename_with(~stringr::str_replace_all(.x, "\\.{2,}", ".")) %>% 
+  dplyr::rename_with(~stringr::str_remove(.x, "\\.$")) %>% 
+  dplyr::rename_with(~stringr::str_replace_all(.x, "\\.", "_")) %>% 
+  dplyr::filter(tolower(unit)=="u10") %>% 
+  dplyr::slice(1) %>% 
+  dplyr::mutate(site = "TRFO-BLM Pinyon-Juniper Site")
+# BHEF Ponderosa Pine Site
+bhef_stand_boundary <- 
+  sf::st_read("../data/BHEF_202306/bhef_harvests.gpkg", quiet=T) %>% 
+  dplyr::rename_with(tolower) %>% 
+  dplyr::rename_with(stringr::str_squish) %>% 
+  dplyr::rename_with(make.names) %>% 
+  dplyr::rename_with(~stringr::str_replace_all(.x, "\\.{2,}", ".")) %>% 
+  dplyr::rename_with(~stringr::str_remove(.x, "\\.$")) %>% 
+  dplyr::rename_with(~stringr::str_replace_all(.x, "\\.", "_")) %>% 
+  dplyr::filter(
+    year_id == 2021
+    & !(treatment_type_grp %in% c("Improvement/Liberation Cut", "Other", "Sanitation Cut"))
+    & suid %in% c("0203088082660004000","0203088082660003000") # these were the only units with machine piles in prescription
+  ) %>% 
+  dplyr::mutate(site = "BHEF Ponderosa Pine Site")
+# ARNF Ponderosa Pine Site
+arnf_stand_boundary <- 
+  sf::st_read("../data/ARNF_DiamondView_202510/Diamond_View_Boundary.gpkg", quiet=T) %>% 
+  sf::st_union() %>% 
+  dplyr::mutate(site = "ARNF Ponderosa Pine Site")
+```
 
-# points recorded in field
-slash_piles_points <- sf::st_read(
-    "../data/PFDP_Data/PFDP_SlashPiles/SlashPiles.shp"
-    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles.shp"
-    , quiet = T
+we'll combine the study unit boundaries for all sites to create a spatial data set that contains all units for plotting in a single map
+
+```{r}
+# read the data
+# stand boundary
+all_stand_boundary <- 
+  dplyr::bind_rows(
+    psinf_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
+    , pj_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
+    , bhef_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
+    , arnf_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
   ) %>% 
-  dplyr::rename_with(tolower) %>% 
-  sf::st_zm() %>% 
-  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
-  dplyr::filter( !(objectid %in% c(43)) ) %>% # duplicate field points
-  dplyr::mutate(row_number = dplyr::row_number()) %>% 
-  dplyr::select(-c(objectid)) %>% 
-  dplyr::rename(
-    height_ft = height
-    , diameter_ft = diameter
+  sf::st_set_geometry("geometry") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarise(
+    geometry = sf::st_union(geometry)
+  ) %>% 
+  dplyr::ungroup() %>% 
+  sf::st_set_geometry("geometry") %>% 
+  dplyr::mutate(
+    site_area_m2 = sf::st_area(geometry) %>% as.numeric()
+    , site_area_ha = site_area_m2/10000
+  )
+  # sf::st_centroid() %>% 
+  # sf::st_sf() %>% 
+```
+
+Let's map the study sites on a single map
+
+```{r}
+sites_pal <- RColorBrewer::brewer.pal(n = nrow(all_stand_boundary), name = "Dark2")
+# option to put satellite imagery as base layer of mapview maps
+mapview::mapviewOptions(
+  homebutton = T
+  # , basemaps = c("Esri.WorldImagery","OpenStreetMap")
+  , basemaps = c("OpenStreetMap", "Esri.WorldImagery")
+)
+# map it
+mapview::mapview(
+  all_stand_boundary %>% 
+    dplyr::group_by(site) %>% 
+    sf::st_centroid()
+  , zcol="site"
+  , col.regions = sites_pal
+  , cex = 8
+  , layer.name = "study sites"
+)
+```
+
+static map for printing
+
+let's make a pretty image for use in the journal article. we'll use the `ggmap` package to get a nice background map and do some transformation to actually work with the map. We'll add a map scale using `ggspatial`
+
+```{r, warning=F, message=FALSE, results=F}
+library(ggmap)
+library(ggspatial)
+#########################################################################
+#########################################################################
+# Make each plot individually by landscape as solution to small multiples
+# this block defines function
+#########################################################################
+##################hack to align plots for ggmap
+ggmap_bbox_fn <- function(map, my_crs=3857) {
+    if (!inherits(map, "ggmap")) stop("map must be a ggmap object")
+    # Extract the bounding box (in lat/lon) from the ggmap to a numeric vector, 
+    # and set the names to what sf::st_bbox expects:
+    map_bbox <- setNames(unlist(attr(map, "bb")), c("ymin", "xmin", "ymax", "xmax"))
+    # Convert the bbox to an sf polygon, transform it to 3857, 
+    # and convert back to a bbox (convoluted, but it works)
+    bbox_3857 <- st_bbox(st_transform(st_as_sfc(st_bbox(map_bbox, crs = 4326)), my_crs))
+    # Overwrite the bbox of the ggmap object with the transformed coordinates 
+    attr(map, "bb")$ll.lat <- bbox_3857["ymin"]
+    attr(map, "bb")$ll.lon <- bbox_3857["xmin"]
+    attr(map, "bb")$ur.lat <- bbox_3857["ymax"]
+    attr(map, "bb")$ur.lon <- bbox_3857["xmax"]
+    map
+}
+plt_crs <- 3857
+#########################################################################
+#########################################################################
+#########################################################################
+my_ggmap_basemap <- function(sf_data, zoom_level = 14, buffer_box = 2600, my_crs = plt_crs, scale_location = "bl", my_maptype = "stamen_terrain") {
+  
+  # # should zoom in?
+  # zoom_level <- 14 # 11
+  # # should buffer extend?
+  # buffer_box <- 2600 # 20000
+  # bounding box
+  bb_temp <-
+    sf_data %>% 
+    sf::st_bbox() %>% 
+    sf::st_as_sfc() %>% 
+    sf::st_transform(crs=5070) %>% 
+    sf::st_buffer(as.numeric(buffer_box)) %>% 
+    sf::st_transform(crs=4326) %>% # same as get_map return
+    sf::st_bbox()
+  # set bbox for get call
+  bbox_temp <- c(
+    bottom = bb_temp[[2]]
+    , top = bb_temp[[4]]
+    , right = bb_temp[[3]]
+    , left = bb_temp[[1]]
+  )
+  hey_ggmap <- ggmap::get_stadiamap(
+    bbox = bbox_temp
+    , zoom = zoom_level
+    , maptype = my_maptype #"stamen_terrain" #"stamen_toner_lite"
+    , crop = T
   )
 
-# stand boundary
-stand_boundary <- sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
-  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
-  sf::st_union()
+  # ggmap::ggmap(hey_ggmap)
+  # apply align function
+  hey_ggmap_aligned <- ggmap_bbox_fn(hey_ggmap, my_crs) # Use the function
+  # plot
+  plt_basemap <-
+    ggmap::ggmap(hey_ggmap_aligned) + 
+    ggplot2::coord_sf(
+      expand = FALSE
+    ) +
+    ggplot2::theme_light() +
+    ggplot2::theme(
+      legend.position = "none"
+      , plot.title = ggplot2::element_blank()
+      , strip.text = ggplot2::element_blank()
+      , axis.title = ggplot2::element_blank()
+      , axis.text = ggplot2::element_blank()
+      , axis.ticks = ggplot2::element_blank()
+      , panel.grid = ggplot2::element_blank()
+      , plot.margin = ggplot2::margin(0, 0, 0, 0, "cm")
+    )
+  if(scale_location %in% c("bl", "br", "tr", "tl")){
+    plt_basemap <- plt_basemap + 
+      ggspatial::annotation_scale(
+        location = scale_location
+        , style = "ticks"
+        , pad_x = unit(0.1, "cm")
+        , pad_y = unit(0.1, "cm")
+      )
+  }
+  return(plt_basemap)
+}
+```
+
+plot the fancy basemap with the points
+
+```{r, fig.height=9, fig.width=7.5}
+# get the basemap with our my_ggmap_basemap()
+plt_basemap <- my_ggmap_basemap(
+  sf_data = all_stand_boundary %>% dplyr::group_by(site) %>% sf::st_point_on_surface()
+  , buffer_box = 190000
+  , zoom_level = 7
+  , my_maptype = "stamen_terrain"
+)
+# plt_basemap
+# plot
+plt2_temp <- 
+  plt_basemap + 
+    ggplot2::geom_sf(
+      data = all_stand_boundary %>% 
+        dplyr::group_by(site) %>% 
+        sf::st_point_on_surface() %>% 
+        sf::st_transform(crs=plt_crs)
+      , mapping = ggplot2::aes(fill = site)
+      , size = 4.5
+      , inherit.aes = F
+      , shape = 21
+      , color = "gray88"
+      , fill = "blue2"
+    ) +
+    ggplot2::geom_sf_label(
+      data = all_stand_boundary %>% 
+        dplyr::group_by(site) %>% 
+        sf::st_point_on_surface() %>% 
+        sf::st_transform(crs=plt_crs)
+      , mapping = ggplot2::aes(label = stringr::str_wrap(site, width = 40))
+      , size = 2.5
+      , hjust = -0.055
+      , vjust = 0.4
+      , inherit.aes = F
+    ) +
+    ggplot2::scale_fill_manual(values = sites_pal)
+plt2_temp
+```
+
+```{r, include=FALSE, eval=TRUE}
+ggplot2::ggsave(
+  "../data/all_agg_ground_truth_match_ans.jpg"
+  , dpi = "print"
+  , height = 9, width = 7.5
+)
 ```
 
 what is the area of the treatment unit boundaries we are looking over?
 
 ```{r}
-stand_boundary %>% 
-  sf::st_area() %>% 
-  as.numeric() %>% 
-  `/`(10000) %>% 
-  scales::comma(suffix = " ha", accuracy = 0.1)
+all_stand_boundary %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::select(site, site_area_ha) %>% 
+  dplyr::mutate(
+    site_area_ha = scales::comma(site_area_ha, suffix = " ha", accuracy = 0.1)
+  ) %>% 
+  kableExtra::kbl(
+    caption = caption
+    , col.names = c(
+      "site", "hectares"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
 ```
 
-that's great
+## Slash Pile Vector Data
 
-let's check this on the map
+Image-annotated pile footprints at each study site were created in a GIS by outlining pile boundaries on the RGB orthomosaic and confirming the vertical structure using fine-resolution CHM data (e.g., 0.15m resolution). Field-collected points were used to ensure pile census completeness at the hand-pile study sites (PSINF Mixed Conifer Site and TRFO-BLM Pinyon-Juniper Site) to pinpoint piles that were otherwise challenging to delineate from the aerial imagery and CHM data alone. Machine piles were easily distinguishable using the RGB and CHM data.
+
+Let's load in those image-annotated pile polygons now for each study site.
 
 ```{r}
-# mapview::mapview(slash_piles_points, zcol = "comment", layer.name = "slash piles")
-mapview::mapview(
-  stand_boundary
-  , color = "black"
-  , lwd = 1
-  , alpha.regions = 0
-  , label = FALSE
-  , legend = FALSE
-  , popup = FALSE
-  , layer.name = "stand boundary"
-) +
-# mapview::mapview(slash_piles_polys, zcol = "is_in_stand", layer.name = "'in' slash piles") +
-mapview::mapview(slash_piles_polys, col.regions = "navy", col = NA, layer.name = "pile polys", legend = FALSE) +
-mapview::mapview(slash_piles_points, cex = 2, col.regions = "gold", color = "gold", layer.name = "pile points")
+#######################################
+# polygons annotated using RGB and field-collected points
+#######################################
+###########################
+# PSINF Mixed Conifer Site
+###########################
+  psinf_slash_piles_polys <- sf::st_read(
+      "../data/PFDP_Data/PFDP_SlashPiles/manitou_pile_polys.shp"
+      , quiet = T
+    ) %>% 
+    dplyr::rename_with(tolower) %>% 
+    sf::st_make_valid() %>% 
+    dplyr::filter(sf::st_is_valid(.)) %>% 
+    # fix multipolygons
+    dplyr::ungroup() %>% 
+    dplyr::mutate(treeID = dplyr::row_number()) %>% 
+    cloud2trees::simplify_multipolygon_crowns() %>% 
+    dplyr::select(-c(treeID, shape_leng, shape_area))
+  
+  # points recorded in field
+  psinf_slash_piles_points <- sf::st_read(
+      "../data/PFDP_Data/PFDP_SlashPiles/SlashPiles.shp"
+      , quiet = T
+    ) %>% 
+    dplyr::rename_with(tolower) %>% 
+    sf::st_zm() %>% 
+    sf::st_transform(sf::st_crs(psinf_slash_piles_polys)) %>% 
+    dplyr::filter( !(objectid %in% c(43)) ) %>% # duplicate field points
+    dplyr::mutate(row_number = dplyr::row_number()) %>% 
+    dplyr::select(-c(objectid)) %>% 
+    dplyr::rename(
+      height_ft = height
+      , diameter_ft = diameter
+    )
+  # update unit boundary to pile proj
+  psinf_stand_boundary <- psinf_stand_boundary %>% sf::st_transform(sf::st_crs(psinf_slash_piles_polys))
+  
+  # attach flag for spatial overlap with unit boundary
+  psinf_slash_piles_polys <- psinf_slash_piles_polys %>%
+    dplyr::left_join(
+      psinf_slash_piles_polys %>% 
+        sf::st_intersection(psinf_stand_boundary) %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::select(pile_id) %>% 
+        dplyr:mutate(is_in_stand = T)
+      , by = "pile_id"
+    ) %>% 
+    dplyr::mutate(
+      is_in_stand = dplyr::coalesce(is_in_stand, F)
+    )
+###########################
+# TRFO-BLM Pinyon-Juniper Site
+###########################
+  pj_slash_piles_polys <- 
+    sf::st_read("../data/Dawson_Data/piles/pj_pile_polys.shp", quiet=T) %>% 
+    dplyr::rename_with(tolower) %>% 
+    sf::st_make_valid() %>% 
+    dplyr::filter(sf::st_is_valid(.)) %>% 
+    # fix multipolygons
+    dplyr::mutate(
+      pile_id = dplyr::row_number()
+      , treeID = dplyr::row_number()
+    ) %>% 
+    cloud2trees::simplify_multipolygon_crowns() %>%
+    dplyr::select(-c(treeID,id)) %>% 
+    dplyr::filter(pile_id!=62)
+  
+  # points recorded in field
+  # these piles were collected twice in the same location and have different measurements :\
+  bad_pile_ids_temp <- c(
+    142
+    , 146
+    , 99
+    , 96
+    , 50
+  )
+  pj_slash_piles_points <- 
+    readr::read_csv("../data/Dawson_data/PJ_Piles_Unit_10.csv") %>% 
+    dplyr::rename_with(tolower) %>% 
+    dplyr::rename_with(stringr::str_squish) %>% 
+    dplyr::rename_with(make.names) %>% 
+    dplyr::rename_with(~stringr::str_replace_all(.x, "\\.{2,}", ".")) %>% 
+    dplyr::rename_with(~stringr::str_remove(.x, "\\.$")) %>% 
+    dplyr::rename_with(~stringr::str_replace_all(.x, "\\.", "_")) %>% 
+    dplyr::mutate(
+      orig_pile_id = tidyr::extract_numeric(name)
+    ) %>% 
+    dplyr::filter(
+      !(orig_pile_id %in% bad_pile_ids_temp)
+    ) %>% 
+    sf::st_as_sf(coords = c("easting","northing"), crs = 6342, remove = F) %>% 
+    dplyr::select(orig_pile_id,name,height_m,width_m,easting,northing,latitude,longitude,code,description,elevation) %>% 
+    sf::st_make_valid() %>% 
+    sf::st_transform(sf::st_crs(pj_slash_piles_polys))
+  
+  # update unit boundary to pile proj
+  pj_stand_boundary <- pj_stand_boundary %>% sf::st_transform(sf::st_crs(pj_slash_piles_polys))
+  
+  # attach flag for spatial overlap with unit boundary
+  pj_slash_piles_polys <- pj_slash_piles_polys %>%
+    dplyr::left_join(
+      pj_slash_piles_polys %>% 
+        sf::st_intersection(pj_stand_boundary) %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::select(pile_id) %>% 
+        dplyr:mutate(is_in_stand = T)
+      , by = "pile_id"
+    ) %>% 
+    dplyr::mutate(
+      is_in_stand = dplyr::coalesce(is_in_stand, F)
+    )
+###########################  
+# BHEF Ponderosa Pine Site
+###########################  
+  bhef_slash_piles_polys <- 
+    sf::st_read("../data/BHEF_202306/piles/bhef_pile_polys.shp", quiet=T) %>% 
+    dplyr::rename_with(tolower) %>% 
+    sf::st_make_valid() %>% 
+    dplyr::filter(sf::st_is_valid(.)) %>% 
+    # fix multipolygons
+    dplyr::mutate(
+      pile_id = dplyr::row_number()
+      , treeID = dplyr::row_number()
+    ) %>% 
+    cloud2trees::simplify_multipolygon_crowns() %>%
+    dplyr::select(-c(treeID))
+  
+  # update unit boundary to pile proj
+  bhef_stand_boundary <- bhef_stand_boundary %>% sf::st_transform(sf::st_crs(bhef_slash_piles_polys))
+  
+  # attach flag for spatial overlap with unit boundary
+  bhef_slash_piles_polys <- bhef_slash_piles_polys %>%
+    dplyr::left_join(
+      bhef_slash_piles_polys %>% 
+        sf::st_intersection(bhef_stand_boundary) %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::select(pile_id) %>% 
+        dplyr:mutate(is_in_stand = T)
+      , by = "pile_id"
+    ) %>% 
+    dplyr::mutate(
+      is_in_stand = dplyr::coalesce(is_in_stand, F)
+    )
+###########################  
+# ARNF Ponderosa Pine Site
+###########################  
+  arnf_slash_piles_polys <- 
+    sf::st_read("../data/ARNF_DiamondView_202510/arnf_diamond_view_pile_polys.shp", quiet=T) %>% 
+    dplyr::rename_with(tolower) %>% 
+    sf::st_make_valid() %>% 
+    dplyr::filter(sf::st_is_valid(.)) %>% 
+    # fix multipolygons
+    dplyr::mutate(
+      pile_id = dplyr::row_number()
+      , treeID = dplyr::row_number()
+    ) %>% 
+    cloud2trees::simplify_multipolygon_crowns() %>%
+    dplyr::select(-c(treeID))
+  
+  # update unit boundary to pile proj
+  arnf_stand_boundary <- arnf_stand_boundary %>% sf::st_transform(sf::st_crs(arnf_slash_piles_polys))
+  
+  # attach flag for spatial overlap with unit boundary
+  arnf_slash_piles_polys <- arnf_slash_piles_polys %>%
+    dplyr::left_join(
+      arnf_slash_piles_polys %>% 
+        sf::st_intersection(arnf_stand_boundary) %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::select(pile_id) %>% 
+        dplyr:mutate(is_in_stand = T)
+      , by = "pile_id"
+    ) %>% 
+    dplyr::mutate(
+      is_in_stand = dplyr::coalesce(is_in_stand, F)
+    )
 ```
 
-because each point does not necessarily fall within the polygon boundary (e.g. due to misalignment between the imagery and point locations or slight inaccuracies in either the point or pile boundaries) we need to perform a matching process to tie the points to the polygons so that we get the height and diameter measured during the point collection attached to the polygons. to do this, we'll use a two-stage process that first attaches the points data frame to polygons where points fall within, using a spatial intersection. It then finds and assigns the remaining, unjoined points to their nearest polygon. The final output includes all polygons from the original data, ensuring that every polygon is represented even if no points were matched. 
+For the sites with field-collected point data, each point may not necessarily fall within the polygon boundary (e.g. due to misalignment between the imagery and point locations or slight inaccuracies in either the point or pile boundaries). So, we need to perform a matching process to tie the points to the polygons so that we get the height and diameter measured during the point collection attached to the polygons. to do this, we'll use a two-stage process that first attaches the points data frame to polygons where points fall within, using a spatial intersection. It then finds and assigns the remaining, unjoined points to their nearest polygon. The final output includes all polygons from the original data, ensuring that every polygon is represented even if no points were matched. 
 
 ```{r}
 # function to perform a two-step spatial join
@@ -278,13 +626,23 @@ st_calculate_diameter <- function(sf_data) {
 
 let's apply our `match_points_to_polygons()` and `st_calculate_diameter()` functions
 
+For only the PSINF mixed conifer site, slash pile field measurements were taken by measuring the height and diameter (longest side of pile) using a laser hypsometer
+
+For volume estimation, we'll model the ground truth slash piles as a paraboloid, specifically a parabolic dome, assuming a perfectly circular base and sides curved smoothly to a peak. Assuming a paraboloid shape is common for quantifying slash pile volume ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)) and may better represent the diverse shapes of real-world slash piles than assuming a conical or half-sphere form. A paraboloid can represent a variety of shapes including those that are taller and more conical, or flatter and more spread out, because it allows the measured height and width to influence the volume calculation independently. This makes the paraboloid potentially more robust for estimating volumes of piles with varying aspect ratios. 
+
+the volume formula for a paraboloid is:
+  
+$$
+V = \frac{1}{8}\pi \cdot width^2 \cdot height
+$$
+
+
 ```{r}
-# nrow(slash_piles_polys)
-# let's do it
-slash_piles_polys <-
+# PSINF Mixed Conifer Site
+psinf_slash_piles_polys <-
   match_points_to_polygons(
-    points_sf = slash_piles_points 
-    , polygons_sf = slash_piles_polys
+    points_sf = psinf_slash_piles_points 
+    , polygons_sf = psinf_slash_piles_polys
     , point_id = "row_number"
     , polygon_id = "pile_id"
   ) %>% 
@@ -303,25 +661,141 @@ slash_piles_polys <-
     , field_gt_area_m2 = pi*field_radius_m^2 
     # volume ASSUMING PERFECT GEOMETRIC SHAPE :/
     , image_gt_volume_m3 = (1/8) * pi * ( (sqrt(image_gt_area_m2/pi)*2)^2 ) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
-      # (sqrt(image_gt_area_m2/pi)*2) = diameter assuming of circle covering same area
     , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
   )
-  
-# check if the pile is in the stand boundary
-slash_piles_polys <- slash_piles_polys %>% 
+# TRFO-BLM Pinyon-Juniper Site
+pj_slash_piles_polys <-
+  match_points_to_polygons(
+    points_sf = pj_slash_piles_points 
+    , polygons_sf = pj_slash_piles_polys
+    , point_id = "orig_pile_id"
+    , polygon_id = "pile_id"
+  ) %>% 
+  dplyr::ungroup() %>%
+  sf::st_make_valid() %>%
+  dplyr::filter(sf::st_is_valid(.)) %>% 
+  st_calculate_diameter() %>% 
+  dplyr::rename(image_gt_diameter_m = diameter_m) %>% 
+  # calculate area and volume
   dplyr::mutate(
-    is_in_stand = pile_id %in% (slash_piles_polys %>% 
-      sf::st_intersection(stand_boundary) %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::pull(pile_id))
+    # height 
+    height_m = height_m
+    , field_diameter_m = width_m
+    , field_radius_m = (field_diameter_m/2)
+    , image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
+    , field_gt_area_m2 = pi*field_radius_m^2 
+    # volume ASSUMING PERFECT GEOMETRIC SHAPE :/
+    , image_gt_volume_m3 = (1/8) * pi * ( (sqrt(image_gt_area_m2/pi)*2)^2 ) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
+    , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
   )
+# BHEF Ponderosa Pine Site
+bhef_slash_piles_polys <-
+  bhef_slash_piles_polys %>% 
+  st_calculate_diameter() %>% 
+  dplyr::rename(image_gt_diameter_m = diameter_m) %>% 
+  # calculate area and volume
+  dplyr::mutate(
+    image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
+  )
+# ARNF Ponderosa Pine Site
+arnf_slash_piles_polys <-
+  arnf_slash_piles_polys %>% 
+  st_calculate_diameter() %>% 
+  dplyr::rename(image_gt_diameter_m = diameter_m) %>% 
+  # calculate area and volume
+  dplyr::mutate(
+    image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
+  )
+
+xxx
 ```
 
-what? 
+
+---
+
+Slash pile field measurements were taken by measuring the height and diameter (longest side of pile) using a laser hypsometer
+
+For volume estimation, we'll model the ground truth slash piles as a paraboloid, specifically a parabolic dome, assuming a perfectly circular base and sides curved smoothly to a peak. Assuming a paraboloid shape is common for quantifying slash pile volume ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)) and may better represent the diverse shapes of real-world slash piles than assuming a conical or half-sphere form. A paraboloid can represent a variety of shapes including those that are taller and more conical, or flatter and more spread out, because it allows the measured height and width to influence the volume calculation independently. This makes the paraboloid potentially more robust for estimating volumes of piles with varying aspect ratios. 
+
+the volume formula for a paraboloid is:
+  
+$$
+V = \frac{1}{8}\pi \cdot width^2 \cdot height
+$$
+
 
 ```{r}
-slash_piles_polys %>% dplyr::glimpse()
+# polygons annotated using RGB and field-collected points
+slash_piles_polys <- sf::st_read(
+    "../data/PFDP_Data/PFDP_SlashPiles/manitou_pile_polys.shp"
+    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles_Polygons.shp"
+    , quiet = T
+  ) %>% 
+  dplyr::rename_with(tolower) %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.)) %>% 
+  # fix multipolygons
+  dplyr::ungroup() %>% 
+  dplyr::mutate(treeID = dplyr::row_number()) %>% 
+  cloud2trees::simplify_multipolygon_crowns() %>% 
+  dplyr::select(-c(treeID, shape_leng, shape_area))
+# slash_piles_polys %>% dplyr::glimpse()
+
+# points recorded in field
+slash_piles_points <- sf::st_read(
+    "../data/PFDP_Data/PFDP_SlashPiles/SlashPiles.shp"
+    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles.shp"
+    , quiet = T
+  ) %>% 
+  dplyr::rename_with(tolower) %>% 
+  sf::st_zm() %>% 
+  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
+  dplyr::filter( !(objectid %in% c(43)) ) %>% # duplicate field points
+  dplyr::mutate(row_number = dplyr::row_number()) %>% 
+  dplyr::select(-c(objectid)) %>% 
+  dplyr::rename(
+    height_ft = height
+    , diameter_ft = diameter
+  )
+
+# stand boundary
+stand_boundary <- sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
+  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
+  sf::st_union()
 ```
+
+what is the area of the treatment unit boundaries we are looking over?
+
+```{r}
+stand_boundary %>% 
+  sf::st_area() %>% 
+  as.numeric() %>% 
+  `/`(10000) %>% 
+  scales::comma(suffix = " ha", accuracy = 0.1)
+```
+
+that's great
+
+let's check this on the map
+
+```{r}
+# mapview::mapview(slash_piles_points, zcol = "comment", layer.name = "slash piles")
+mapview::mapview(
+  stand_boundary
+  , color = "black"
+  , lwd = 1
+  , alpha.regions = 0
+  , label = FALSE
+  , legend = FALSE
+  , popup = FALSE
+  , layer.name = "stand boundary"
+) +
+# mapview::mapview(slash_piles_polys, zcol = "is_in_stand", layer.name = "'in' slash piles") +
+mapview::mapview(slash_piles_polys, col.regions = "navy", col = NA, layer.name = "pile polys", legend = FALSE) +
+mapview::mapview(slash_piles_points, cex = 2, col.regions = "gold", color = "gold", layer.name = "pile points")
+```
+
+
 
 summary statistics for the form measurements
 
