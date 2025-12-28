@@ -382,9 +382,9 @@ adjust_raster_resolution <- function(
 
     # aggregate the raster
     if(inherits(ofile,"character")){
-      aggregated_raster <- terra::aggregate(raster_object, fact = fact, fun = fun, filename = ofile, overwrite = TRUE)
+      aggregated_raster <- terra::aggregate(raster_object, fact = fact, fun = fun, na.rm = TRUE, filename = ofile, overwrite = TRUE)
     }else{
-      aggregated_raster <- terra::aggregate(raster_object, fact = fact, fun = fun) 
+      aggregated_raster <- terra::aggregate(raster_object, fact = fact, fun = fun, na.rm = TRUE) 
     }
     result_raster <- aggregated_raster  
   }else if(target_resolution < current_resolution) {

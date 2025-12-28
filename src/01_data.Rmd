@@ -72,8 +72,11 @@ let's load in all the vector data containing the study units
 
 ```{r}
 # PSINF Mixed Conifer Site
-psinf_stand_boundary <- sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
+psinf_stand_boundary <-
+  sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
   sf::st_union() %>% 
+  sf::st_as_sf() %>% 
+  sf::st_set_geometry("geometry") %>% 
   dplyr::mutate(site = "PSINF Mixed Conifer Site")
 # TRFO-BLM Pinyon-Juniper Site
 pj_stand_boundary <- 
@@ -86,6 +89,7 @@ pj_stand_boundary <-
   dplyr::rename_with(~stringr::str_replace_all(.x, "\\.", "_")) %>% 
   dplyr::filter(tolower(unit)=="u10") %>% 
   dplyr::slice(1) %>% 
+  sf::st_set_geometry("geometry") %>% 
   dplyr::mutate(site = "TRFO-BLM Pinyon-Juniper Site")
 # BHEF Ponderosa Pine Site
 bhef_stand_boundary <- 
@@ -101,11 +105,14 @@ bhef_stand_boundary <-
     & !(treatment_type_grp %in% c("Improvement/Liberation Cut", "Other", "Sanitation Cut"))
     & suid %in% c("0203088082660004000","0203088082660003000") # these were the only units with machine piles in prescription
   ) %>% 
+  sf::st_set_geometry("geometry") %>% 
   dplyr::mutate(site = "BHEF Ponderosa Pine Site")
 # ARNF Ponderosa Pine Site
 arnf_stand_boundary <- 
   sf::st_read("../data/ARNF_DiamondView_202510/Diamond_View_Boundary.gpkg", quiet=T) %>% 
   sf::st_union() %>% 
+  sf::st_as_sf() %>% 
+  sf::st_set_geometry("geometry") %>% 
   dplyr::mutate(site = "ARNF Ponderosa Pine Site")
 ```
 
@@ -114,14 +121,25 @@ we'll combine the study unit boundaries for all sites to create a spatial data s
 ```{r}
 # read the data
 # stand boundary
-all_stand_boundary <- 
+all_stand_boundary <-
   dplyr::bind_rows(
-    psinf_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
-    , pj_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
-    , bhef_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
-    , arnf_stand_boundary %>% sf::st_transform(crs = 5070) %>% dplyr::select(site)
+    psinf_stand_boundary %>% 
+      sf::st_transform(crs = 5070) %>% 
+      dplyr::select(site) %>% 
+      sf::st_set_geometry("geometry")
+    , pj_stand_boundary %>% 
+      sf::st_transform(crs = 5070) %>% 
+      dplyr::select(site) %>% 
+      sf::st_set_geometry("geometry")
+    , bhef_stand_boundary %>% 
+      sf::st_transform(crs = 5070) %>% 
+      dplyr::select(site) %>% 
+      sf::st_set_geometry("geometry")
+    , arnf_stand_boundary %>% 
+      sf::st_transform(crs = 5070) %>% 
+      dplyr::select(site) %>% 
+      sf::st_set_geometry("geometry")
   ) %>% 
-  sf::st_set_geometry("geometry") %>% 
   dplyr::group_by(site) %>% 
   dplyr::summarise(
     geometry = sf::st_union(geometry)
@@ -254,7 +272,7 @@ my_ggmap_basemap <- function(sf_data, zoom_level = 14, buffer_box = 2600, my_crs
 
 plot the fancy basemap with the points
 
-```{r, fig.height=9, fig.width=7.5}
+```{r, fig.height=9, fig.width=7.5, eval=FALSE}
 # get the basemap with our my_ggmap_basemap()
 plt_basemap <- my_ggmap_basemap(
   sf_data = all_stand_boundary %>% dplyr::group_by(site) %>% sf::st_point_on_surface()
@@ -293,9 +311,9 @@ plt2_temp <-
 plt2_temp
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r, include=FALSE, eval=F}
 ggplot2::ggsave(
-  "../data/all_agg_ground_truth_match_ans.jpg"
+  "../data/all_study_site_map.jpg"
   , dpi = "print"
   , height = 9, width = 7.5
 )
@@ -311,7 +329,7 @@ all_stand_boundary %>%
     site_area_ha = scales::comma(site_area_ha, suffix = " ha", accuracy = 0.1)
   ) %>% 
   kableExtra::kbl(
-    caption = caption
+    caption = "Study site area"
     , col.names = c(
       "site", "hectares"
     )
@@ -322,7 +340,7 @@ all_stand_boundary %>%
 
 ## Slash Pile Vector Data
 
-Image-annotated pile footprints at each study site were created in a GIS by outlining pile boundaries on the RGB orthomosaic and confirming the vertical structure using fine-resolution CHM data (e.g., 0.15m resolution). Field-collected points were used to ensure pile census completeness at the hand-pile study sites (PSINF Mixed Conifer Site and TRFO-BLM Pinyon-Juniper Site) to pinpoint piles that were otherwise challenging to delineate from the aerial imagery and CHM data alone. Machine piles were easily distinguishable using the RGB and CHM data.
+Image-annotated pile footprints at each study site were created in a GIS by outlining pile boundaries on the RGB orthomosaic and confirming the vertical structure using fine-resolution CHM data (e.g., 0.15m resolution). Field-collected points were used to ensure pile census completeness at the hand-pile study sites (PSINF Mixed Conifer Site and TRFO-BLM Pinyon-Juniper Site) to pinpoint piles that were otherwise challenging to delineate from the aerial imagery and CHM data alone. Across all sites, machine piles were easily distinguishable using the RGB and CHM data.
 
 Let's load in those image-annotated pile polygons now for each study site.
 
@@ -344,7 +362,8 @@ Let's load in those image-annotated pile polygons now for each study site.
     dplyr::ungroup() %>% 
     dplyr::mutate(treeID = dplyr::row_number()) %>% 
     cloud2trees::simplify_multipolygon_crowns() %>% 
-    dplyr::select(-c(treeID, shape_leng, shape_area))
+    dplyr::select(-c(treeID, shape_leng, shape_area)) %>% 
+    dplyr::mutate(site = "PSINF Mixed Conifer Site")
   
   # points recorded in field
   psinf_slash_piles_points <- sf::st_read(
@@ -371,7 +390,7 @@ Let's load in those image-annotated pile polygons now for each study site.
         sf::st_intersection(psinf_stand_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id) %>% 
-        dplyr:mutate(is_in_stand = T)
+        dplyr::mutate(is_in_stand = T)
       , by = "pile_id"
     ) %>% 
     dplyr::mutate(
@@ -392,7 +411,8 @@ Let's load in those image-annotated pile polygons now for each study site.
     ) %>% 
     cloud2trees::simplify_multipolygon_crowns() %>%
     dplyr::select(-c(treeID,id)) %>% 
-    dplyr::filter(pile_id!=62)
+    dplyr::filter(pile_id!=62) %>% 
+    dplyr::mutate(site = "TRFO-BLM Pinyon-Juniper Site")
   
   # points recorded in field
   # these piles were collected twice in the same location and have different measurements :\
@@ -404,7 +424,7 @@ Let's load in those image-annotated pile polygons now for each study site.
     , 50
   )
   pj_slash_piles_points <- 
-    readr::read_csv("../data/Dawson_data/PJ_Piles_Unit_10.csv") %>% 
+    readr::read_csv("../data/Dawson_data/PJ_Piles_Unit_10.csv", progress = T, show_col_types = F) %>% 
     dplyr::rename_with(tolower) %>% 
     dplyr::rename_with(stringr::str_squish) %>% 
     dplyr::rename_with(make.names) %>% 
@@ -412,7 +432,7 @@ Let's load in those image-annotated pile polygons now for each study site.
     dplyr::rename_with(~stringr::str_remove(.x, "\\.$")) %>% 
     dplyr::rename_with(~stringr::str_replace_all(.x, "\\.", "_")) %>% 
     dplyr::mutate(
-      orig_pile_id = tidyr::extract_numeric(name)
+      orig_pile_id = readr::parse_number(name)
     ) %>% 
     dplyr::filter(
       !(orig_pile_id %in% bad_pile_ids_temp)
@@ -432,7 +452,7 @@ Let's load in those image-annotated pile polygons now for each study site.
         sf::st_intersection(pj_stand_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id) %>% 
-        dplyr:mutate(is_in_stand = T)
+        dplyr::mutate(is_in_stand = T)
       , by = "pile_id"
     ) %>% 
     dplyr::mutate(
@@ -452,7 +472,8 @@ Let's load in those image-annotated pile polygons now for each study site.
       , treeID = dplyr::row_number()
     ) %>% 
     cloud2trees::simplify_multipolygon_crowns() %>%
-    dplyr::select(-c(treeID))
+    dplyr::select(-c(treeID)) %>% 
+    dplyr::mutate(site = "BHEF Ponderosa Pine Site")
   
   # update unit boundary to pile proj
   bhef_stand_boundary <- bhef_stand_boundary %>% sf::st_transform(sf::st_crs(bhef_slash_piles_polys))
@@ -464,7 +485,7 @@ Let's load in those image-annotated pile polygons now for each study site.
         sf::st_intersection(bhef_stand_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id) %>% 
-        dplyr:mutate(is_in_stand = T)
+        dplyr::mutate(is_in_stand = T)
       , by = "pile_id"
     ) %>% 
     dplyr::mutate(
@@ -484,7 +505,8 @@ Let's load in those image-annotated pile polygons now for each study site.
       , treeID = dplyr::row_number()
     ) %>% 
     cloud2trees::simplify_multipolygon_crowns() %>%
-    dplyr::select(-c(treeID))
+    dplyr::select(-c(treeID)) %>% 
+    dplyr::mutate(site = "ARNF Ponderosa Pine Site")
   
   # update unit boundary to pile proj
   arnf_stand_boundary <- arnf_stand_boundary %>% sf::st_transform(sf::st_crs(arnf_slash_piles_polys))
@@ -496,13 +518,15 @@ Let's load in those image-annotated pile polygons now for each study site.
         sf::st_intersection(arnf_stand_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id) %>% 
-        dplyr:mutate(is_in_stand = T)
+        dplyr::mutate(is_in_stand = T)
       , by = "pile_id"
     ) %>% 
     dplyr::mutate(
       is_in_stand = dplyr::coalesce(is_in_stand, F)
     )
 ```
+
+### Standardize Pile Data
 
 For the sites with field-collected point data, each point may not necessarily fall within the polygon boundary (e.g. due to misalignment between the imagery and point locations or slight inaccuracies in either the point or pile boundaries). So, we need to perform a matching process to tie the points to the polygons so that we get the height and diameter measured during the point collection attached to the polygons. to do this, we'll use a two-stage process that first attaches the points data frame to polygons where points fall within, using a spatial intersection. It then finds and assigns the remaining, unjoined points to their nearest polygon. The final output includes all polygons from the original data, ensuring that every polygon is represented even if no points were matched. 
 
@@ -565,11 +589,23 @@ match_points_to_polygons <- function(
     combined_points <- points_within
   }
   
+  # names diff
+  cols_add <-
+    c(
+      base::setdiff(
+        names(combined_points)
+        , names(polygons_sf)
+      )
+      , polygon_id
+    )
+  
   # 7. Perform a left join to ensure all original polygons are included in the final output.
   # Polygons without any matched points will have `NA` values for the point attributes.
   final_result <- polygons_sf %>% 
     dplyr::left_join(
-      sf::st_drop_geometry(combined_points)
+      combined_points %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(dplyr::all_of(cols_add))
       , by = polygon_id
     )
   
@@ -636,7 +672,6 @@ $$
 V = \frac{1}{8}\pi \cdot width^2 \cdot height
 $$
 
-
 ```{r}
 # PSINF Mixed Conifer Site
 psinf_slash_piles_polys <-
@@ -654,14 +689,14 @@ psinf_slash_piles_polys <-
   # calculate area and volume
   dplyr::mutate(
     # height 
-    height_m = height_ft*0.3048
+    field_height_m = height_ft*0.3048
     , field_diameter_m = diameter_ft*0.3048 # *0.3048 or /3.281 to convert to m
     , field_radius_m = (field_diameter_m/2)
     , image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
     , field_gt_area_m2 = pi*field_radius_m^2 
     # volume ASSUMING PERFECT GEOMETRIC SHAPE :/
-    , image_gt_volume_m3 = (1/8) * pi * ( (sqrt(image_gt_area_m2/pi)*2)^2 ) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
-    , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
+    , image_gt_volume_m3 = (1/8) * pi * (image_gt_diameter_m^2) * field_height_m
+    , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * field_height_m
   )
 # TRFO-BLM Pinyon-Juniper Site
 pj_slash_piles_polys <-
@@ -675,18 +710,20 @@ pj_slash_piles_polys <-
   sf::st_make_valid() %>%
   dplyr::filter(sf::st_is_valid(.)) %>% 
   st_calculate_diameter() %>% 
-  dplyr::rename(image_gt_diameter_m = diameter_m) %>% 
+  dplyr::rename(
+    image_gt_diameter_m = diameter_m
+    , field_height_m = height_m
+  ) %>% 
   # calculate area and volume
   dplyr::mutate(
     # height 
-    height_m = height_m
-    , field_diameter_m = width_m
+    field_diameter_m = width_m
     , field_radius_m = (field_diameter_m/2)
     , image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
     , field_gt_area_m2 = pi*field_radius_m^2 
     # volume ASSUMING PERFECT GEOMETRIC SHAPE :/
-    , image_gt_volume_m3 = (1/8) * pi * ( (sqrt(image_gt_area_m2/pi)*2)^2 ) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
-    , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * height_m # (1/8) * pi * (shape_length^2) * max_height_m
+    , image_gt_volume_m3 = (1/8) * pi * (image_gt_diameter_m^2) * field_height_m
+    , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * field_height_m
   )
 # BHEF Ponderosa Pine Site
 bhef_slash_piles_polys <-
@@ -706,110 +743,111 @@ arnf_slash_piles_polys <-
   dplyr::mutate(
     image_gt_area_m2 = sf::st_area(.) %>% as.numeric()
   )
-
-xxx
 ```
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(list = ls()[grep("_points",ls())])
+remove(ggmap_bbox_fn, my_ggmap_basemap, plt_crs)
+gc()
+```
 
----
+### Pile Form Measurements
 
-Slash pile field measurements were taken by measuring the height and diameter (longest side of pile) using a laser hypsometer
-
-For volume estimation, we'll model the ground truth slash piles as a paraboloid, specifically a parabolic dome, assuming a perfectly circular base and sides curved smoothly to a peak. Assuming a paraboloid shape is common for quantifying slash pile volume ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)) and may better represent the diverse shapes of real-world slash piles than assuming a conical or half-sphere form. A paraboloid can represent a variety of shapes including those that are taller and more conical, or flatter and more spread out, because it allows the measured height and width to influence the volume calculation independently. This makes the paraboloid potentially more robust for estimating volumes of piles with varying aspect ratios. 
-
-the volume formula for a paraboloid is:
-  
-$$
-V = \frac{1}{8}\pi \cdot width^2 \cdot height
-$$
-
+let's make some reusable functions to make the same tables throughout the analysis
 
 ```{r}
-# polygons annotated using RGB and field-collected points
-slash_piles_polys <- sf::st_read(
-    "../data/PFDP_Data/PFDP_SlashPiles/manitou_pile_polys.shp"
-    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles_Polygons.shp"
-    , quiet = T
+# aggregate
+agg_piles_temp <- function(df) {
+  df %>% 
+    dplyr::filter(is_in_stand) %>% 
+    # dplyr::ungroup() %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::select(
+      dplyr::any_of(c("site", "pile_type"))
+      , tidyselect::contains("area_m2")
+        | tidyselect::contains("diameter_m")
+        | tidyselect::contains("height_m")
+        # | tidyselect::contains("volume_m3")
+    ) %>%
+    dplyr::summarise(
+      dplyr::across(
+        dplyr::where(~ is.character(.x) | is.factor(.x))
+        , .fns = dplyr::first
+      )
+      , dplyr::across(
+        dplyr::where(is.numeric)
+        , .fns = list(
+          mean = ~mean(.x,na.rm=T)
+          , sd = ~sd(.x,na.rm=T)
+          # , q10 = ~quantile(.x,na.rm=T,probs=0.1)
+          # , q50 = ~quantile(.x,na.rm=T,probs=0.5)
+          # , q90 = ~quantile(.x,na.rm=T,probs=0.9)
+          # , min = ~min(.x,na.rm=T)
+          # , max = ~max(.x,na.rm=T)
+          , range = ~paste0(
+            scales::comma(min(.x,na.rm=T), accuracy = 0.1)
+            ,"-"
+            , scales::comma(max(.x,na.rm=T), accuracy = 0.1)
+          )
+        )
+      )
+      , n = dplyr::n()
+    ) %>% 
+    dplyr::ungroup()
+}
+# function to kableExtra
+kbl_form_sum_stats_wide <- function(df, by_lab = "") {
+  df %>% 
+    dplyr::mutate(
+    n = scales::comma(n,accuracy=1)
+    , dplyr::across(
+      dplyr::where(is.numeric)
+      , ~scales::comma(.x,accuracy=0.1)
+    )
   ) %>% 
-  dplyr::rename_with(tolower) %>% 
-  sf::st_make_valid() %>% 
-  dplyr::filter(sf::st_is_valid(.)) %>% 
-  # fix multipolygons
-  dplyr::ungroup() %>% 
-  dplyr::mutate(treeID = dplyr::row_number()) %>% 
-  cloud2trees::simplify_multipolygon_crowns() %>% 
-  dplyr::select(-c(treeID, shape_leng, shape_area))
-# slash_piles_polys %>% dplyr::glimpse()
-
-# points recorded in field
-slash_piles_points <- sf::st_read(
-    "../data/PFDP_Data/PFDP_SlashPiles/SlashPiles.shp"
-    # "f:\\PFDP_Data\\PFDP_SlashPiles\\SlashPiles.shp"
-    , quiet = T
+  kableExtra::kbl(
+    caption = paste0(
+      "Slash pile image-annotated and field-collected form measurements"
+      ,"<br>"
+      , by_lab
+    )
+    , col.names = c(
+      " ", "Piles"
+      , rep(c("Mean","Std Dev","Range"), times = 4)
+    )
+    , escape = F
   ) %>% 
-  dplyr::rename_with(tolower) %>% 
-  sf::st_zm() %>% 
-  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
-  dplyr::filter( !(objectid %in% c(43)) ) %>% # duplicate field points
-  dplyr::mutate(row_number = dplyr::row_number()) %>% 
-  dplyr::select(-c(objectid)) %>% 
-  dplyr::rename(
-    height_ft = height
-    , diameter_ft = diameter
-  )
-
-# stand boundary
-stand_boundary <- sf::st_read("../data/PFDP_Data/Tree_Data/GIS/PFDP_Boundary.shp", quiet = T) %>% 
-  sf::st_transform(sf::st_crs(slash_piles_polys)) %>% 
-  sf::st_union()
-```
-
-what is the area of the treatment unit boundaries we are looking over?
-
-```{r}
-stand_boundary %>% 
-  sf::st_area() %>% 
-  as.numeric() %>% 
-  `/`(10000) %>% 
-  scales::comma(suffix = " ha", accuracy = 0.1)
-```
-
-that's great
-
-let's check this on the map
-
-```{r}
-# mapview::mapview(slash_piles_points, zcol = "comment", layer.name = "slash piles")
-mapview::mapview(
-  stand_boundary
-  , color = "black"
-  , lwd = 1
-  , alpha.regions = 0
-  , label = FALSE
-  , legend = FALSE
-  , popup = FALSE
-  , layer.name = "stand boundary"
-) +
-# mapview::mapview(slash_piles_polys, zcol = "is_in_stand", layer.name = "'in' slash piles") +
-mapview::mapview(slash_piles_polys, col.regions = "navy", col = NA, layer.name = "pile polys", legend = FALSE) +
-mapview::mapview(slash_piles_points, cex = 2, col.regions = "gold", color = "gold", layer.name = "pile points")
-```
-
-
-
-summary statistics for the form measurements
-
-```{r}
-kbl_form_sum_stats <- function(
+  kableExtra::kable_styling(font_size = 11.5) %>% 
+  kableExtra::add_header_above(
+    c(
+      " "=2
+      , "Image-Ann. Area (m<sup>2</sup>)" = 3
+      , "Image-Ann. Diam (m)" = 3
+      , "Field-Meas. Diam (m)" = 3
+      , "Field-Meas. Height (m)" = 3
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::column_spec(seq(2,14,by=3), border_right = TRUE, include_thead = TRUE) %>% 
+  kableExtra::column_spec(
+    column = 2:14
+    , extra_css = "font-size: 11px;"
+    , include_thead = T
+  ) %>% 
+  kableExtra::scroll_box(width = "740px")
+}
+## for a single site
+kbl_form_sum_stats_long <- function(
   pile_df
   , caption = "Ground Truth Piles: summary statistics for form measurements"
 ) {
 pile_df %>% 
   sf::st_drop_geometry() %>% 
   dplyr::select(
-    tidyselect::contains("height_m")
+    tidyselect::contains("area_m2")
     | tidyselect::contains("diameter_m")
-    | tidyselect::contains("area_m2")
+    | tidyselect::contains("height_m")
     | tidyselect::contains("volume_m3")
   ) %>% 
   dplyr::summarise(
@@ -827,7 +865,7 @@ pile_df %>%
     )
     , n = dplyr::n()
   ) %>% 
-  dplyr::ungroup() %>% 
+  # dplyr::ungroup() %>% 
   tidyr::pivot_longer(cols = -c(n)) %>% 
   dplyr::mutate(
     agg = stringr::word(name,-1,sep = "_")
@@ -877,25 +915,68 @@ pile_df %>%
 }
 ```
 
+summary statistics for the form measurements for all study sites
+
 ```{r}
-kbl_form_sum_stats(
-  slash_piles_polys %>% dplyr::filter(is_in_stand) %>% dplyr::select(!tidyselect::contains("volume_m3"))
-  , caption = "Ground Truth Piles: summary statistics for form measurements<br>ponderosa pine training site"
-)
+agg_piles_temp(
+  psinf_slash_piles_polys %>% 
+    dplyr::select(-tidyselect::starts_with("field_gt_area"))
+) %>%
+  dplyr::bind_rows(
+    agg_piles_temp(
+      pj_slash_piles_polys %>% 
+        dplyr::select(
+          -tidyselect::contains("field")
+          , -tidyselect::contains("height")
+        )
+    )
+    , agg_piles_temp(bhef_slash_piles_polys)
+    , agg_piles_temp(arnf_slash_piles_polys)
+  ) %>% 
+  dplyr::select(
+    site, n
+    , tidyselect::starts_with("image_")
+    , tidyselect::starts_with("field_")
+  ) %>% 
+  kbl_form_sum_stats_wide(by_lab = "by study site")  
 ```
 
-let's check the field-collected and image-annotated measurements of diameter which will serve as a good sanity check for our image-annotation process (assuming diameter was accurately measured in the field...might be a perilous assumption)
+All sites except PSINF have only mechanical or only hand piles whereas PSINF has both hand piles and mechanical piles. Let's look at the summary statistics for the form measurements for only PSINF based on pile construction type
 
 ```{r}
-slash_piles_polys %>% 
+psinf_slash_piles_polys %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::filter(is_in_stand) %>% 
+  dplyr::select(
+    -tidyselect::contains("volume_m3")
+    , -tidyselect::starts_with("field_gt_area")
+    , -c(site)
+  ) %>% 
+  dplyr::rename(pile_type = comment) %>% 
+  dplyr::group_by(pile_type) %>% 
+  agg_piles_temp() %>% 
+  dplyr::select(
+    pile_type, n
+    , tidyselect::starts_with("image_")
+    , tidyselect::starts_with("field_")
+  ) %>% 
+  kbl_form_sum_stats_wide(by_lab = "PSINF Mixed Conifer Site by pile type")  
+```
+
+### Image-Annotation Comparison
+
+For only the PSINF site, let's check the field-collected and image-annotated measurements of diameter which will serve as a good sanity check for our image-annotation process (assuming diameter was accurately measured in the field...might be a perilous assumption)
+
+```{r}
+psinf_slash_piles_polys %>% 
   dplyr::mutate(diff_diameter_m = image_gt_diameter_m - field_diameter_m) %>% 
   ggplot2::ggplot(mapping = ggplot2::aes(x = image_gt_diameter_m, y = field_diameter_m)) +
   ggplot2::geom_abline(lwd = 1.5) +
   ggplot2::geom_point(ggplot2::aes(color = diff_diameter_m)) +
   ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
   ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(slash_piles_polys$field_diameter_m,na.rm=T), max(slash_piles_polys$image_gt_diameter_m,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(slash_piles_polys$field_diameter_m,na.rm=T), max(slash_piles_polys$image_gt_diameter_m,na.rm=T) ) )) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(psinf_slash_piles_polys$field_diameter_m,na.rm=T), max(psinf_slash_piles_polys$image_gt_diameter_m,na.rm=T) ) )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(psinf_slash_piles_polys$field_diameter_m,na.rm=T), max(psinf_slash_piles_polys$image_gt_diameter_m,na.rm=T) ) )) +
   ggplot2::labs(
     x = "image-annotated diameter (m)", y = "field-collected diameter (m)"
     , color = "image-field\ndiameter diff."
@@ -907,71 +988,29 @@ slash_piles_polys %>%
 the plot makes these values look very similar with the image-annotated diameter generally larger than the field-collected value. let's check these using `lm()`
 
 ```{r}
-lm_temp <- lm(field_diameter_m ~ image_gt_diameter_m, data = slash_piles_polys)
+lm_temp <- lm(field_diameter_m ~ image_gt_diameter_m, data = psinf_slash_piles_polys)
 summary(lm_temp)
 ```
 
 Our slope of `r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)` is close to 1 and, along with our high R-squared value of `r scales::percent(summary(lm_temp)$r.squared, accuracy = 1)`, indicate our image- and field-measured diameters are well-calibrated
 
-let's check the field-collected and image-annotated measurements of volume and area. for both volume measurements, a paraboloid geometry is assumed for calculation with the image-annotated volume relying on the field-collected heights
+let's use a paired t-test to determine if the mean difference (MD) between the field-measured diameter and the image-annotated diameter is statistically significant (i.e. significantly different from zero)
 
 ```{r}
-p1_temp <- slash_piles_polys %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = image_gt_area_m2, y =field_gt_area_m2)) +
-  ggplot2::geom_abline(lwd = 1.5) +
-  ggplot2::geom_point(ggplot2::aes(color = height_m)) +
-  ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
-  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(slash_piles_polys$field_gt_area_m2,na.rm=T), max(slash_piles_polys$image_gt_area_m2,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(slash_piles_polys$field_gt_area_m2,na.rm=T), max(slash_piles_polys$image_gt_area_m2,na.rm=T) ) )) +
-  ggplot2::labs(
-    x = "image-annotated area (m2)", y = "field-collected area (m2)"
-    , color = "height (m)"
-    , subtitle = "area (m2) comparison"
-  ) +
-  ggplot2::theme_light()
-p2_temp <-
-  slash_piles_polys %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = image_gt_volume_m3, y =field_gt_volume_m3)) +
-  ggplot2::geom_abline(lwd = 1.5) +
-  ggplot2::geom_point(ggplot2::aes(color = height_m)) +
-  ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
-  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(slash_piles_polys$field_gt_volume_m3,na.rm=T), max(slash_piles_polys$image_gt_volume_m3,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(slash_piles_polys$field_gt_volume_m3,na.rm=T), max(slash_piles_polys$image_gt_volume_m3,na.rm=T) ) )) +
-  ggplot2::labs(
-    x = "image-annotated volume (m3)", y = "field-collected volume (m3)"
-    , color = "height (m)"
-    , subtitle = "volume (m3) comparison"
-  ) +
-  ggplot2::theme_light()
-patchwork::wrap_plots(list(p1_temp,p2_temp), guides = "collect") &
-  ggplot2::theme(legend.position = "bottom")
+# is the mean difference between the two diameters significantly different from zero
+ttest_temp <- t.test(
+  psinf_slash_piles_polys %>% 
+    dplyr::filter(!is.na(field_diameter_m), !is.na(image_gt_diameter_m)) %>% 
+    dplyr::pull(field_diameter_m)
+  , psinf_slash_piles_polys %>% 
+    dplyr::filter(!is.na(field_diameter_m), !is.na(image_gt_diameter_m)) %>% 
+    dplyr::pull(image_gt_diameter_m)
+  , paired = TRUE
+)
+ttest_temp
 ```
 
-even assuming a perfectly circular base for the area of the field-collected data (i.e. based on measured diameter), our image-annotated values are in-line with the field-collected data as we saw with the diameter comparison
-
-quick summary of these measurements
-
-```{r}
-slash_piles_polys %>% 
-  sf::st_drop_geometry() %>% 
-  dplyr::select(height_m, tidyselect::ends_with("area_m2"), tidyselect::ends_with("volume_m3")) %>% 
-  summary()
-```
-
-```{r, include=FALSE,eval=FALSE}
-slash_piles_polys %>% 
-  sf::st_drop_geometry() %>% 
-  dplyr::filter(is_in_stand) %>% 
-  dplyr::select(height_m, tidyselect::ends_with("area_m2")) %>% 
-  dplyr::summarise(
-    dplyr::across(
-      .cols = dplyr::everything()
-      , list(p90 = ~quantile(.x,probs=0.90), p95 = ~quantile(.x,probs=0.95), p98 = ~quantile(.x,probs=0.98))
-    )
-  )
-```
+the mean difference (MD) is `r scales::comma(ttest_temp$estimate, accuracy = 0.01)` m (field-measured minus image-annotated value). also, the p-value of `r scales::comma(ifelse(ttest_temp$p.value<0.00001,0.00001,ttest_temp$p.value), accuracy = 0.00001)` is less than 0.05, meaning we should reject the null hypothesis that the true mean difference is zero. this confirms that the systematic difference (or bias) we observed where image-annotated diameter is larger than the field-measured diameter is statistically significant and not due to random chance
 
 ## RGB orthomosaic
 
