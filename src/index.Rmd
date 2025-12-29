@@ -60,7 +60,7 @@ The following table provides an overview of the four sites utilized in this stud
 
 We will follow the general analysis outline in five distinct sections:
 
-1. **Data Overview:** We will detail the study sites and summarize the number of piles and the pile size based on available measurements.
+1. **Data Overview:** We will detail the study sites, summarize the number of piles and the pile size based on available measurements, and review the RGB orthomosaic data
 2. **Point Cloud Processing:** We will demonstrate how to process the point cloud data to generate the required inputs for the propose pile detection method.
 3. **Geometry-based Slash Pile Detection:** We will detail the geometry-based slash pile detection method which uses user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data.
 2. **Spectral Refinement Methodology:** We will detail the complementary spectral refinement methodology which uses RGB data to filter the structurally-detected candidate piles.

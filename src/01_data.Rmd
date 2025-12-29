@@ -1012,55 +1012,178 @@ ttest_temp
 
 the mean difference (MD) is `r scales::comma(ttest_temp$estimate, accuracy = 0.01)` m (field-measured minus image-annotated value). also, the p-value of `r scales::comma(ifelse(ttest_temp$p.value<0.00001,0.00001,ttest_temp$p.value), accuracy = 0.00001)` is less than 0.05, meaning we should reject the null hypothesis that the true mean difference is zero. this confirms that the systematic difference (or bias) we observed where image-annotated diameter is larger than the field-measured diameter is statistically significant and not due to random chance
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(ggmap_bbox_fn, my_ggmap_basemap, plt_crs)
+gc()
+```
+
 ## RGB orthomosaic
 
-Orthomosaic `tif` files from the UAS flight imagery that were created in [Agisoft Metashape](https://www.agisoft.com/) are loaded and stitched together via `terra::mosaic`.
+Orthomosaic `tif` files from UAS flight imagery were created in the photogrammetry software (e.g. [Agisoft Metashape](https://www.agisoft.com/)). Each of our study sites have RGB data available covering the study area extent.
+
+### PSINF Mixed Conifer Site
 
 ```{r ortho-ld, results = 'hide'}
-  # read list of orthos
-  ortho_list_temp <- list.files(
-    "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
-    , pattern = "*\\.(tif|tiff)$", full.names = T)[] %>% 
-    purrr::map(function(x){terra::rast(x)})
-  
-  ortho_list_temp[[1]] %>% terra::res()
-  #   terra::aggregate(20) %>%
-  #   terra::plotRGB(r = 1, g = 2, b = 3, stretch = "hist", colNA = "transparent")
-  
-  ####### ensure the resolution of the rasters matches 
-    # terra::res(ortho_list_temp[[1]])
-    
-    ## function
-    change_res_fn <- function(r, my_res=1, m = "bilinear"){
-      r2 <- r
-      terra::res(r2) <- my_res
-      r2 <- terra::resample(r, r2, method = m)
-      return(r2)
-    }
-    ## apply the function
-    ortho_list_temp <- 1:length(ortho_list_temp) %>% 
-      purrr::map(function(x){change_res_fn(ortho_list_temp[[x]], my_res=0.10)})
-    
-    # terra::res(ortho_list_temp[[1]])
-    
-    # ortho_list_temp[[1]] %>%
-    #   terra::aggregate(2) %>%
-    #   terra::plotRGB(r = 1, g = 2, b = 3, stretch = "hist", colNA = "transparent")
+#### read RGB data keep only RGB
+psinf_rgb_rast <- terra::rast(
+    file.path(
+      "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
+      , "P4Pro_06_17_2021_half_half_optimal_transparent_mosaic_group1.tif"
+    )
+  ) %>% 
+  terra::subset(c(1,2,3))
+# rename bands
+names(psinf_rgb_rast) <- c("red","green","blue")
+```
 
-  ######## mosaic the raster list 
-    ortho_rast <- terra::mosaic(
-      terra::sprc(ortho_list_temp)
-      , fun = "min" # min only thing that works
+what is the resolution of the original RGB data?
+```{r}
+terra::res(psinf_rgb_rast)
+```
+
+let's reduce the resolution (i.e. increase the raster cell size; make more coarse)
+
+```{r, results='hide'}
+## function to change the resolution of RGB 
+change_res_fn <- function(
+  r
+  , my_res=1
+  , m = "bilinear"
+  # , ofile = tempfile(fileext = ".tif")
+  , ofile = NULL
+){
+  r2 <- r
+  terra::res(r2) <- my_res
+  if(!inherits(ofile,"character")){
+    r2 <- terra::resample(r, r2, method = m) 
+  }else{
+    r2 <- terra::resample(r, r2, method = m, filename=ofile, overwrite = T) 
+  }
+  return(r2)
+}
+###############################################################
+# clip to boundary and resample to change resolution
+###############################################################
+dir_temp <- "../data/PFDP_Data/"
+rgb_fnm_temp <- file.path(dir_temp,"psinf_rgb_rast.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- psinf_rgb_rast %>% 
+    terra::crop(
+      psinf_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(psinf_rgb_rast))
+      , filename =  tempfile(fileext = ".tif")
+      , overwrite = TRUE
     ) 
-    
-    names(ortho_rast) <- c("red","green","blue","alpha")
-    
-  # ortho_rast %>%
-  #   terra::aggregate(4) %>%
-  #   terra::plotRGB(r = 1, g = 2, b = 3, stretch = "lin", colNA = "transparent")
+  # Mask the cropped raster to the precise shape of the polygon
+  # This function will also be processed on disk due to the file size
+  psinf_rgb_rast <- terra::mask(
+    crop_rgb_rast_temp
+    , psinf_stand_boundary %>% 
+      sf::st_union() %>% 
+      sf::st_buffer(10) %>% 
+      terra::vect() %>% 
+      terra::project(terra::crs(psinf_rgb_rast))
+    , filename = tempfile(fileext = ".tif")
+    , overwrite = TRUE
+  )
+  
+  ## apply the change_res_fn for our analysis we don't need such finery
+  # this takes too long...
+  psinf_rgb_rast <- change_res_fn(psinf_rgb_rast, my_res=0.06, ofile = rgb_fnm_temp)
+}else{
+  psinf_rgb_rast <- terra::rast(rgb_fnm_temp)
+}
+# terra::res(psinf_rgb_rast)
+# terra::plotRGB(bhef_rgb_rast, stretch = "lin")
 ```
 
 make a function to plot the RGB imagery as a background for `ggplot2` plots
+
+```{r}
+# make a function to plot these detected crowns with rgb data
+ortho_plt_fn = function(rgb_rast, stand, buffer = 10, plt_lwd = 1, plt_line_col = "black"){
+  if(!inherits(rgb_rast,"SpatRaster")){stop("rgb_rast must be terra SpatRaster data")}
+  if(terra::nlyr(rgb_rast)<3){stop("rgb_rast must have 3 layers with RGB data")}
+  if(!inherits(stand,"sf") && !inherits(stand,"sfc")){stop("stand must be sf data")}
+  # crop
+  crp_rgb_rast_temp <- rgb_rast %>% 
+    terra::crop(
+      stand %>% 
+        dplyr::ungroup() %>% 
+        sf::st_union() %>% 
+        sf::st_bbox() %>% 
+        sf::st_as_sfc() %>% 
+        sf::st_buffer(buffer) %>% 
+        sf::st_transform(terra::crs(rgb_rast)) %>% 
+        terra::vect()
+    )
+  # convert raster to a data frame and create hex colors
+  # ?grDevices::rgb
+  rgb_df_temp <-
+    crp_rgb_rast_temp %>% 
+    terra::as.data.frame(xy = TRUE) %>%
+    dplyr::rename(
+      red = 3, green = 4, blue = 5
+    ) %>% 
+    dplyr::mutate(
+      hex_col = 
+        ifelse(
+          !is.na(red) & !is.na(green) & !is.na(blue)
+          , grDevices::rgb(
+            red
+            , green
+            , blue
+            , maxColorValue = 255
+          )
+          , NA
+        )
+    )
+    # dplyr::glimpse()
+  XXX
+  
+  # plt
+  plt <- ggplot2::ggplot() +
+    # add rgb base map
+    ggplot2::geom_raster(data = rgb_df_temp, mapping = ggplot2::aes(x = x, y = y, fill = hex_col)) +
+    # use identity scale so the hex codes are used directly
+    ggplot2::scale_fill_identity() +
+    ggplot2::coord_sf(expand = F) +
+    ggplot2::theme_void() +
+    ggplot2::theme(
+      legend.position = "none"
+    )
+  # add stand
+  # overlay polygons
+  plt <- plt +
+    # ggplot2::geom_sf(data = polys, fill = NA, color = "red", linewidth = 0.5) +
+    ggplot2::geom_sf(
+      data = stand %>% 
+        sf::st_make_valid() %>% 
+        dplyr::filter(sf::st_is_valid(.)) %>% 
+        sf::st_transform(terra::crs(rgb_rast))
+      , fill = NA
+      , color = plt_line_col
+      , lwd = plt_lwd
+      , inherit.aes = F
+    )
+  
+  return(plt)
+}
+```
+
+plot
+
+```{r}
+ortho_plt_fn(psinf_rgb_rast, psinf_stand_boundary)
+```
+
 
 ```{r}
 ######################################################################################
@@ -1135,6 +1258,70 @@ stand_temp <- slash_piles_polys %>%
 ortho_plt_fn(stand = stand_temp)
 ggsave("../data/pile_rgb.jpeg", height = 5, width = 5)
 ```
+
+### TRFO-BLM Pinyon-Juniper Site
+
+```{r}
+###############################################################
+# read/crop RGB raster
+###############################################################
+rgb_fnm_temp <- "../data/dawson_data/dawson_rgb.tif"
+if(!file.exists(rgb_fnm_temp)){
+  # terra handles large files on disk automatically
+  rgb_rast_temp <- terra::rast("d:/BLM_CO_SWDF_DawsonFuelsTreatment/Final/Ortho/BLM_CO_SWDF_DawsonFuelsTreatment_Ortho_202504.tif")
+  # Read the polygon file (e.g., a shapefile)
+  polygon_border_temp <- pj_stand_boundary %>% 
+    sf::st_buffer(50) %>% 
+    sf::st_bbox() %>% 
+    sf::st_as_sfc() %>%
+    sf::st_as_sf() %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(rgb_rast_temp))
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- terra::crop(rgb_rast_temp, polygon_border_temp, filename =  tempfile(fileext = ".tif"), overwrite = TRUE)
+  # Mask the cropped raster to the precise shape of the polygon
+  # This function will also be processed on disk due to the file size
+  pj_rgb_rast <- terra::mask(crop_rgb_rast_temp, polygon_border_temp, filename = rgb_fnm_temp, overwrite = TRUE)
+}else{
+  pj_rgb_rast <- terra::rast(rgb_fnm_temp)
+}
+terra::res(pj_rgb_rast)
+## function to change the resolution of RGB 
+change_res_fn <- function(r, my_res=1, m = "bilinear"){
+  r2 <- r
+  terra::res(r2) <- my_res
+  r2 <- terra::resample(r, r2, method = m)
+  return(r2)
+}
+## apply the function
+pj_rgb_rast <- change_res_fn(pj_rgb_rast, my_res=0.08)
+terra::res(pj_rgb_rast)
+```
+
+plot RGB with the ground-truth piles (blue)
+
+```{r}
+terra::plotRGB(pj_rgb_rast, stretch="lin")
+terra::plot(
+  pj_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(pj_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+terra::plot(
+  pj_slash_piles_polys %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(pj_rgb_rast))
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
+```
+
+### BHEF Ponderosa Pine Site
+
+### ARNF Ponderosa Pine Site
+
+
 
 ### Example ratio-based index
 
