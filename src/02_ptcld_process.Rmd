@@ -21,13 +21,20 @@ my_chm_res_m <- 0.1
 
 ### PSINF Mixed Conifer Site
 
-```{r, results=F}
+look at the summary of the point cloud data we'll be processing
+
+```{r}
 # processing dirs
 c2t_out_dir_temp <- "../data/PFDP_Data/"
 out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
+```
+
+process the point cloud with the `cloud2trees::cloud2raster()` workflow
+
+```{r, results=F}
 # do it
 if(!dir.exists(out_dir_temp)){
   # cloud2trees
@@ -62,17 +69,23 @@ let's check out the DTM
 
 ```{r, results='hide', message=FALSE, fig.show='asis'}
 psinf_cloud2raster_ans$dtm_rast %>% 
-  terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
+  terra::crop(
+    psinf_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(psinf_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>%  
   terra::plot(
-    col = harrypotter::hp(n = 100, option = "mischief")
+    col = viridis::viridis(n = 100)
     , axes = F
-    , main = "PSINF DTM (m)"
+    , main = "DTM (m)"
   )
 # add stand boundary
 terra::plot(
   psinf_stand_boundary %>% 
-    terra::vect() %>% 
-    terra::project(terra::crs(psinf_rgb_rast))
+    sf::st_transform(terra::crs(psinf_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
   , add = T, border = "black", col = NA, lwd = 1.2
 )
 ```
@@ -81,46 +94,51 @@ and CHM
 
 ```{r, results='hide', message=FALSE, fig.show='asis'}
 psinf_cloud2raster_ans$chm_rast %>% 
-  terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
+  terra::crop(
+    psinf_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(psinf_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>% 
   terra::plot(
     col = viridis::plasma(100)
     , axes = F
-    , main = "PSINF CHM (m)"
+    , main = "CHM (m)"
   )
 # add stand boundary
 terra::plot(
   psinf_stand_boundary %>% 
-    terra::vect() %>% 
-    terra::project(terra::crs(psinf_rgb_rast))
+    sf::st_transform(terra::crs(psinf_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
   , add = T, border = "black", col = NA, lwd = 1.2
 )
 ```
 
-### DTM and CHM + piles
+#### DTM and CHM + piles
 
-let's visually inspect the DTM and CHM with the pile outlines overlaid
+let's visually inspect the DTM and CHM with the pile outlines overlaid. we'll make some functions to use for the different study areas
 
 ```{r}
-p_fn_temp <- function(
+plt_rast_fn <- function(
     rn
-    , df = slash_piles_polys
-    , rast = cloud2raster_ans$dtm_rast
-    , crs = terra::crs(cloud2raster_ans$dtm_rast)
+    , df
+    , rast
     , my_title = ""
     , vopt = "viridis"
     , lim = NULL
+    , buff = 10
 ) {
   # scale the buffer based on the largest
     d_temp <- df %>%
-      dplyr::arrange(tolower(comment), desc(field_diameter_m)) %>% 
+      dplyr::arrange(desc(image_gt_diameter_m)) %>% 
       dplyr::slice(rn) %>% 
-      sf::st_transform(crs)
+      sf::st_transform(terra::crs(rast))
     
-    # plt classifier
-    # convert to stars
+    # convert rast to df
     comp_st <- rast %>%  
       terra::crop(
-        d_temp %>% sf::st_buffer(20) %>% terra::vect()
+        d_temp %>% sf::st_buffer(buff) %>% terra::vect()
       ) %>% 
       terra::as.data.frame(xy = T) %>% 
       dplyr::rename(f=3)
@@ -128,7 +146,7 @@ p_fn_temp <- function(
     # ggplot
     comp_temp <- ggplot2::ggplot() +
       ggplot2::geom_tile(data = comp_st, ggplot2::aes(x=x,y=y,fill=f)) +
-      ggplot2::geom_sf(data = d_temp, fill = NA, color = "gray33", lwd = 0.4) +
+      ggplot2::geom_sf(data = d_temp, fill = NA, color = "brown", lwd = 0.4) +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       ggplot2::labs(
@@ -159,75 +177,97 @@ p_fn_temp <- function(
   return(list("plt"=plt_temp,"d"=d_temp))
 }
 
-# p_fn_temp(
-#   rn = 5
-#   # , lim = c(floor(terra::minmax(cloud2raster_ans$dtm_rast)[1]*0.98), floor(terra::minmax(cloud2raster_ans$dtm_rast)[2]*1.02))
-# )
-# p_fn_temp(
-#   rn = 11
-#   , rast = cloud2raster_ans$chm_rast
-#   , vopt = "plasma"
-# )
+# plt_rast_fn(rn = 9, df = psinf_slash_piles_polys, rast = psinf_cloud2raster_ans$dtm_rast, vopt = "viridis")
+
 # combine 3
-plt_combine_temp <- function(
+plt_rast_combine <- function(
     rn
-    , df = slash_piles_polys %>% dplyr::filter(!is.na(comment))
-    , rast1 = cloud2raster_ans$dtm_rast
-    , title1 = "DTM"
-    , vopt1 = "viridis"
-    , rast2 = cloud2raster_ans$chm_rast
-    , title2 = "CHM"
-    , vopt2 = "plasma"
-    , crs = terra::crs(cloud2raster_ans$dtm_rast)
+    , df
+    , dtm_rast
+    , dtm_rast_vopt = "viridis"
+    , chm_rast
+    , chm_rast_vopt = "plasma"
+    , rgb_rast
+    , buffer = 10
 ) {
   # composite 1
-  ans1 <- p_fn_temp(
+  ans1 <- plt_rast_fn(
     rn = rn
     , df = df
-    , rast = rast1
-    , my_title = title1
-    , crs = crs
-    , vopt = vopt1
+    , rast = dtm_rast
+    , my_title = "DTM"
+    , vopt = dtm_rast_vopt
+    , buff = buffer
   )
   # composite 2
-  ans2 <- p_fn_temp(
+  ans2 <- plt_rast_fn(
     rn = rn
     , df = df
-    , rast = rast2
-    , my_title = title2
-    , crs = crs
-    , vopt = vopt2
+    , rast = chm_rast
+    , my_title = "CHM"
+    , vopt = chm_rast_vopt
+    , buff = buffer
   )
   # plt rgb
     rgb_temp <-
-      ortho_plt_fn(my_ortho_rast = ortho_rast, stand =ans1$d) + 
-      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "white", lwd = 0.3)
+      ortho_plt_fn(
+        rgb_rast = rgb_rast
+        , stand =ans1$d
+        , buffer = buffer
+        , add_stand = F
+      ) + 
+      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "brown", lwd = 0.3)
   # combine
-    r <- ans1$plt + ans2$plt + rgb_temp
+    r <- patchwork::wrap_plots(list(rgb_temp,ans1$plt,ans2$plt), nrow = 1)
     return(r)
 }
 
-# plt_combine_temp(2)
-
-# add pile locations
-plt_list_rast_comp <- sample(1:nrow(slash_piles_polys %>% dplyr::filter(!is.na(comment))),10) %>% 
-  purrr::map(plt_combine_temp)
-# plt_list_rast_comp[[2]]
+# plt_rast_combine(
+#   rn = 11
+#   , df = psinf_slash_piles_polys %>% dplyr::filter(is_in_stand)
+#   , dtm_rast = psinf_cloud2raster_ans$dtm_rast
+#   , chm_rast = psinf_cloud2raster_ans$chm_rast
+#   , rgb_rast = psinf_rgb_rast
+# )
 ```
 
-combine the plots for a few piles
+use this handy plotting function for some piles
 
-```{r, height = 10.5, width = 7.5}
+```{r, results=F, eval=F}
+# add pile locations
+plt_list_rast_temp <- 
+  1:sum(psinf_slash_piles_polys$is_in_stand) %>% 
+  sample(
+    min(10, sum(psinf_slash_piles_polys$is_in_stand))
+  ) %>% 
+  purrr::map(
+    \(x) 
+    plt_rast_combine(
+      rn = x
+      , df = psinf_slash_piles_polys %>% dplyr::filter(is_in_stand)
+      , dtm_rast = psinf_cloud2raster_ans$dtm_rast
+      , chm_rast = psinf_cloud2raster_ans$chm_rast
+      , rgb_rast = psinf_rgb_rast
+    )
+  )
+# plt_list_rast_temp[[2]]
+```
+
+combine the plots with `patchwork`
+
+```{r, height = 8.5, width = 8, eval=F}
 patchwork::wrap_plots(
-  plt_list_rast_comp
+  plt_list_rast_temp
   , ncol = 2
 )
-ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 10.5)
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 8)
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(las_ctg, plt_list_rast_comp)
 gc()
 ```
 
@@ -238,241 +278,567 @@ a few things are noteworthy in these examples:
 * The DTM and CHM were rarely impacted by shadows in the RGB imagery
 * It is interesting to see coarse woody debris occasionally visible in the CHM
 
-```{r, include=FALSE, eval=TRUE}
-# quick function to ingest a sf data.frame with geometry features for each row
-# and return a bbox for each row-level geometry
-st_bbox_by_row <- function(
-  df
-  , corner = NA # ul,ll,ur,lr,full
-  , dimensions = T
-) {
-  if(!inherits(df,"sf")){stop("must be sf class object")}
-  # corner
-  corner <- dplyr::coalesce(corner,"") %>% tolower()
-  
-  nd <- df %>% 
-    sf::st_set_geometry("geometry") %>% 
-    dplyr::rowwise() %>% 
-    dplyr::mutate(
-      xmin_temp = sf::st_bbox(geometry)[1]
-      , ymin_temp = sf::st_bbox(geometry)[2]
-      , xmax_temp = sf::st_bbox(geometry)[3]
-      , ymax_temp = sf::st_bbox(geometry)[4]
-    )
+### TRFO-BLM Pinyon-Juniper Site
 
-  if(corner == "ul"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmin_temp","ymax_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "ll"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmin_temp","ymin_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "ur"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmax_temp","ymax_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "lr"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmax_temp","ymin_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "full"){
-    ret_d <- nd %>% 
-      dplyr::mutate(
-        geometry = sf::st_sfc(
-            sf::st_point(c(xmin_temp,ymin_temp)) # lower_left_pt
-            , sf::st_point(c(xmax_temp,ymax_temp)) # upper_right_pt
-          ) %>% 
-          sf::st_bbox() %>% 
-          sf::st_as_sfc()
-      ) %>%
-      dplyr::ungroup() %>%
-      sf::st_set_geometry("geometry") %>%
-      sf::st_set_crs(sf::st_crs(df))
-  }else{
-    ret_d <- nd %>% dplyr::ungroup()
-  }
+for this site, the full point cloud data we have covers a much larger extent than the treatment unit used for this study. we will therefore crop point cloud to a buffered area of interest so that we limit the amount of data processed
+
+```{r}
+###############################################################
+# read/crop point cloud
+###############################################################
+# output dir for clipped las
+las_dir_temp <- "../data/Dawson_Data/point_cloud" 
+if(!dir.exists(las_dir_temp)){dir.create(las_dir_temp, showWarnings = F)}
+# do it if not already done
+if(dplyr::coalesce(length(list.files(las_dir_temp)),0)<1){
+  # this reads the metadata from all files in the folder, not the points themselves.
+  las_ctg_temp <- lidR::readLAScatalog("d:/BLM_CO_SWDF_DawsonFuelsTreatment/Final/PointCloud/Tiles/")
+  las_ctg_temp
+  cloud2trees:::check_las_ctg_empty(las_ctg_temp)
+  # set ctg opts
+  lidR::opt_select(las_ctg_temp) <- "xyzainrcRGBNC"
+  lidR::opt_progress(las_ctg_temp) <- T
+  # write generated results to disk storage rather than keeping everything in memory. This option can be activated with opt_output_files()
+  lidR::opt_output_files(las_ctg_temp) <- paste0(normalizePath(las_dir_temp),"/", "_{XLEFT}_{YBOTTOM}") # label outputs based on coordinates
+  lidR::opt_filter(las_ctg_temp) <- "-drop_duplicates"
   
-  # length/width
-  if(dimensions){
-    ret_d <- ret_d %>% 
-      dplyr::rowwise() %>% 
-      dplyr::mutate(
-        # calc dimensions
-        xdiff_temp = xmax_temp-xmin_temp
-        , ydiff_temp = ymax_temp-ymin_temp
-        , shape_length = max(xdiff_temp,ydiff_temp,na.rm = T)
-        , shape_width = min(xdiff_temp,ydiff_temp,na.rm = T)
-      ) %>% 
-      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp,xdiff_temp,ydiff_temp)) %>% 
-      dplyr::ungroup()
-  }else{
-    ret_d <- ret_d %>% 
-      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp))
-  }
-  
-  return(ret_d)
+  # clip the point cloud using the polygon and write to a new file
+  # the lidR::opt_output_files is key to writing the output to disk without loading the entire clipped result into memory.
+  clip_las_ctg_temp <- lidR::clip_roi(
+    las = las_ctg_temp
+    , geometry = pj_stand_boundary %>% 
+      sf::st_buffer(100) %>% 
+      sf::st_bbox() %>% 
+      sf::st_as_sfc() %>% 
+      sf::st_as_sf() %>% 
+      sf::st_transform(sf::st_crs(las_ctg_temp))
+  )
+}else{
+  clip_las_ctg_temp <- lidR::readLAScatalog(las_dir_temp)
+}
+# clip_las_ctg_temp
+# clip_las_ctg_temp$filename
+```
+
+look at the summary of the point cloud data we'll be processing
+
+```{r}
+# processing dirs
+c2t_out_dir_temp <- "../data/Dawson_Data/"
+out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+# las_dir_temp <- las_dir_temp
+# read header with catalog
+lidR::readLAScatalog(las_dir_temp)
+```
+
+process the point cloud with the `cloud2trees::cloud2raster()` workflow
+
+```{r, results=F}
+# do it
+if(!dir.exists(out_dir_temp)){
+  # cloud2trees
+  pj_cloud2raster_ans <- cloud2trees::cloud2raster(
+    output_dir = c2t_out_dir_temp
+    , input_las_dir = las_dir_temp
+    , accuracy_level = 2
+    , keep_intrmdt = T
+    , dtm_res_m = 0.2
+    , chm_res_m = my_chm_res_m
+    , min_height = 0 # effectively generates a DSM based on non-ground points
+  )
+  # rename
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+}else{
+  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+    terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
+  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  # combine
+  pj_cloud2raster_ans <- list(
+    "dtm_rast" = dtm_temp
+    , "chm_rast" = chm_temp
+  )
 }
 ```
 
-```{r, include = F, eval = F}
-pile_id_temp <- 
-  # slash_piles_polys %>% dplyr::arrange(desc(field_diameter_m)) %>% dplyr::slice(1) %>% dplyr::pull(pile_id)
-  73
-crs_temp <- terra::crs(ortho_rast)
-# buff
-buff_temp <- slash_piles_polys %>% dplyr::filter(pile_id == pile_id_temp) %>% 
-  sf::st_centroid() %>% 
-  sf::st_buffer(35, endCapStyle = "SQUARE")
-# piles filter
-piles_temp <- slash_piles_polys %>% 
-  sf::st_intersection(buff_temp) %>% 
-  dplyr::mutate(rn = dplyr::row_number())
-piles_bbox_temp <- piles_temp %>% st_bbox_by_row(corner = "ul")
-  
-# rgb
-rgb_temp <- 
-  ortho_plt_fn(my_ortho_rast = ortho_rast, stand = buff_temp %>% sf::st_transform(crs_temp), buffer = 0) 
-# rgb_temp
-rgb_temp + 
-  ggplot2::geom_sf(
-    data = piles_temp %>% sf::st_transform(crs_temp)
-    , fill = NA, color = "orangered2", lwd = 0.8
-  ) +
-  ggplot2::geom_sf_label(
-    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
-    , ggplot2::aes(label = rn, fontface = "bold")
-    , vjust = 0, hjust = 0.5
-    # , color = "white"
-  )
-ggplot2::ggsave("../data/rgbtesttest.jpg", height = 7, width = 7.5)
-# dtm
-dtm_temp <- 
-  cloud2raster_ans$dtm_rast %>%  
-  terra::crop(
-    buff_temp %>% 
-      sf::st_transform(crs_temp) %>% 
-      terra::vect()
-  ) %>% 
-  terra::as.data.frame(xy = T) %>% 
-  dplyr::rename(f=3) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_tile(ggplot2::aes(x=x,y=y,fill=f)) +
-  ggplot2::scale_fill_viridis_c(option = "viridis") +
-  ggplot2::scale_x_continuous(expand = c(0, 0)) +
-  ggplot2::scale_y_continuous(expand = c(0, 0)) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-dtm_temp +
-  ggplot2::geom_sf(
-    data = piles_temp %>% sf::st_transform(crs_temp)
-    , fill = NA, color = "orangered2", lwd = 0.8
-  ) +
-  ggplot2::geom_sf_label(
-    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
-    , ggplot2::aes(label = rn, fontface = "bold")
-    , vjust = 0, hjust = 0.5
-    # , color = "white"
-  )
-ggplot2::ggsave("../data/dtmtesttest.jpg", height = 7, width = 7.5)
-# chm
-chm_temp <- 
-  cloud2raster_ans$chm_rast %>%  
-  terra::crop(
-    buff_temp %>% 
-      sf::st_transform(crs_temp) %>% 
-      terra::vect()
-  ) %>% 
-  terra::as.data.frame(xy = T) %>% 
-  dplyr::rename(f=3) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_tile(ggplot2::aes(x=x,y=y,fill=f)) +
-  # harrypotter::scale_fill_hp("mischief") +
-  ggplot2::scale_fill_viridis_c(option = "mako", direction = -1) +
-  # ggplot2::scale_fill_distiller(palette = "BrBG", direction = 1) +
-  ggplot2::scale_x_continuous(expand = c(0, 0)) +
-  ggplot2::scale_y_continuous(expand = c(0, 0)) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-chm_temp +
-  ggplot2::geom_sf(
-    data = piles_temp %>% sf::st_transform(crs_temp)
-    , fill = NA, color = "orangered2", lwd = 0.8
-  ) +
-  ggplot2::geom_sf_label(
-    data = piles_bbox_temp %>% sf::st_transform(crs_temp)
-    , ggplot2::aes(label = rn, fontface = "bold")
-    , vjust = 0, hjust = 0.5
-    # , color = "white"
-  )
-ggplot2::ggsave("../data/chmtesttest.jpg", height = 7, width = 7.5)
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
-```{r, include = F, eval = F}
-# cld
-ctg_temp <- lidR::readLAScatalog(
-  "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
-  # "../data/point_cloud_processing_temp/02_normalize"
-  , select = "xyzRGB"
+let's check out the DTM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+pj_cloud2raster_ans$dtm_rast %>% 
+  terra::crop(
+    pj_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(pj_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::plot(
+    col = viridis::viridis(n = 100)
+    , axes = F
+    , main = "DTM (m)"
+  )
+# add stand boundary
+terra::plot(
+  pj_stand_boundary %>% 
+    sf::st_transform(terra::crs(pj_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
 )
-lidR::opt_progress(ctg_temp) <- F
-lidR::opt_filter(ctg_temp) <- "-drop_duplicates"
+```
 
-lidR::clip_roi(
-  ctg_temp
-  # biggest mechanical
-  , piles_temp %>%
-    dplyr::filter(rn==1) %>% 
-    sf::st_centroid() %>% 
-    sf::st_buffer(4.2, endCapStyle = "SQUARE") %>% 
-    sf::st_transform(lidR::st_crs(ctg_temp))
-) %>% 
-lidR::plot(
-    color = "RGB", bg = "white", legend = F
-  )  
+and CHM
 
+```{r, results='hide', message=FALSE, fig.show='asis'}
+pj_cloud2raster_ans$chm_rast %>% 
+  terra::crop(
+    pj_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(pj_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>% 
+  terra::plot(
+    col = viridis::plasma(100)
+    , axes = F
+    , main = "CHM (m)"
+  )
+# add stand boundary
+terra::plot(
+  pj_stand_boundary %>% 
+    sf::st_transform(terra::crs(pj_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+```
 
-lidR::clip_roi(
-  ctg_temp
-  # biggest mechanical
-  , piles_temp %>%
-    dplyr::filter(rn==2) %>% 
-    sf::st_centroid() %>% 
-    sf::st_buffer(5, endCapStyle = "SQUARE") %>% 
-    sf::st_transform(lidR::st_crs(ctg_temp))
-) %>% 
-  purrr::pluck("data") %>% 
-  summary()
-lidR::plot(
-    color = "RGB", bg = "white", legend = F
-  )  
+#### DTM and CHM + piles
 
+let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-p_fn_temp(1)
-p_fn_temp(2)
-p_fn_temp(3)
-p_fn_temp(4)
-p_fn_temp(5)
+```{r, results=F, eval=F}
+# add pile locations
+plt_list_rast_temp <- 
+  1:sum(pj_slash_piles_polys$is_in_stand) %>% 
+  sample(
+    min(10, sum(pj_slash_piles_polys$is_in_stand))
+  ) %>% 
+  purrr::map(
+    \(x) 
+    plt_rast_combine(
+      rn = x
+      , df = pj_slash_piles_polys %>% dplyr::filter(is_in_stand)
+      , dtm_rast = pj_cloud2raster_ans$dtm_rast
+      , chm_rast = pj_cloud2raster_ans$chm_rast
+      , rgb_rast = pj_rgb_rast
+    )
+  )
+# plt_list_rast_temp[[2]]
+```
+
+combine the plots with `patchwork`
+
+```{r, height = 8.5, width = 8, eval=F}
+patchwork::wrap_plots(
+  plt_list_rast_temp
+  , ncol = 2
+)
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### BHEF Ponderosa Pine Site
+
+for this site, the point cloud files are dispersed across different folders. so, we'll manually specify which files to use.
+
+look at the summary of the point cloud data we'll be processing
+
+```{r}
+# processing dirs
+c2t_out_dir_temp <- "../data/BHEF_202306/"
+out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+# las_dir_temp <- "where/are/the/pointcloud"
+las_flist_temp <- c(
+  "F:\\UAS_Collections\\BHEF_202306/Unit1and3Processing.files/BHEF_202306_Unit1and3_laz.laz"
+  , "F:\\UAS_Collections\\BHEF_202306/Unit2Processing.files/BHEF_202306_Unit2_laz.laz"        
+  , list.files(
+    "F:\\UAS_Collections\\BHEF_202306\\00good_simplified_point_clouds_reduced_overlap"
+    , pattern = ".*\\.(laz|las)$"
+    , full.names = TRUE, recursive = T
+  )
+)
+# read header with catalog
+lidR::readLAScatalog(las_flist_temp)
+```
+
+process the point cloud with the `cloud2trees::cloud2raster()` workflow
+
+```{r, results=F}
+# do it
+if(!dir.exists(out_dir_temp)){
+  # cloud2trees
+  bhef_cloud2raster_ans <- cloud2trees::cloud2raster(
+    output_dir = c2t_out_dir_temp
+    , input_las_dir = las_flist_temp
+    , accuracy_level = 2
+    , keep_intrmdt = T
+    , dtm_res_m = 0.2
+    , chm_res_m = my_chm_res_m
+    , min_height = 0 # effectively generates a DSM based on non-ground points
+  )
+  # rename
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+}else{
+  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+    terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
+  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  # combine
+  bhef_cloud2raster_ans <- list(
+    "dtm_rast" = dtm_temp
+    , "chm_rast" = chm_temp
+  )
+}
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+let's check out the DTM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+bhef_cloud2raster_ans$dtm_rast %>% 
+  terra::crop(
+    bhef_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(bhef_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::plot(
+    col = viridis::viridis(n = 100)
+    , axes = F
+    , main = "DTM (m)"
+  )
+# add stand boundary
+terra::plot(
+  bhef_stand_boundary %>% 
+    sf::st_transform(terra::crs(bhef_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+```
+
+and CHM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+bhef_cloud2raster_ans$chm_rast %>% 
+  terra::crop(
+    bhef_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(bhef_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>%  
+  terra::plot(
+    col = viridis::plasma(100)
+    , axes = F
+    , main = "CHM (m)"
+  )
+# add stand boundary
+terra::plot(
+  bhef_stand_boundary %>% 
+    sf::st_transform(terra::crs(bhef_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+```
+
+#### DTM and CHM + piles
+
+let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
+
+```{r, results=F, eval=F}
+# add pile locations
+plt_list_rast_temp <- 
+  1:sum(bhef_slash_piles_polys$is_in_stand) %>% 
+  sample(
+    min(10, sum(bhef_slash_piles_polys$is_in_stand))
+  ) %>% 
+  purrr::map(
+    \(x) 
+    plt_rast_combine(
+      rn = x
+      , df = bhef_slash_piles_polys %>% dplyr::filter(is_in_stand)
+      , dtm_rast = bhef_cloud2raster_ans$dtm_rast
+      , chm_rast = bhef_cloud2raster_ans$chm_rast
+      , rgb_rast = bhef_rgb_rast
+    )
+  )
+# plt_list_rast_temp[[2]]
+```
+
+combine the plots with `patchwork`
+
+```{r, height = 8.5, width = 8, eval=F}
+patchwork::wrap_plots(
+  plt_list_rast_temp
+  , ncol = 2
+)
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### ARNF Ponderosa Pine Site
+
+look at the summary of the point cloud data we'll be processing
+
+```{r}
+# processing dirs
+c2t_out_dir_temp <- "../data/ARNF_DiamondView_202510/" # where do you want to save processed data to?
+out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+las_dir_temp <- "F:/UAS_Collections/ARNF_DiamondView_202510/point_cloud_high_density" # where is the raw las
+# read header with catalog
+lidR::readLAScatalog(las_dir_temp)
+```
+
+process the point cloud with the `cloud2trees::cloud2raster()` workflow
+
+```{r, results=F}
+# do it
+if(!dir.exists(out_dir_temp)){
+  # cloud2trees
+  arnf_cloud2raster_ans <- cloud2trees::cloud2raster(
+    output_dir = c2t_out_dir_temp
+    , input_las_dir = las_dir_temp
+    , accuracy_level = 2
+    , keep_intrmdt = T
+    , dtm_res_m = 0.2
+    , chm_res_m = my_chm_res_m
+    , min_height = 0 # effectively generates a DSM based on non-ground points
+  )
+  # rename
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+}else{
+  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+    terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
+  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  # combine
+  arnf_cloud2raster_ans <- list(
+    "dtm_rast" = dtm_temp
+    , "chm_rast" = chm_temp
+  )
+}
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+let's check out the DTM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+arnf_cloud2raster_ans$dtm_rast %>% 
+  terra::crop(
+    arnf_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(arnf_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::plot(
+    col = viridis::viridis(n = 100)
+    , axes = F
+    , main = "DTM (m)"
+  )
+# add stand boundary
+terra::plot(
+  arnf_stand_boundary %>% 
+    sf::st_transform(terra::crs(arnf_cloud2raster_ans$dtm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+```
+
+and CHM
+
+```{r, results='hide', message=FALSE, fig.show='asis'}
+arnf_cloud2raster_ans$chm_rast %>% 
+  terra::crop(
+    arnf_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(arnf_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>% 
+  terra::plot(
+    col = viridis::plasma(100)
+    , axes = F
+    , main = "CHM (m)"
+  )
+# add stand boundary
+terra::plot(
+  arnf_stand_boundary %>% 
+    sf::st_transform(terra::crs(arnf_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+```
+
+#### DTM and CHM + piles
+
+let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
+
+```{r, results=F, eval=F}
+# add pile locations
+plt_list_rast_temp <- 
+  1:sum(arnf_slash_piles_polys$is_in_stand) %>% 
+  sample(
+    min(10, sum(arnf_slash_piles_polys$is_in_stand))
+  ) %>% 
+  purrr::map(
+    \(x) 
+    plt_rast_combine(
+      rn = x
+      , df = arnf_slash_piles_polys %>% dplyr::filter(is_in_stand)
+      , dtm_rast = arnf_cloud2raster_ans$dtm_rast
+      , chm_rast = arnf_cloud2raster_ans$chm_rast
+      , rgb_rast = arnf_rgb_rast
+    )
+  )
+# plt_list_rast_temp[[2]]
+```
+
+combine the plots with `patchwork`
+
+```{r, height = 8.5, width = 8, eval=F}
+patchwork::wrap_plots(
+  plt_list_rast_temp
+  , ncol = 2
+)
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggplot2::ggsave("../data/pile_tiles_rast.jpeg", height = 8.5, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+```{r, include=FALSE, eval=FALSE}
+# now that we have all the data, let's plot the RGB + CHM really quick
+terra::plotRGB(arnf_rgb_rast, stretch="lin", axes=F)
+arnf_cloud2raster_ans$chm_rast %>% 
+  terra::crop(
+    arnf_stand_boundary %>% 
+    sf::st_buffer(22) %>% 
+    sf::st_transform(terra::crs(arnf_cloud2raster_ans$chm_rast)) %>% 
+    terra::vect()
+  ) %>% 
+  terra::aggregate(fact = 2, na.rm = T, cores = lasR::half_cores()) %>% 
+  terra::plot(col = viridis::plasma(n=100,alpha = 0.3), add = T, axes=F, legend=F)
+```
+
+## Clean Up
+
+going forward, we only need the CHM data, so we can drop the DTM data from our session
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, results=FALSE}
+# psinf_chm_rast
+fnm_temp <- file.path("../data/PFDP_Data/", paste0("psinf_chm_rast_",my_chm_res_m,"m.tif"))
+if(!file.exists(fnm_temp)){
+  psinf_chm_rast <- psinf_cloud2raster_ans$chm_rast %>% 
+    terra::crop(
+      psinf_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(psinf_cloud2raster_ans$chm_rast))
+     , mask = T
+     , filename = fnm_temp
+     , overwrite = T
+    )
+}else{
+  psinf_chm_rast <- terra::rast(fnm_temp)
+}
+# pj_chm_rast
+fnm_temp <- file.path("../data/Dawson_Data/", paste0("pj_chm_rast_",my_chm_res_m,"m.tif"))
+if(!file.exists(fnm_temp)){
+  pj_chm_rast <- pj_cloud2raster_ans$chm_rast %>% 
+    terra::crop(
+      pj_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(pj_cloud2raster_ans$chm_rast))
+     , mask = T
+     , filename = fnm_temp
+     , overwrite = T
+    )
+}else{
+  pj_chm_rast <- terra::rast(fnm_temp)
+}
+# bhef_chm_rast
+fnm_temp <- file.path("../data/BHEF_202306/", paste0("bhef_chm_rast_",my_chm_res_m,"m.tif"))
+if(!file.exists(fnm_temp)){
+  bhef_chm_rast <- bhef_cloud2raster_ans$chm_rast %>% 
+    terra::crop(
+      bhef_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(bhef_cloud2raster_ans$chm_rast))
+     , mask = T
+     , filename = fnm_temp
+     , overwrite = T
+    )
+}else{
+  bhef_chm_rast <- terra::rast(fnm_temp)
+}
+# arnf_chm_rast
+fnm_temp <- file.path("../data/ARNF_DiamondView_202510/", paste0("arnf_chm_rast_",my_chm_res_m,"m.tif"))
+if(!file.exists(fnm_temp)){
+  arnf_chm_rast <- arnf_cloud2raster_ans$chm_rast %>% 
+    terra::crop(
+      arnf_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(arnf_cloud2raster_ans$chm_rast))
+     , mask = T
+     , filename = fnm_temp
+     , overwrite = T
+    )
+}else{
+  arnf_chm_rast <- terra::rast(fnm_temp)
+}
+# clean up
+remove(list = ls()[grep("_cloud2raster_ans",ls())])
+gc()
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(my_chm_res_m, my_rgb_res_m)
+gc()
 ```
 
 ```{r, include=FALSE, eval=FALSE}
