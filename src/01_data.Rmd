@@ -1022,9 +1022,17 @@ gc()
 
 Orthomosaic `tif` files from UAS flight imagery were created in the photogrammetry software (e.g. [Agisoft Metashape](https://www.agisoft.com/)). Each of our study sites have RGB data available covering the study area extent.
 
+We're going to standardize the raster resolution of these RGB data across study sites. The RGB orthomosaics created from UAS photogrammetry processing generally have very fine resolutions of 4 cm or finer and we will standardize the data to make it slightly more coarse (6 cm) to reduce the computational processing burden.
+
+```{r}
+my_rgb_res_m <- 0.06
+```
+
 ### PSINF Mixed Conifer Site
 
-```{r ortho-ld, results = 'hide'}
+load the original data
+
+```{r, results = 'hide'}
 #### read RGB data keep only RGB
 psinf_rgb_rast <- terra::rast(
     file.path(
@@ -1038,6 +1046,7 @@ names(psinf_rgb_rast) <- c("red","green","blue")
 ```
 
 what is the resolution of the original RGB data?
+
 ```{r}
 terra::res(psinf_rgb_rast)
 ```
@@ -1053,14 +1062,18 @@ change_res_fn <- function(
   # , ofile = tempfile(fileext = ".tif")
   , ofile = NULL
 ){
-  r2 <- r
-  terra::res(r2) <- my_res
-  if(!inherits(ofile,"character")){
-    r2 <- terra::resample(r, r2, method = m) 
+  if(terra::res(r)[1] == my_res){
+    return(r)
   }else{
-    r2 <- terra::resample(r, r2, method = m, filename=ofile, overwrite = T) 
+    r2 <- r
+    terra::res(r2) <- my_res
+    if(!inherits(ofile,"character")){
+      r2 <- terra::resample(r, r2, method = m) 
+    }else{
+      r2 <- terra::resample(r, r2, method = m, filename=ofile, overwrite = T) 
+    }
+    return(r2) 
   }
-  return(r2)
 }
 ###############################################################
 # clip to boundary and resample to change resolution
@@ -1096,7 +1109,7 @@ if(!file.exists(rgb_fnm_temp)){
   
   ## apply the change_res_fn for our analysis we don't need such finery
   # this takes too long...
-  psinf_rgb_rast <- change_res_fn(psinf_rgb_rast, my_res=0.06, ofile = rgb_fnm_temp)
+  psinf_rgb_rast <- change_res_fn(psinf_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
 }else{
   psinf_rgb_rast <- terra::rast(rgb_fnm_temp)
 }
@@ -1104,11 +1117,11 @@ if(!file.exists(rgb_fnm_temp)){
 # terra::plotRGB(bhef_rgb_rast, stretch = "lin")
 ```
 
-make a function to plot the RGB imagery as a background for `ggplot2` plots
+make a function to plot the RGB imagery as a background for `ggplot2` plots. `ggplot2` offers capabilities to build multi-layered, publication-quality figures by stacking multiple vector overlays on an RGB background. however, it can be computationally expensive since it requires the conversion to a data frame first.
 
 ```{r}
 # make a function to plot these detected crowns with rgb data
-ortho_plt_fn = function(rgb_rast, stand, buffer = 10, plt_lwd = 1, plt_line_col = "black"){
+ortho_plt_fn = function(rgb_rast, stand, add_stand = F, buffer = 10, plt_lwd = 1, plt_line_col = "black"){
   if(!inherits(rgb_rast,"SpatRaster")){stop("rgb_rast must be terra SpatRaster data")}
   if(terra::nlyr(rgb_rast)<3){stop("rgb_rast must have 3 layers with RGB data")}
   if(!inherits(stand,"sf") && !inherits(stand,"sfc")){stop("stand must be sf data")}
@@ -1131,442 +1144,552 @@ ortho_plt_fn = function(rgb_rast, stand, buffer = 10, plt_lwd = 1, plt_line_col 
     terra::as.data.frame(xy = TRUE) %>%
     dplyr::rename(
       red = 3, green = 4, blue = 5
-    ) %>% 
+    ) %>%
     dplyr::mutate(
-      hex_col = 
-        ifelse(
-          !is.na(red) & !is.na(green) & !is.na(blue)
-          , grDevices::rgb(
-            red
-            , green
-            , blue
-            , maxColorValue = 255
-          )
-          , NA
-        )
-    )
-    # dplyr::glimpse()
-  XXX
+      # rows that have missing color data
+      is_missing = is.na(red) | is.na(green) | is.na(blue)
+      # hex using 0s for NAs to avoid grDevices::rgb error
+      , hex_col = grDevices::rgb(
+        ifelse(is_missing, 0, red)
+        , ifelse(is_missing, 0, green)
+        , ifelse(is_missing, 0, blue)
+        , maxColorValue = 255
+      )
+      # back to NA
+      , hex_col = ifelse(is_missing, as.character(NA), hex_col)
+    ) %>%
+    dplyr::select(-c(is_missing))
   
   # plt
   plt <- ggplot2::ggplot() +
     # add rgb base map
-    ggplot2::geom_raster(data = rgb_df_temp, mapping = ggplot2::aes(x = x, y = y, fill = hex_col)) +
+    ggplot2::geom_tile(data = rgb_df_temp, mapping = ggplot2::aes(x = x, y = y, fill = hex_col)) +
     # use identity scale so the hex codes are used directly
-    ggplot2::scale_fill_identity() +
+    ggplot2::scale_fill_identity(na.value = "transparent") + # !!! don't take this out or RGB plot will kill your computer
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::coord_sf(expand = F) +
     ggplot2::theme_void() +
     ggplot2::theme(
       legend.position = "none"
     )
   # add stand
-  # overlay polygons
-  plt <- plt +
-    # ggplot2::geom_sf(data = polys, fill = NA, color = "red", linewidth = 0.5) +
-    ggplot2::geom_sf(
-      data = stand %>% 
-        sf::st_make_valid() %>% 
-        dplyr::filter(sf::st_is_valid(.)) %>% 
-        sf::st_transform(terra::crs(rgb_rast))
-      , fill = NA
-      , color = plt_line_col
-      , lwd = plt_lwd
-      , inherit.aes = F
-    )
-  
+  if(add_stand){
+    # overlay polygons
+    plt <- plt +
+      # ggplot2::geom_sf(data = polys, fill = NA, color = "red", linewidth = 0.5) +
+      ggplot2::geom_sf(
+        data = stand %>% 
+          sf::st_make_valid() %>% 
+          dplyr::filter(sf::st_is_valid(.)) %>% 
+          sf::st_transform(terra::crs(rgb_rast))
+        , fill = NA
+        , color = plt_line_col
+        , lwd = plt_lwd
+        , inherit.aes = F
+      )
+  }
   return(plt)
 }
 ```
 
-plot
+test our plotting function on a zoomed-in portion of the study area
 
 ```{r}
-ortho_plt_fn(psinf_rgb_rast, psinf_stand_boundary)
+ortho_plt_fn(
+  psinf_rgb_rast
+  , psinf_stand_boundary %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(11)
+)
 ```
 
+for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (blue)
 
 ```{r}
-######################################################################################
-# function to plot ortho + stand
-######################################################################################
-ortho_plt_fn = function(my_ortho_rast = ortho_rast, stand = las_ctg_dta %>% sf::st_union() %>% sf::st_as_sf(), buffer = 20){
-# convert to stars
-  ortho_st <- my_ortho_rast %>%  
-    terra::subset(subset = c(1,2,3)) %>%
-    terra::crop(
-      stand %>% sf::st_buffer(buffer) %>% terra::vect()
-    ) %>% 
-    # terra::aggregate(fact = 2, fun = "mean", na.rm = T) %>% 
-    stars::st_as_stars()
-  
-  # convert to rgb
-  ortho_rgb <- stars::st_rgb(
-    ortho_st[,,,1:3]
-    , dimension = 3
-    , use_alpha = FALSE
-    # , stretch = "histogram"
-    , probs = c(0.005, 0.995)
-    , stretch = "percent"
-  )
-  # ggplot
-  plt_rgb <- ggplot2::ggplot() +
-    stars::geom_stars(data = ortho_rgb[]) +
-    ggplot2::scale_fill_identity(na.value = "transparent") + # !!! don't take this out or RGB plot will kill your computer
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::labs(
-      x = ""
-      , y = ""
-    ) +
-    ggplot2::theme_void()
-  
-  # return(plt_rgb)
-  # combine all plot elements
-  plt_combine = plt_rgb +
-    # geom_sf(
-    #   data = stand
-    #   , alpha = 0
-    #   , lwd = 1.5
-    #   , color = "gray22"
-    # ) +
-    ggplot2::theme(
-      legend.position = "top" # c(0.5,1)
-      , legend.direction = "horizontal"
-      , legend.margin = ggplot2::margin(0,0,0,0)
-      , legend.text = ggplot2::element_text(size = 8)
-      , legend.title = ggplot2::element_text(size = 8)
-      , legend.key = ggplot2::element_rect(fill = "white")
-      # , plot.title = ggtext::element_markdown(size = 10, hjust = 0.5)
-      , plot.title = ggplot2::element_text(size = 8, hjust = 0.5, face = "bold")
-      , plot.subtitle = ggplot2::element_text(size = 6, hjust = 0.5, face = "italic")
-    )
-  return(plt_combine)
-}
+terra::plotRGB(psinf_rgb_rast, stretch="lin")
+# add stand boundary
+terra::plot(
+  psinf_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  psinf_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
 ```
 
-plot an example slash pile RGB image
-
-```{r}
-stand_temp <- slash_piles_polys %>%
-    dplyr::filter(tolower(comment)=="mechanical pile") %>% 
-    dplyr::arrange(desc(field_diameter_m)) %>% 
-    dplyr::slice(1) %>% 
-    sf::st_point_on_surface() %>% 
-    sf::st_buffer(10, endCapStyle = "SQUARE") %>% 
-    sf::st_transform(terra::crs(ortho_rast))
-# check it with the ortho
-ortho_plt_fn(stand = stand_temp)
-ggsave("../data/pile_rgb.jpeg", height = 5, width = 5)
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
 ### TRFO-BLM Pinyon-Juniper Site
 
+load the original data
+
+```{r, results = 'hide'}
+#### read RGB data keep only RGB
+pj_rgb_rast <- terra::rast(
+    # "d:/BLM_CO_SWDF_DawsonFuelsTreatment/Final/Ortho/BLM_CO_SWDF_DawsonFuelsTreatment_Ortho_202504.tif"
+    "../data/dawson_data/dawson_rgb.tif"
+  ) %>% 
+  terra::subset(c(1,2,3))
+# rename bands
+names(pj_rgb_rast) <- c("red","green","blue")
+```
+
+what is the resolution of the original RGB data?
+
 ```{r}
-###############################################################
-# read/crop RGB raster
-###############################################################
-rgb_fnm_temp <- "../data/dawson_data/dawson_rgb.tif"
-if(!file.exists(rgb_fnm_temp)){
-  # terra handles large files on disk automatically
-  rgb_rast_temp <- terra::rast("d:/BLM_CO_SWDF_DawsonFuelsTreatment/Final/Ortho/BLM_CO_SWDF_DawsonFuelsTreatment_Ortho_202504.tif")
-  # Read the polygon file (e.g., a shapefile)
-  polygon_border_temp <- pj_stand_boundary %>% 
-    sf::st_buffer(50) %>% 
-    sf::st_bbox() %>% 
-    sf::st_as_sfc() %>%
-    sf::st_as_sf() %>% 
-    terra::vect() %>% 
-    terra::project(terra::crs(rgb_rast_temp))
-  # Crop the raster to the rectangular extent of the polygon
-  # Specify a filename to ensure the result is written to disk
-  crop_rgb_rast_temp <- terra::crop(rgb_rast_temp, polygon_border_temp, filename =  tempfile(fileext = ".tif"), overwrite = TRUE)
-  # Mask the cropped raster to the precise shape of the polygon
-  # This function will also be processed on disk due to the file size
-  pj_rgb_rast <- terra::mask(crop_rgb_rast_temp, polygon_border_temp, filename = rgb_fnm_temp, overwrite = TRUE)
-}else{
-  pj_rgb_rast <- terra::rast(rgb_fnm_temp)
-}
-terra::res(pj_rgb_rast)
-## function to change the resolution of RGB 
-change_res_fn <- function(r, my_res=1, m = "bilinear"){
-  r2 <- r
-  terra::res(r2) <- my_res
-  r2 <- terra::resample(r, r2, method = m)
-  return(r2)
-}
-## apply the function
-pj_rgb_rast <- change_res_fn(pj_rgb_rast, my_res=0.08)
 terra::res(pj_rgb_rast)
 ```
 
-plot RGB with the ground-truth piles (blue)
+let's reduce the resolution (i.e. increase the raster cell size; make more coarse)
+
+```{r, results='hide'}
+###############################################################
+# clip to boundary and resample to change resolution
+###############################################################
+dir_temp <- "../data/dawson_data/"
+rgb_fnm_temp <- file.path(dir_temp,"pj_rgb_rast.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- pj_rgb_rast %>% 
+    terra::crop(
+      pj_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(pj_rgb_rast))
+      , filename =  tempfile(fileext = ".tif")
+      , overwrite = TRUE
+    ) 
+  # Mask the cropped raster to the precise shape of the polygon
+  # This function will also be processed on disk due to the file size
+  pj_rgb_rast <- terra::mask(
+    crop_rgb_rast_temp
+    , pj_stand_boundary %>% 
+      sf::st_union() %>% 
+      sf::st_buffer(10) %>% 
+      terra::vect() %>% 
+      terra::project(terra::crs(pj_rgb_rast))
+    , filename = tempfile(fileext = ".tif")
+    , overwrite = TRUE
+  )
+  
+  ## apply the change_res_fn for our analysis we don't need such finery
+  # this takes too long...
+  pj_rgb_rast <- change_res_fn(pj_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+}else{
+  pj_rgb_rast <- terra::rast(rgb_fnm_temp)
+}
+```
+
+test our `ggplot2` plotting function on a zoomed-in portion of the study area
+
+```{r}
+ortho_plt_fn(
+  pj_rgb_rast
+  , pj_stand_boundary %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(11)
+)
+```
+
+for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (blue)
 
 ```{r}
 terra::plotRGB(pj_rgb_rast, stretch="lin")
+# add stand boundary
 terra::plot(
   pj_stand_boundary %>% 
     terra::vect() %>% 
     terra::project(terra::crs(pj_rgb_rast))
   , add = T, border = "black", col = NA, lwd = 1.2
 )
+# add pile boundaries
 terra::plot(
   pj_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(pj_rgb_rast))
   , add = T, border = "blue", col = NA, lwd = 1.2
 )
 ```
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
 ### BHEF Ponderosa Pine Site
 
-### ARNF Ponderosa Pine Site
+load the original data. for this site, the orthomosaics are split across multiple files. we'll read in each, align the resolutions, and use `terra::moasaic()` to combine
 
+```{r, results = 'hide'}
+###############################################################
+# compile RGB raster
+###############################################################
+rgb_dir_temp <- "F:/UAS_Collections/BHEF_202306" # where is the raw las and rgb data?
+dir_temp <- "../data/BHEF_202306/" # where do you want to save processed data to?
+rgb_fnm_temp <- file.path(dir_temp,"bhef_rgb.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  # read list of orthos
+    ortho_list_temp <- list.files(
+        rgb_dir_temp
+        , pattern = ".*(_RGB|_RBG)\\.(tif|tiff)$"
+        , full.names = T, recursive = T
+      ) %>% 
+      purrr::map(function(x){terra::rast(x)})
+    ## apply the change_res_fn
+    ortho_list_temp <- 1:length(ortho_list_temp) %>% 
+      purrr::map(function(x){change_res_fn(ortho_list_temp[[x]], my_res=0.04)})
+    ######## mosaic the raster list 
+    bhef_rgb_rast <- terra::mosaic(
+      terra::sprc(ortho_list_temp)
+      , fun = "min" # min only thing that works
+      , filename = rgb_fnm_temp
+      , overwrite = T
+    )
+}else{
+  bhef_rgb_rast <- terra::rast(rgb_fnm_temp) %>% 
+    terra::subset(c(1,2,3))
+}
+# rename bands
+names(bhef_rgb_rast) <- c("red","green","blue")
+```
 
-
-### Example ratio-based index
-
-While hyperspectral image data enables more detailed analysis by capturing a broader spectral range than RGB imagery, we can still perform robust analysis using spectral data in the visible range
-
-let’s define a general function for a ratio based (e.g. vegetation) index
+what is the resolution of the original RGB data?
 
 ```{r}
-spectral_index_fn <- function(rast, layer1, layer2) {
-  bk <- rast[[layer1]]
-  bi <- rast[[layer2]]
-  vi <- (bk - bi) / (bk + bi)
-  return(vi)
+terra::res(bhef_rgb_rast)
+```
+
+let's reduce the resolution (i.e. increase the raster cell size; make more coarse)
+
+```{r, results='hide'}
+###############################################################
+# clip to boundary and resample to change resolution
+###############################################################
+dir_temp <- "../data/BHEF_202306/"
+rgb_fnm_temp <- file.path(dir_temp,"bhef_rgb_rast.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- bhef_rgb_rast %>% 
+    terra::crop(
+      bhef_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(bhef_rgb_rast))
+      , filename =  tempfile(fileext = ".tif")
+      , overwrite = TRUE
+    ) 
+  # Mask the cropped raster to the precise shape of the polygon
+  # This function will also be processed on disk due to the file size
+  bhef_rgb_rast <- terra::mask(
+    crop_rgb_rast_temp
+    , bhef_stand_boundary %>% 
+      sf::st_union() %>% 
+      sf::st_buffer(10) %>% 
+      terra::vect() %>% 
+      terra::project(terra::crs(bhef_rgb_rast))
+    , filename = tempfile(fileext = ".tif")
+    , overwrite = TRUE
+  )
+  
+  ## apply the change_res_fn for our analysis we don't need such finery
+  # this takes too long...
+  bhef_rgb_rast <- change_res_fn(bhef_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+}else{
+  bhef_rgb_rast <- terra::rast(rgb_fnm_temp)
 }
 ```
 
-The Green-Red Vegetation Index (GRVI) uses the reflectance of green and red bands to assess vegetation health and identify ground cover types. The formula is GRVI = (green - red) / (green + red). Higher GRVI values indicate healthy vegetation, while negative values suggest soils, and values near zero may indicate water or snow.
+for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (blue)
 
 ```{r}
-grvi_rast <- spectral_index_fn(rast = ortho_rast, layer1 = 2, layer2 = 1)
-names(grvi_rast) <- c("grvi")
-terra::plot(grvi_rast, col = harrypotter::hp(n=100, option = "Slytherin"))
-```
-
-let's check the GRVI for a ground truth pile
-
-```{r}
-# check it with the ortho
-grvi_rast %>% 
-  terra::crop(stand_temp %>% sf::st_buffer(20)) %>% 
-  terra::as.data.frame(xy=T) %>% 
-  dplyr::rename(f=3) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_tile(ggplot2::aes(x=x,y=y,fill = f), color = NA) +
-  scale_fill_gradient2(low = "black", high = "forestgreen") +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  ggplot2::theme_void() +
-  theme(
-      legend.position = "none" # c(0.5,1)
-      , legend.direction = "horizontal"
-      , legend.margin = margin(0,0,0,0)
-      , legend.text = element_text(size = 8)
-      , legend.title = element_text(size = 8)
-      , legend.key = element_rect(fill = "white")
-      # , plot.title = ggtext::element_markdown(size = 10, hjust = 0.5)
-      , plot.title = element_text(size = 10, hjust = 0.5, face = "bold")
-      , plot.subtitle = element_text(size = 8, hjust = 0.5, face = "italic")
-    )
-
-ggsave("../data/pile_grvi.jpeg", height = 5, width = 5)
+terra::plotRGB(bhef_rgb_rast, stretch="lin")
+# add stand boundary
+terra::plot(
+  bhef_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(bhef_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  bhef_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(bhef_rgb_rast))
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(f, r3dDefaults, m)
 gc()
 ```
 
-## Study area imagery
+### ARNF Ponderosa Pine Site
 
-let's look at the RGB imagery and pile locations
+load the original data
 
-```{r}
-# get the base plot
-plt_rgb_ortho <- ortho_plt_fn(
-  stand = 
-    slash_piles_points %>% 
-    sf::st_bbox() %>% 
-    sf::st_as_sfc() %>% 
-    sf::st_buffer(50) %>% 
-    sf::st_transform(terra::crs(ortho_rast))
-)
-# add pile locations
-plt_rgb_ortho +
-  ggplot2::geom_sf(
-    data = slash_piles_points %>% sf::st_transform(terra::crs(ortho_rast))
-    , ggplot2::aes() # size = diameter
-    , shape = 1
-    , color = "firebrick"
-  ) +
-  ggplot2::theme(legend.position = "none")
+```{r, results = 'hide'}
+#### read RGB data keep only RGB
+arnf_rgb_rast <- terra::rast(
+    "f:/UAS_Collections/ARNF_DiamondView_202510/DiamondPeak_Switchblade_transparent_mosaic_group1.tif"
+  ) %>% 
+  terra::subset(c(1,2,3))
+# rename bands
+names(arnf_rgb_rast) <- c("red","green","blue")
 ```
 
-notice these are point measurements of plot locations and the points are not precisely in the center of the pile. notice also there are piles in the imagery that were not measured (e.g. upper-left corner)
-
-we created image-annotated pile polygons using the RBG and field-collected pile location data to compare against our predicted slash pile segments using an intersection over union (IoU) approach
-
-let's make a panel of plots for each pile
+what is the resolution of the original RGB data?
 
 ```{r}
-p_fn_temp <- function(
-    rn
-    , df = slash_piles_polys %>% dplyr::filter(!is.na(comment))
-    , crs = terra::crs(ortho_rast)
-) {
-  # scale the buffer based on the largest
-  d <- df %>%
-    dplyr::arrange(tolower(comment), desc(field_diameter_m)) %>% 
-    dplyr::slice(rn) %>% 
-    sf::st_transform(crs)
-  # plt
-  ortho_plt_fn(stand=d) + 
-    ggplot2::geom_sf(data = d, fill = NA, color = "firebrick") +
-    ggplot2::labs(
-      subtitle = paste0(
-        tolower(d$comment)
-        , "\ndiam. = "
-        , scales::comma(d$field_diameter_m, accuracy = 0.1)
-        # , ", ht. = "
-        # , scales::comma(d$height, accuracy = 0.1)
-      )
-    )
+terra::res(arnf_rgb_rast)
+```
+
+let's reduce the resolution (i.e. increase the raster cell size; make more coarse)
+
+```{r, results='hide'}
+###############################################################
+# clip to boundary and resample to change resolution
+###############################################################
+dir_temp <- "../data/ARNF_DiamondView_202510/"
+rgb_fnm_temp <- file.path(dir_temp,"arnf_rgb_rast.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- arnf_rgb_rast %>% 
+    terra::crop(
+      arnf_stand_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(10) %>% 
+        terra::vect() %>% 
+        terra::project(terra::crs(arnf_rgb_rast))
+      , filename =  tempfile(fileext = ".tif")
+      , overwrite = TRUE
+    ) 
+  # Mask the cropped raster to the precise shape of the polygon
+  # This function will also be processed on disk due to the file size
+  arnf_rgb_rast <- terra::mask(
+    crop_rgb_rast_temp
+    , arnf_stand_boundary %>% 
+      sf::st_union() %>% 
+      sf::st_buffer(10) %>% 
+      terra::vect() %>% 
+      terra::project(terra::crs(arnf_rgb_rast))
+    , filename = tempfile(fileext = ".tif")
+    , overwrite = TRUE
+  )
+  
+  ## apply the change_res_fn for our analysis we don't need such finery
+  # this takes too long...
+  arnf_rgb_rast <- change_res_fn(arnf_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+}else{
+  arnf_rgb_rast <- terra::rast(rgb_fnm_temp)
 }
-# add pile locations
-plt_list_rgb <- 1:nrow(slash_piles_polys %>% dplyr::filter(!is.na(comment))) %>% 
-  purrr::map(p_fn_temp)
 ```
 
-plot tiles 
+test our `ggplot2` plotting function on a zoomed-in portion of the study area
 
-```{r, height = 10.5, width = 8}
+```{r}
+ortho_plt_fn(
+  arnf_rgb_rast
+  , arnf_stand_boundary %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(11)
+)
+```
+
+for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (blue)
+
+```{r}
+terra::plotRGB(arnf_rgb_rast, stretch="lin")
+# add stand boundary
+terra::plot(
+  arnf_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(arnf_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  arnf_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(arnf_rgb_rast))
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+## Slash Pile RGB Imagery
+
+let's look at the RGB imagery and pile locations. we'll make a panel of plots for each pile at each study site and place a one square meter box in the middle of each pile to distinguish size
+
+```{r}
+plt_fn_temp <- function(vect, rgb){
+  # get vector
+  d <- vect %>% 
+    dplyr::slice(1) %>% 
+    sf::st_transform(terra::crs(rgb))
+  # make a box
+  sqm <- d %>% 
+    sf::st_centroid() %>% 
+    sf::st_buffer(
+      sqrt(1/4) ## numerator = desired plot size in m2
+      , endCapStyle = "SQUARE"
+    ) %>%
+    dplyr::mutate(dummy=1)
+  # buff
+  buff <- dplyr::case_when(
+    d$image_gt_diameter_m < 4 ~ 4
+    , d$image_gt_diameter_m > 10 ~ 2.5
+    , T ~ d$image_gt_diameter_m*(2/3)
+  )
+  # plt
+  ortho_plt_fn(
+    rgb_rast = rgb
+    , stand = sf::st_union(d, sqm)
+    , buffer = buff
+    , add_stand = F
+  ) + 
+  ggplot2::geom_sf(data = sqm, fill = NA, color = "white", inherit.aes = F) +
+  ggplot2::geom_sf(data = d, fill = NA, lwd = 1, color = "brown", inherit.aes = F) +
+  ggplot2::labs(
+    subtitle = base::bquote(
+      "pile area: " ~
+      .(scales::comma(d$image_gt_area_m2, accuracy = 0.1)) ~ 
+      m^2
+    )
+  ) +
+  ggplot2::theme(
+    plot.subtitle = ggplot2::element_text(hjust = 0.5, size = 8)
+    , plot.title = ggplot2::element_text(hjust = 0.5, size = 9)
+  )
+}
+# plot largest, smallest, and median
+samp_plt_fn_temp <- function(piles, ortho) {
+  min_temp <-
+    plt_fn_temp(
+      vect = piles %>% 
+        dplyr::filter(is_in_stand) %>% 
+        dplyr::ungroup() %>% 
+        dplyr::slice_min(n = 1, order_by = image_gt_area_m2, na_rm = T, with_ties = F)
+      , rgb = ortho
+    ) +
+    ggplot2::labs(title = "smallest")
+  med_temp <-
+    plt_fn_temp(
+      vect = piles %>% 
+        dplyr::filter(is_in_stand) %>% 
+        dplyr::ungroup() %>% 
+        dplyr::slice_min(
+          n = 1
+          , order_by = abs(image_gt_area_m2 - median(image_gt_area_m2, na.rm = TRUE))
+          , na_rm = T, with_ties = F
+        )
+      , rgb = ortho
+    ) +
+    ggplot2::labs(title = "median")
+  max_temp <-
+    plt_fn_temp(
+      vect = piles %>% 
+        dplyr::filter(is_in_stand) %>% 
+        dplyr::ungroup() %>% 
+        dplyr::slice_max(n = 1, order_by = image_gt_area_m2, na_rm = T, with_ties = F)
+      , rgb = ortho
+    ) +
+    ggplot2::labs(title = "largest")
+  # combine
+  patchwork::wrap_plots(
+    list(min_temp, med_temp, max_temp)
+    , ncol = 3
+  )
+}
+```
+
+### PSINF Mixed Conifer Site
+
+example smallest, median, and largest slash pile (red) with a one square meter box for size reference
+
+```{r, results=F, warning=FALSE, message=FALSE}
+psinf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = psinf_slash_piles_polys, ortho = psinf_rgb_rast)
+```
+
+```{r}
+psinf_samp_plt_fn_temp
+```
+
+```{r, include=FALSE, eval=FALSE}
+plt_list_rgb <- 
+  which(psinf_slash_piles_polys$is_in_stand) %>% 
+  purrr::map(function(x){
+    #plt
+    plt_fn_temp(vect = psinf_slash_piles_polys %>% dplyr::slice(x), rgb = psinf_rgb_rast)
+  })
 patchwork::wrap_plots(
-  sample(
-    plt_list_rgb, size = as.integer(nrow(slash_piles_points)/3))
+  plt_list_rgb
   , ncol = 5
 )
 ggsave("../data/pile_tiles_rgb.jpeg", height = 10.5, width = 8)
 ```
 
-a challenge in using the spectral data to identify slash piles will be to develop a spectral-based method that can account for the different lighting conditions in the imagery (e.g. piles in shadows or under tree crowns). this different lighting may have also influenced the point cloud generation
+### TRFO-BLM Pinyon-Juniper Site
 
-## Point Cloud Data
+example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-Let's check out the point cloud data we got using UAS-SfM methods
-
-```{r}
-# directory with the downloaded .las|.laz files
-f_temp <- 
-  "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
-  # system.file(package = "lidR", "extdata", "Megaplot.laz")
-# is there data?
-list.files(f_temp, pattern = ".*\\.(laz|las)$") %>% length()
-# what files are in here?
-list.files(f_temp, pattern = ".*\\.(laz|las)$")[1]
-```
-
-what information does `lidR` read from the catalog?
-
-```{r}
-las_ctg <- lidR::readLAScatalog(f_temp)
-# set the processing options
-lidR::opt_progress(las_ctg) <- F
-lidR::opt_filter(las_ctg) <- "-drop_duplicates"
-lidR::opt_select(las_ctg) <- "xyziRGB"
-# huh?
-las_ctg
-```
-
-that's a lot of points...can an ordinary laptop handle it? we'll find out.
-
-We'll plot our point cloud data tiles real quick to orient ourselves
-
-```{r}
-las_ctg %>% 
-  purrr::pluck("data") %>% 
-  mapview::mapview(popup = F, layer.name = "point cloud tile")
-```
-
-## Check out one pile
-
-```{r}
-las_temp <- lidR::clip_roi(
-  las_ctg
-  # biggest mechanical
-  , slash_piles_polys %>%
-    dplyr::filter(tolower(comment)=="mechanical pile") %>% 
-    dplyr::arrange(desc(field_diameter_m)) %>% 
-    dplyr::slice(1) %>% 
-    sf::st_point_on_surface() %>% 
-    sf::st_buffer(10, endCapStyle = "SQUARE") %>% 
-    sf::st_transform(lidR::st_crs(las_ctg))
-)
-```
-
-what did we get?
-
-```{r}
-las_temp@data %>% dplyr::glimpse()
-```
-
-plot a sample
-
-```{r,echo=FALSE,message=FALSE,warning=FALSE}
-## if want to get current rgl parameters
-# rgl::par3d()$zoom
-# rgl::par3d()$FOV
-# rgl::par3d()$userMatrix %>% c()
-# rgl::par3d()$windowRect
-## set up for printing rgl graphics
-r3dDefaults <- rgl::r3dDefaults
-m  <- structure(c(
-  -0.39951634,0.09665099, -0.91161686,0.00000000, -0.90745372,0.09938181,0.40822852,0.00000000,0.13005376,0.99034417,0.04800174,0.00000000,0.00000000,0.00000000
-,0.00000000,1.00000000
-), .Dim = c(4L, 4L))
-r3dDefaults$FOV <- 30
-r3dDefaults$userMatrix <- m
-r3dDefaults$zoom <- 0.78
-r3dDefaults$windowRect <- c(0,23,1536,864)
-rgl::setupKnitr(autoprint = TRUE)
-```
-
-```{r, rgl = TRUE}
-las_temp %>% 
-  lidR::plot(
-    color = "Z", bg = "white", legend = F
-   , pal = harrypotter::hp(n=50, house = "gryffindor")
-  )
-```
-
-make a gif
-
-```{r}
-library(magick)
-if(!file.exists(file.path("../data/", "pile_z.gif"))){
-  rgl::close3d()
-  lidR::plot(
-    las_temp, color = "Z", bg = "white", legend = F
-   , pal = harrypotter::hp(n=50, house = "gryffindor")
-  )
-  rgl::movie3d( rgl::spin3d(), duration = 10, fps = 10 , movie = "pile_z", dir = "../data/")
-  rgl::close3d()
-}
+```{r, results=F, warning=FALSE, message=FALSE}
+pj_samp_plt_fn_temp <- samp_plt_fn_temp(piles = pj_slash_piles_polys, ortho = pj_rgb_rast)
 ```
 
 ```{r}
-library(magick)
-if(!file.exists(file.path("../data/", "pile_rgb.gif"))){
-  rgl::close3d()
-  lidR::plot(
-    las_temp, color = "RGB", bg = "white", legend = F
-  )
-  rgl::movie3d( rgl::spin3d(), duration = 10, fps = 10 , movie = "pile_rgb", dir = "../data/")
-  rgl::close3d()
-}
+pj_samp_plt_fn_temp
+```
+
+### BHEF Ponderosa Pine Site
+
+example smallest, median, and largest slash pile (red) with a one square meter box for size reference
+
+```{r, results=F, warning=FALSE, message=FALSE}
+bhef_samp_plt_fn_temp <- samp_plt_fn_temp(piles = bhef_slash_piles_polys, ortho = bhef_rgb_rast)
+```
+
+```{r}
+bhef_samp_plt_fn_temp
+```
+
+### ARNF Ponderosa Pine Site
+
+example smallest, median, and largest slash pile (red) with a one square meter box for size reference
+
+```{r, results=F, warning=FALSE, message=FALSE}
+arnf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = arnf_slash_piles_polys, ortho = arnf_rgb_rast)
+```
+
+```{r}
+arnf_samp_plt_fn_temp
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
