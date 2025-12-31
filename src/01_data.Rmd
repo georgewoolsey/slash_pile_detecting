@@ -1585,8 +1585,8 @@ plt_fn_temp <- function(vect, rgb){
     )
   ) +
   ggplot2::theme(
-    plot.subtitle = ggplot2::element_text(hjust = 0.5, size = 8)
-    , plot.title = ggplot2::element_text(hjust = 0.5, size = 9)
+    plot.subtitle = ggplot2::element_text(hjust = 0.5, size = 7)
+    , plot.title = ggplot2::element_text(hjust = 0.5, size = 8)
   )
 }
 # plot largest, smallest, and median
@@ -1692,8 +1692,43 @@ arnf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = arnf_slash_piles_polys, ortho 
 arnf_samp_plt_fn_temp
 ```
 
+### All
+
+```{r, fig.height=9.5, fig.width=5}
+patchwork::wrap_plots(
+  patchwork::wrap_elements( 
+    psinf_samp_plt_fn_temp + 
+      patchwork::plot_annotation(
+        title = "PSINF Mixed Conifer Site"
+        , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10))
+      ) 
+    )
+  , patchwork::wrap_elements( 
+    pj_samp_plt_fn_temp + 
+      patchwork::plot_annotation(
+        title = "TRFO-BLM Pinyon-Juniper Site"
+        , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10))
+      ) 
+    )
+  , patchwork::wrap_elements( 
+    bhef_samp_plt_fn_temp + 
+      patchwork::plot_annotation(
+        title = "BHEF Ponderosa Pine Site"
+        , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10))
+      ) 
+    )
+  , patchwork::wrap_elements( 
+    arnf_samp_plt_fn_temp + 
+      patchwork::plot_annotation(
+        title = "ARNF Ponderosa Pine Site"
+        , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10))
+      ) 
+    )
+  , ncol = 1
+)
+```
+
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(f, r3dDefaults, m)
 gc()
 ```

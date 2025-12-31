@@ -1,68 +1,52 @@
-# Point Cloud Processing and Pile Segmentation{#ptcld_process}
+# Point Cloud Processing{#ptcld_process}
 
-To start, we'll use the point cloud data alone to attempt to classify slash piles using structural signatures alone without additional spectral information.
-
-We'll use the `cloud2trees` package to perform all preprocessing of point cloud data which includes:
+We'll use the `cloud2trees` [package](https://github.com/georgewoolsey/cloud2trees) to perform all preprocessing of point cloud data which includes:
 
 * ground classification and noise removal
 * raster data (DTM and CHM) generation
 * point cloud height normalization
 
-All of this can be accomplished using the `cloud2raster()` function. After generating these products from the raw point cloud we'll perform object segmentation to attempt to detect round, conical objects like slash piles from: 1) the normalized point cloud directly; 2) the CHM which we'll generate by setting the minimum height to zero (essentially a digital surface model [DSM] with the ground removed).
+All of this can be accomplished using the `cloud2trees::cloud2raster()` function. After generating these products from the raw point cloud we'll perform object segmentation to attempt to detect slash piles from the CHM which we'll generate by setting the minimum height to zero (essentially a digital surface model [DSM] with the ground removed).
 
-To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation in a bottom-up approach. *Insert something from paper about bottom-up approach that uses a CHM "slice" near the ground*. For slash piles, which are often irregular and may not have a distinct "treetop" equivalent, CHM-based methods might be less directly applicable unless the piles present a very clear, isolated conical or rounded form. Could use expected morphology of the slash piles (e.g. maximum height) based on prior research and/or the pile construction prescription. We won't use the height normalized point cloud data in this project but future work could attempt to detect slash piles directly from the point cloud by using a clustering algorithm such as DBSCAN (Density-Based Spatial Clustering of Applications with Noise), for example.
-
-* [**Section 5**](#raster_watershed) builds and tests a raster-based watershed segmentation methodology
-* [**Section 6**](#data_fusion) combines the raster-based watershed segmentation methodology with spectral information in a data fusion approach
-
-```{r, include=FALSE,eval=FALSE}
-# To attempt to detect slash piles directly from the point cloud we can use a clustering algorithm such as DBSCAN (Density-Based Spatial Clustering of Applications with Noise) which identifies clusters based on point density, making it effective for detecting clusters of arbitrary shapes and sizes. It does not require the number of clusters to be specified beforehand. [Fu et al. (2022)](https://doi.org/10.3390/f13040566) outline a method using DBSCAN in semi-automated way to segment individual trees from TLS data. After segmenting the point cloud using DBSCAN, either random forest can be used as a classifier (i.e. classification step) or a rules-based method can filter segments to distinguish slash piles from other objects based on their extracted geometric features. The general workflow is:
-# 
-# 1) for each point in the normalized non-ground point cloud, compute a suite of relevant geometric features within a defined local neighborhood radius using `lidR::point_metrics()`
-# 2) calculate features derived from PCA, such as linearity, planarity, sphericity, and surface variation. Also, compute curvature (mean, Gaussian) and roughness
-# 3) perform object segmentation/clustering to group points belonging to individual objects using DBSCAN which can identify dense clusters without requiring a predefined number of objects
-# 4a) classify the segmented objects (clusters) as "slash pile" or "non-slash pile" based on their extracted features (e.g., sphericity, roughness, height, volume) with a random forest classifier using a manually annotated subset of segmented objects
-# 4b) *or* used a rules-based approach to filter the segmented objects based on their extracted features (e.g., sphericity, roughness, height, volume) based on expected morphology of the slash piles (e.g. maximum height) using prior research or prescription settings.
-# 5) merge small, adjacent segments that likely belong to a single slash pile based on proximity and connectivity
-# 6) perform a confusion matrix-based evaluation on the results
-```
+To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation or DBSCAN (Density-Based Spatial Clustering of Applications with Noise), for example. Both of these methods are common in segmenting individual trees and coarse woody debris from CHM data.
 
 ## Process Raw Point Cloud
 
-We'll use `cloud2trees::cloud2raster()` to process the raw point cloud data
+We'll use `cloud2trees::cloud2raster()` to process the raw point cloud data. For each site we'll generate a fine-resolution (0.1 m) CHM data set which can be aggregated to coarser resolution for sensitivity testing. Fine resolution CHM data would include granular details which may be important for delineating smaller slash piles while more coarse resolution data may help smooth out noise in the data to reduce false positive pile detections and potentially better represent the form of the actual piles
 
 ```{r}
 # set chm res
-chm_res_m_temp <- 0.2
-dir_temp <- paste0("../data/point_cloud_processing_delivery_chm",chm_res_m_temp,"m")
+my_chm_res_m <- 0.1
+```
+
+### PSINF Mixed Conifer Site
+
+```{r, results=F}
+# processing dirs
+c2t_out_dir_temp <- "../data/PFDP_Data/"
+out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
 # do it
-if(!dir.exists(dir_temp)){
+if(!dir.exists(out_dir_temp)){
   # cloud2trees
-  cloud2raster_ans <- cloud2trees::cloud2raster(
-    output_dir = "../data"
+  psinf_cloud2raster_ans <- cloud2trees::cloud2raster(
+    output_dir = c2t_out_dir_temp
     , input_las_dir = las_dir_temp
     , accuracy_level = 2
     , keep_intrmdt = T
     , dtm_res_m = 0.25
-    , chm_res_m = chm_res_m_temp
+    , chm_res_m = my_chm_res_m
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
   # rename
-  file.rename(from = "../data/point_cloud_processing_delivery", to = dir_temp)
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
 }else{
-  dtm_temp <- terra::rast( file.path(dir_temp, "dtm_0.25m.tif") )
-  chm_temp <- terra::rast( file.path(dir_temp, paste0("chm_", chm_res_m_temp,"m.tif")) )
-  
-  # dtm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.1m/dtm_0.25m.tif")
-  # chm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.1m/chm_0.1m.tif")
-  
-  # dtm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.2m/dtm_0.5m.tif")
-  # chm_temp <- terra::rast("../data/point_cloud_processing_delivery_chm0.2m/chm_0.2m.tif")
-  
-  cloud2raster_ans <- list(
+  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.25m.tif") )
+  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  # combine
+  psinf_cloud2raster_ans <- list(
     "dtm_rast" = dtm_temp
     , "chm_rast" = chm_temp
   )
@@ -77,25 +61,39 @@ gc()
 let's check out the DTM
 
 ```{r, results='hide', message=FALSE, fig.show='asis'}
-cloud2raster_ans$dtm_rast %>% 
+psinf_cloud2raster_ans$dtm_rast %>% 
   terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
-  terra::plot(axes = F)
-```
-
-```{r, include=FALSE, eval=TRUE}
-ggplot2::ggsave("../data/dtm.jpeg", height = 8, width = 10.5)
+  terra::plot(
+    col = harrypotter::hp(n = 100, option = "mischief")
+    , axes = F
+    , main = "PSINF DTM (m)"
+  )
+# add stand boundary
+terra::plot(
+  psinf_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
 ```
 
 and CHM
 
 ```{r, results='hide', message=FALSE, fig.show='asis'}
-cloud2raster_ans$chm_rast %>% 
+psinf_cloud2raster_ans$chm_rast %>% 
   terra::aggregate(fact = 2) %>%  #, fun = "median", cores = lasR::half_cores(), na.rm = T) %>% 
-  terra::plot(col = viridis::plasma(100), axes = F)
-```
-
-```{r, include=FALSE, eval=TRUE}
-ggplot2::ggsave("../data/chm.jpeg", height = 8, width = 10.5)
+  terra::plot(
+    col = viridis::plasma(100)
+    , axes = F
+    , main = "PSINF CHM (m)"
+  )
+# add stand boundary
+terra::plot(
+  psinf_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
 ```
 
 ### DTM and CHM + piles
@@ -475,5 +473,12 @@ p_fn_temp(2)
 p_fn_temp(3)
 p_fn_temp(4)
 p_fn_temp(5)
+```
+
+```{r, include=FALSE, eval=FALSE}
+### PSINF Mixed Conifer Site
+### TRFO-BLM Pinyon-Juniper Site
+### BHEF Ponderosa Pine Site
+### ARNF Ponderosa Pine Site
 ```
 
