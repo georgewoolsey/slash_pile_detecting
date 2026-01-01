@@ -1576,7 +1576,7 @@ plt_fn_temp <- function(vect, rgb){
     , add_stand = F
   ) + 
   ggplot2::geom_sf(data = sqm, fill = NA, color = "white", inherit.aes = F) +
-  ggplot2::geom_sf(data = d, fill = NA, lwd = 1, color = "brown", inherit.aes = F) +
+  ggplot2::geom_sf(data = d, fill = NA, lwd = 1, color = "blue", inherit.aes = F) +
   ggplot2::labs(
     subtitle = base::bquote(
       "pile area: " ~

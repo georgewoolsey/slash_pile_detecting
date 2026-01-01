@@ -1,14 +1,153 @@
-# Structural Detection from CHM{#raster_watershed}
+# Geometry-based Slash Pile Detection{#raster_watershed}
 
-We'll first attempt to detect slash piles using raster-based methods with the DTM and CHM. These raster-based approaches are simple and efficient but can be limited in complex forest structures where piles might be occluded by overstory trees while rasterization simplifies/removes some of the rich 3D information in the point cloud.
+We will detail the geometry-based slash pile detection method which uses user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data. Since this is only a demonstration of the method, we will work with only a sample area from one of the study sites which we know includes slash piles. Full evaluation of the methodology will be performed later in the analysis.
 
-When used for individual tree detection (ITD) the watershed segmentation technique treats the CHM as a topographic surface, where local maxima represent tree tops and valleys represent crown boundaries. A "water source" is conceptually placed at each local lowest point, and the surface is "flooded." Barriers are generated where different "water sources" meet, forming watershed lines that delineate individual tree crowns.
+We'll attempt to detect slash piles using raster-based methods with the CHM. These raster-based approaches are simple and efficient but rasterization simplifies/removes some of the rich 3D information in the point cloud. However, raster-based approaches for detecting individual trees in forest stands and coarse woody debris are common.
 
-two possible approaches for segmenting piles are to: 1) segment individual trees using a top-down approach and then use the canopy cover as a mask to then identify slash piles; 2) use a bottoms-up approach to perform slash pile segmentation on a lower "slice" of the CHM based on an expected maximum height of a pile
+Here is a section from the draft manuscript:
 
-we'll first try the bottoms-up approach using a CHM slice with a user-defined maximum height which should be set based on the pile construction prescription or expectation from the treatment type.
+>These geometry-based approaches are supported by the demonstrated successes of object segmentation frameworks for both CWD and individual trees, which consistently provide high detection and quantification accuracy by utilizing rules to define expected target object morphology. Beyond their technical performance, the geometry-based methods utilizing a set of rules offer some key advantages. The inherent traceability of these methods ensures that reporting for regulatory oversight is more transparent and easier to describe compared to the "black box" nature of many model-based approaches. Geometry-based frameworks also do not rely on training datasets and can directly align with the explicit pile construction parameters which are generally known by land managers through silvicultural prescriptions. To address the current lack of automated methods for simultaneously detecting and quantifying slash piles from aerial remote sensing data, our objective in this work is to present a geometry-based approach that uses rules and user-defined thresholds applied to geometric features (such as area, shape, and height) to identify and quantify slash piles from UAS-DAP point cloud data.
 
-the first step in this approach is to isolate the lower slice of the CHM based on a maximum height threshold defined by the upper limit of the expected slash pile height. the expected height range to search for slash piles should be based on the pile construction prescription and potentially adjusted based on a sample of field-measured values after treatment completion
+## Demonstration Area
+
+we'll focus on a 2,000 square meter example area
+
+```{r}
+# boundary
+aoi_boundary <- psinf_slash_piles_polys %>% 
+  dplyr::filter(pile_id == 73) %>% 
+  sf::st_centroid() %>% 
+  sf::st_buffer(
+    sqrt(2000/4) ## numerator = desired plot size in m2
+    , endCapStyle = "SQUARE"
+  ) %>%
+  dplyr::mutate(dummy=1)
+# rgb
+aoi_rgb_rast <- psinf_rgb_rast %>% 
+  terra::crop(
+    aoi_boundary %>% 
+      sf::st_buffer(3*2) %>% 
+      sf::st_transform(terra::crs(psinf_rgb_rast)) %>% 
+      terra::vect()
+    , mask = T
+  )
+# chm
+aoi_chm_rast <- psinf_chm_rast %>% 
+  terra::crop(
+    aoi_boundary %>% 
+      sf::st_buffer(3) %>% 
+      sf::st_transform(terra::crs(psinf_chm_rast)) %>% 
+      terra::vect()
+    , mask = T
+  )
+# piles
+aoi_slash_piles_polys <- psinf_slash_piles_polys %>% 
+  dplyr::inner_join(
+    psinf_slash_piles_polys %>% 
+      sf::st_intersection(aoi_boundary) %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pile_id)
+    , by = "pile_id"
+  )
+# ggplot base
+aoi_plt_ortho <- ortho_plt_fn(rgb_rast = aoi_rgb_rast, stand = aoi_boundary, buffer = 3)
+# aoi_plt_ortho
+```
+
+look at the demonstration area (plots using `ggplot2` for maximum customization)
+
+here is the CHM of the example area. can you pick out the slash piles?
+
+```{r}
+plt_aoi_chm <- function(chm) {
+  chm %>% 
+    terra::as.data.frame(xy=T) %>% 
+    dplyr::rename(f=3) %>% 
+    ggplot2::ggplot() +
+    ggplot2::geom_tile(mapping = ggplot2::aes(x=x,y=y,fill=f)) +
+    ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+    ggplot2::scale_fill_viridis_c(option = "plasma") +
+    ggplot2::labs(fill = "CHM (m)") +
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "top") 
+}
+plt_aoi_chm(aoi_chm_rast)
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_chm.jpg", height = 8, width = 8)
+p_temp <- plt_aoi_chm(aoi_chm_rast) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  )
+ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_chm_piles.jpg", height = 8, width = 8)
+p_temp <- plt_aoi_chm(aoi_chm_rast) +
+  ggplot2::theme(legend.position = "none")
+ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_chm_noleg.jpg", height = 8, width = 8)
+```
+
+here is the RGB of the example area. can you pick out the slash piles?
+
+```{r}
+aoi_plt_ortho + 
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8)
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_rgb01.jpg", height = 8, width = 8)
+```
+
+we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_rgb02.jpg", height = 8, width = 8)
+```
+
+would you have done better if you had both the CHM and RGB data?
+
+```{r}
+plt_aoi_chm_rgb <- function(chm) {
+ aoi_plt_ortho +
+    ggnewscale::new_scale_fill() +
+    ggplot2::geom_tile(
+      data = chm %>%
+        terra::as.data.frame(xy=T) %>%
+        dplyr::rename(f=3)
+      , mapping = ggplot2::aes(x=x,y=y,fill=f)
+      , alpha = 0.4
+      , inherit.aes = F
+    ) +
+    ggplot2::scale_fill_viridis_c(option = "plasma") +
+    ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+    ggplot2::theme(legend.position = "none") 
+}
+plt_aoi_chm_rgb(aoi_chm_rast) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_rgb03.jpg", height = 8, width = 8)
+```
+
+## Method Demonstration
+
+the first step in this approach is to isolate the lower "slice" of the CHM based on a maximum height threshold defined by the upper limit of the expected slash pile height. the expected height range to search for slash piles should be based on the pile construction prescription and potentially adjusted based on a sample of field-measured values after treatment completion
 
 we'll set a maximum height threshold which filters the CHM to only include raster cells lower than this threshold. we'll also set a lower height limit based on the expected slash pile height for use later in removing candidate segments that are shorter than this lower limit.
 
@@ -17,26 +156,136 @@ we'll set a maximum height threshold which filters the CHM to only include raste
 max_ht_m <- 4
 min_ht_m <- 0.5
 # lower CHM slice
-cloud2raster_ans$chm_rast %>% 
-  terra::clamp(upper = max_ht_m, lower = 0, values = F) %>% 
-  terra::plot(col = viridis::plasma(100), axes = F)
+aoi_chm_rast_slice <- terra::clamp(aoi_chm_rast, upper = max_ht_m, lower = 0, values = F)
+```
+
+plot the lower slice, notice how the CHM height scale has changed
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_rgb04.jpg", height = 8, width = 8)
 ```
 
 already, it looks like the piles should be distinguishable objects from this data
 
-## Method Demonstration
-
 let's run watershed segmentation using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
 
 ```{r}
+# ?EBImage::watershed
 watershed_ans <- lidR::watershed(
-    chm = cloud2raster_ans$chm_rast %>% 
-      terra::clamp(upper = max_ht_m, lower = 0, values = F)
-    , th_tree = 0.1
+    chm = aoi_chm_rast_slice
+    # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
+    , th_tree = 0.01
+    # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
+      # and the point where it contacts another object (checked for every contact pixel). 
+      # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
+      # Tolerance should be chosen according to the range of x
+    , tol = max_ht_m-min_ht_m
+    # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
+      # Higher value smoothes out small objects.
+    , ext = 1
   )()
 # this is a raster
 watershed_ans
+xxx
 ```
+
+```{r, include=FALSE, eval=FALSE}
+# set the dbscan parameters based on minimum expected object size and point density
+# min_area_m2 <- 2.5
+# the minimum cluster size to be detected based on the minimum object area expected (min_area_m2)
+# circular radius = epsilon = sqrt(min_area_m2/pi)
+(epsilon <- sqrt(min_area_m2/pi)*1.1) # *1.01 # could make this slightly larger to avoid over-segmenting
+# depends on the point density and expected size of WD objects
+# could do math based on input point cloud density and expected minimum size
+# expected points in the smallest object size expected = 
+  # minPts = avg_pts_per_m2 * min_area_m2
+# las_planar # check this point density
+# las_planar %>% lidR::filter_poi(planar==F) # check this point density
+# ( nrow(est_wd_pts_sf) / (lidR::st_bbox(las) %>% sf::st_as_sfc() %>% sf::st_as_sf() %>% sf::st_area() %>% as.numeric()) ) # check this point density
+# !!!!! for rasters...points/m2 = 1 m2 / cell area m2 = points
+avg_pts_per_m2 <- 1/prod(terra::res(aoi_chm_rast_slice)[1:2])
+# avg_pts_per_m2
+minPts <- max( # don't go any lower than the dbscan::dbscan() default
+  5 # the dbscan::dbscan() default
+  , ceiling(avg_pts_per_m2 * min_area_m2)
+)
+## XY df
+xy_df <- terra::as.data.frame(aoi_chm_rast_slice, xy = T) %>% 
+  dplyr::rename(
+    X=x,Y=y
+    , f=3
+  ) %>% 
+  dplyr::filter(!is.na(f)) %>% 
+  dplyr::select(X,Y)
+# xy_df %>% dplyr::glimpse()
+# ggplot2::ggplot(data = xy_df, mapping = ggplot2::aes(x=X,y=Y)) + ggplot2::geom_point(shape=".")
+
+epsilon
+# ?dbscan::dbscan
+db <- dbscan::dbscan(
+  x = xy_df
+    # est_wd_pts_sf %>% sf::st_drop_geometry() %>% dplyr::select(X,Y)
+  # eps primarily controls the spatial extent of a cluster, 
+  # as it defines how far points can be from each other to be considered part of the same dense region.
+  , eps = epsilon
+  # minPts primarily controls the minimum density of a cluster, 
+  # as it dictates how many points must be packed together within that eps radius.
+  , minPts = minPts
+)
+# # huh?
+# db$cluster %>% length()
+# nrow(xy_df)
+
+# add the cluster to the data
+xy_df$cluster <- db$cluster
+summary(db$cluster)
+# xy_df %>% dplyr::glimpse()
+
+# xy_df %>% 
+#   sf::st_as_sf(coords = c("X", "Y"), crs = terra::crs(aoi_chm_rast_slice), remove = F) %>%
+#   sf::st_intersection(aoi_slash_piles_polys %>% dplyr::slice(1)) %>% 
+#   ggplot2::ggplot(mapping = ggplot2::aes(x=X,y=Y)) + ggplot2::geom_point(shape=".")
+
+# fill the rast with the cluster values
+dbscan_ans <- terra::rasterize(
+    x = xy_df %>% 
+      sf::st_as_sf(coords = c("X", "Y"), crs = terra::crs(aoi_chm_rast_slice), remove = F) %>%
+      dplyr::ungroup() %>% 
+      dplyr::select(cluster) %>% 
+      terra::vect()
+    , y = aoi_chm_rast_slice
+    , field = "cluster"
+  )
+dbscan_ans %>% terra::as.factor() %>% terra::plot()
+# "0" clusters are noise which should be dropped
+# convert to vector
+dbscan_ans_poly <- 
+  dbscan_ans %>% 
+  terra::subst(from = 0, to = NA) %>% 
+  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+  setNames("pred_id") %>%
+  sf::st_as_sf() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.))
+dbscan_ans_poly %>% dplyr::glimpse()
+dbscan_ans_poly %>% 
+  ggplot2::ggplot() + 
+  ggplot2::geom_sf(mapping = ggplot2::aes(fill = as.factor(pred_id)), color = NA) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  )
+```
+
 
 each value should be a unique "segment" which we can refine based on rules of expected size and shape of piles
 

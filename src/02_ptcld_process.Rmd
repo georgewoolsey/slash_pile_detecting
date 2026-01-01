@@ -146,7 +146,7 @@ plt_rast_fn <- function(
     # ggplot
     comp_temp <- ggplot2::ggplot() +
       ggplot2::geom_tile(data = comp_st, ggplot2::aes(x=x,y=y,fill=f)) +
-      ggplot2::geom_sf(data = d_temp, fill = NA, color = "brown", lwd = 0.4) +
+      ggplot2::geom_sf(data = d_temp, fill = NA, color = "blue", lwd = 0.4) +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       ggplot2::labs(
@@ -216,7 +216,7 @@ plt_rast_combine <- function(
         , buffer = buffer
         , add_stand = F
       ) + 
-      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "brown", lwd = 0.3)
+      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "blue", lwd = 0.3)
   # combine
     r <- patchwork::wrap_plots(list(rgb_temp,ans1$plt,ans2$plt), nrow = 1)
     return(r)
@@ -769,7 +769,7 @@ if(!file.exists(fnm_temp)){
     terra::crop(
       psinf_stand_boundary %>% 
         sf::st_union() %>% 
-        sf::st_buffer(10) %>% 
+        sf::st_buffer(20) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(psinf_cloud2raster_ans$chm_rast))
      , mask = T
@@ -786,7 +786,7 @@ if(!file.exists(fnm_temp)){
     terra::crop(
       pj_stand_boundary %>% 
         sf::st_union() %>% 
-        sf::st_buffer(10) %>% 
+        sf::st_buffer(20) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(pj_cloud2raster_ans$chm_rast))
      , mask = T
@@ -803,7 +803,7 @@ if(!file.exists(fnm_temp)){
     terra::crop(
       bhef_stand_boundary %>% 
         sf::st_union() %>% 
-        sf::st_buffer(10) %>% 
+        sf::st_buffer(20) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(bhef_cloud2raster_ans$chm_rast))
      , mask = T
@@ -820,7 +820,7 @@ if(!file.exists(fnm_temp)){
     terra::crop(
       arnf_stand_boundary %>% 
         sf::st_union() %>% 
-        sf::st_buffer(10) %>% 
+        sf::st_buffer(20) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(arnf_cloud2raster_ans$chm_rast))
      , mask = T
@@ -837,7 +837,7 @@ gc()
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(my_chm_res_m, my_rgb_res_m)
+remove(my_chm_res_m, my_rgb_res_m, plt_rast_combine, plt_rast_fn, change_res_fn)
 gc()
 ```
 
