@@ -8,6 +8,10 @@ Here is a section from the draft manuscript:
 
 >These geometry-based approaches are supported by the demonstrated successes of object segmentation frameworks for both CWD and individual trees, which consistently provide high detection and quantification accuracy by utilizing rules to define expected target object morphology. Beyond their technical performance, the geometry-based methods utilizing a set of rules offer some key advantages. The inherent traceability of these methods ensures that reporting for regulatory oversight is more transparent and easier to describe compared to the "black box" nature of many model-based approaches. Geometry-based frameworks also do not rely on training datasets and can directly align with the explicit pile construction parameters which are generally known by land managers through silvicultural prescriptions. To address the current lack of automated methods for simultaneously detecting and quantifying slash piles from aerial remote sensing data, our objective in this work is to present a geometry-based approach that uses rules and user-defined thresholds applied to geometric features (such as area, shape, and height) to identify and quantify slash piles from UAS-DAP point cloud data.
 
+Geometric, rules-based object detection methods offer advantages over model-based approaches, primarily because they eliminate the need for extensive training data which might be limited in it's transferrability to unseen conditions. Models are often considered "black boxes" but rules-based methods rely on the inherent physical properties of the target objects themselves. This transparency allows for a high degree of interpretability as every segmentation result can be traced back to specific geometric constraints. Furthermore, this approach aligns perfectly with the expertise of land managers, as the input parameters like minimum height and area thresholds are the physical metrics commonly used in forest inventories and silvicultural prescriptions. By using these intuitive thresholds, the method becomes accessible to managers who possess a good understanding of the landscape they manage.
+
+To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation or DBSCAN (Density-Based Spatial Clustering of Applications with Noise). Both of these methods are common in segmenting individual trees and coarse woody debris from CHM data.
+
 ## Demonstration Area
 
 we'll focus on a 2,000 square meter example area
@@ -147,9 +151,11 @@ ggplot2::ggsave(filename = "../data/workflow_ex_rgb03.jpg", height = 8, width = 
 
 ## Method Demonstration
 
+Our slash pile detection approach will align with the land manager knowledge of physical metrics of slash pile form which are commonly used in forest inventories and silvicultural prescriptions. We'll start with input parameters like height and area thresholds.
+
 the first step in this approach is to isolate the lower "slice" of the CHM based on a maximum height threshold defined by the upper limit of the expected slash pile height. the expected height range to search for slash piles should be based on the pile construction prescription and potentially adjusted based on a sample of field-measured values after treatment completion
 
-we'll set a maximum height threshold which filters the CHM to only include raster cells lower than this threshold. we'll also set a lower height limit based on the expected slash pile height for use later in removing candidate segments that are shorter than this lower limit.
+we'll set a maximum height threshold (`max_ht_m`) which filters the CHM to only include raster cells lower than this threshold. we'll also set a lower height limit (`min_ht_m`) based on the expected slash pile height for use later in removing candidate segments that are shorter than this lower limit.
 
 ```{r}
 # set the max and min expected pile height
@@ -175,6 +181,162 @@ ggplot2::ggsave(filename = "../data/workflow_ex_rgb04.jpg", height = 8, width = 
 
 already, it looks like the piles should be distinguishable objects from this data
 
+our rules-based pile detection methodology will also rely on area thresholds to define a search space and filter candidate segments. like height, we'll also set a minimum (`min_area_m2`) and maximum (`max_area_m2`) pile 2D area (in square meters) to search and filter for valid candidate objects. As with the height, these thresholds should be set based on the pile construction prescription or estimates or sample measurements from field visits.
+
+```{r}
+# set the max and min expected pile area
+min_area_m2 <- 2
+# Two standard US parking spaces, typically measuring 9 feet by 18 feet, 
+# are roughly equivalent to 30.25 square meters. Each space is approximately 15.125 square meters.
+# 15.125*3
+max_area_m2 <- 50
+```
+
+to summarize, the size-based thresholds of our geometric, rules-based approach for detecting slash piles from CHM data are:
+
+* `max_ht_m` : numeric. The maximum height (in meters) a slash pile is expected to be. This value helps us focus on a specific "slice" of the data, ignoring anything taller than a typical pile.
+* `min_ht_m` : numeric. The minimum height (in meters) a detected pile must reach to be considered valid.
+* `min_area_m2` : numeric. The smallest 2D area (in square meters) a detected pile must cover to be considered valid.
+* `max_area_m2` : numeric. The largest 2D area (in square meters) a detected pile can cover to be considered valid.
+
+### Segmentation Methods
+
+The two primary segmentation methods we'll test are watershed segmentation and DBSCAN. Watershed segmentation, which we'll implement with `lidR::watershed()`, is a raster-based technique that treats a CHM as a topographic surface where height values are inverted to create basins. The algorithm identifies local maxima as "seeds" and expands them until they reach a boundary or "watershed" line. This method requires a tolerance parameter (`tol`) which defines "the minimum height of the object...between its highest point (seed) and the point where it contacts another object...If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest. Tolerance should be chosen according to the range of x." An extent parameter (`ext`) is used to define the search window for object seeds.
+
+The DBSCAN algorithm, which we'll implement with `dbscan::dbscan()`, is typically a point-cloud-based clustering algorithm that groups points based on their spatial density but DBSCAN can also be applied to raster data by converting the raster cells into a 2D point set using the cell centroids. The algorithm relies on an epsilon parameter (`eps`), which defines the search radius around a point, and a minimum points parameter (`minPts`), which sets the threshold for how many neighbors must exist within that radius to form a core cluster.
+
+Dynamically defining these parameters is critical for the usability and scalability of the method because it removes the guesswork typically required when moving between different datasets. For example, point clouds can vary in point density depending on the flight altitude or sensor, and rasters can vary in resolution. If parameters are kept static, a model tuned for a specific data structure or target object will be suboptimal for different data. We can link the segmentation algorithm parameters directly to the input data structure and the expected target object size so that the method automatically recalibrates itself.
+
+In applying a similar, rules-based methodology for coarse woody debris detection from point cloud data, [dos Santos et al. (2025)](https://doi.org/10.3390/rs17040651) recommend setting algorithm parameters based on minimum expected object size to be detected and point density.
+
+We developed dynamic logic to automatically bridge the gap between the expectation of the target object form (height and area thresholds) and the representation of the object in the data by using geometric ratios. For watershed segmentation, the tolerance (`tol`) is scaled to the height range of the target objects to ensure sensitivity to the vertical variability. The extent (`ext`) is calculated by converting the physical radius of the smallest expected object into a pixel count based on the raster resolution. For DBSCAN, the epsilon parameter (`eps`) is calculated to bridge the average gap between points (or the distance between raster cell centroids) but is capped to prevent the merging of adjacent objects. The minimum points (`minPts`) parameter is scaled by the ratio of the search area (`eps`) to the total object area, ensuring that a cluster only forms if the local point density is representative of a valid target object.
+
+| Method | Parameter | Parameter Description | Our Dynamic Logic (R-style pseudo-code) | Why our dynamic logic works |
+| :--- | :--- | :--- | :--- | :--- |
+| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.5` | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
+| **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(1, round((sqrt(min_area_m2 / pi) * 0.5) / rast_res_m))` | Uses half the target radius to increase local sensitivity, allowing the algorithm to find distinct seeds in crowded areas. |
+| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(pts_per_m2)), (sqrt(min_area_m2 / pi) * 0.25))` | Bridges gaps between points while capping the radius at 25% of the target diameter to ensure objects remain spatially separated. |
+| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round(total_exp_pts * (eps^2 / target_radius^2))` | Scales the required point "mass" so that core points must meet the density profile of the actual target object. |
+
+let's define a function to get these parameters based on the user-defined size thresholds and the input data description
+
+```{r}
+get_segmentation_params <- function(
+  max_ht_m
+  , min_ht_m
+  , min_area_m2
+  , max_area_m2
+  , pts_per_m2 = NULL
+  , rast_res_m = NULL
+){
+  
+  # check for missing required values
+  if (missing(max_ht_m) || missing(min_ht_m) || 
+      missing(min_area_m2) || missing(max_area_m2)) {
+    stop("all geometric constraints (max_ht_m, min_ht_m, min_area_m2, max_area_m2) must be defined.")
+  }
+  
+  # geometric param validation
+  if (max_ht_m <= min_ht_m) {
+    stop("max_ht_m must be greater than min_ht_m.")
+  }
+  if (max_area_m2 <= min_area_m2) {
+    stop("max_area_m2 must be greater than min_area_m2.")
+  }
+  if (min_ht_m < 0 || min_area_m2 < 0) {
+    stop("height and area constraints must be positive values.")
+  }
+  
+  # data structure validation and calculation
+  if (is.null(pts_per_m2) && is.null(rast_res_m)) {
+    stop("must provide either 'pts_per_m2' (pts/m2) or 'rast_res_m' (m/pixel).")
+  }
+  
+  # calculate and validate data str values
+  if (is.null(pts_per_m2)) {
+    if (rast_res_m <= 0) stop("rast_res_m must be a positive value.")
+    pts_per_m2 <- 1 / (rast_res_m^2)
+  }
+  if (is.null(rast_res_m)) {
+    if (pts_per_m2 <= 0) stop("pts_per_m2 must be a positive value.")
+    rast_res_m <- 1 / sqrt(pts_per_m2)
+  }
+  ################################################
+  # lidR::watershed / EBImage::watershed
+  ################################################
+  # lidR::watershed `tol`
+  # set based on the height range
+  height_range <- max_ht_m - min_ht_m
+  # scale it to increase the sensitivity to distinguish smaller objects
+  tol_val <- height_range * 0.5
+  
+  # lidR::watershed `ext`
+  # use half the radius of the minimum object to increase sensitivity
+  # this helps prevent merging nearby objects (under-segmentation)
+  target_radius_m <- sqrt(min_area_m2 / pi)
+  effective_radius_m <- target_radius_m * 0.5
+  ext_val <- max(1, round(effective_radius_m / rast_res_m))
+  
+  ################################################
+  # dbscan::dbscan
+  ################################################
+  # dbscan::dbscan `eps` (epsilon)
+  # [dos Santos et al. (2025)](https://doi.org/10.3390/rs17040651) recommended to set this value based:
+    # "on the minimum cluster size to be detected and point density"
+  
+  # start by scaling based on point spacing (1.5x average distance between points).
+  spacing <- 1 / sqrt(pts_per_m2)
+  connectivity_eps <- 1.5 * spacing
+  # eps should not exceed 50% of the minimum object radius 
+    # to avoid merging separate objects into one cluster.
+  max_allowable_eps <- effective_radius_m * 0.5
+  # cap eps by the object size constraint
+  eps_val <- min(connectivity_eps, max_allowable_eps)
+  
+  # dbscan::dbscan `minPts`
+  # based on expected points within the epsilon neighborhood area
+  
+  # get expected number of points in an object of min_area_m2
+  expected_pts_in_min_object <- min_area_m2 * pts_per_m2
+  
+  # ensure a core point is surrounded by a density of points based on min_area_m2 size at point density
+  # scale the total expected points of the minimum object 
+    # by the ratio of the epsilon-neighborhood area to the total minimum object area
+    # to ensure a core point meets the expected density of the target object
+  pts_ratio_calc <- expected_pts_in_min_object * (eps_val^2 / target_radius_m^2)
+  min_pts_val <- max(
+    5 # don't go any lower than the dbscan::dbscan() default
+    , round(pts_ratio_calc)
+  )
+  
+  # return
+  return(list(
+    data_summary = list(pts_per_m2 = pts_per_m2, rast_res_m = rast_res_m),
+    watershed = list(tol = tol_val, ext = ext_val),
+    dbscan = list(eps = eps_val, minPts = min_pts_val)
+  ))
+}
+```
+
+let's test our `get_segmentation_params()` function using the size threshold parameters we defined above: `max_ht_m`, `min_ht_m`, `min_area_m2`, `max_area_m2` and we can get the raster resolution directly from our input CHM
+
+```{r}
+# get_segmentation_params
+get_segmentation_params_ans <- get_segmentation_params(
+    max_ht_m = max_ht_m
+    , min_ht_m = min_ht_m
+    , min_area_m2 = min_area_m2
+    , max_area_m2 = max_area_m2
+    # , pts_per_m2 = NULL
+    , rast_res_m = terra::res(aoi_chm_rast_slice)[1]
+  )
+# huh?
+dplyr::glimpse(get_segmentation_params_ans)
+```
+
+
+## Watershed Segmentation
+
 let's run watershed segmentation using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
 
 ```{r}
@@ -187,15 +349,15 @@ watershed_ans <- lidR::watershed(
       # and the point where it contacts another object (checked for every contact pixel). 
       # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
       # Tolerance should be chosen according to the range of x
-    , tol = max_ht_m-min_ht_m
+    , tol = get_segmentation_params_ans$watershed$tol # max_ht_m-min_ht_m
     # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
       # Higher value smoothes out small objects.
-    , ext = 1
+    , ext = get_segmentation_params_ans$watershed$ext # 1
   )()
 # this is a raster
 watershed_ans
-xxx
 ```
+
 
 ```{r, include=FALSE, eval=FALSE}
 # set the dbscan parameters based on minimum expected object size and point density
@@ -284,8 +446,16 @@ dbscan_ans_poly %>%
     data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   )
-```
 
+
+watershed_ans %>% 
+  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+  sf::st_as_sf() %>% 
+  dplyr::mutate(area = sf::st_area(.) %>% as.numeric()) %>% 
+  dplyr::filter(area>3) %>% 
+  # dplyr::filter(focal_mean==25) %>% 
+  ggplot2::ggplot() + ggplot2::geom_sf(mapping = ggplot2::aes(fill=as.factor(focal_mean)), color = NA)
+```
 
 each value should be a unique "segment" which we can refine based on rules of expected size and shape of piles
 
@@ -306,6 +476,7 @@ let's plot the raster return from the watershed segmentation
 
 ```{r}
 watershed_ans %>% 
+  terra::as.factor() %>% 
   terra::plot(
     col = c(
       viridis::turbo(n = floor(terra::minmax(watershed_ans)[2]/3))
