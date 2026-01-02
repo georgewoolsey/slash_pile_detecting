@@ -81,16 +81,16 @@ plt_aoi_chm(aoi_chm_rast)
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_chm.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_01_chm.jpg", height = 8, width = 8)
 p_temp <- plt_aoi_chm(aoi_chm_rast) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   )
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_chm_piles.jpg", height = 8, width = 8)
+ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_011_chm_piles.jpg", height = 8, width = 8)
 p_temp <- plt_aoi_chm(aoi_chm_rast) +
   ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_chm_noleg.jpg", height = 8, width = 8)
+ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_012_chm_noleg.jpg", height = 8, width = 8)
 ```
 
 here is the RGB of the example area. can you pick out the slash piles?
@@ -101,7 +101,7 @@ aoi_plt_ortho +
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb01.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_02_rgb.jpg", height = 8, width = 8)
 ```
 
 we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
@@ -117,7 +117,7 @@ aoi_plt_ortho +
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb02.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb.jpg", height = 8, width = 8)
 ```
 
 would you have done better if you had both the CHM and RGB data?
@@ -146,7 +146,7 @@ plt_aoi_chm_rgb(aoi_chm_rast) +
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb03.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb_chm.jpg", height = 8, width = 8)
 ```
 
 ## Method Demonstration
@@ -176,7 +176,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb04.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_04_chm.jpg", height = 8, width = 8)
 ```
 
 already, it looks like the piles should be distinguishable objects from this data
@@ -213,10 +213,17 @@ We developed dynamic logic to automatically bridge the gap between the expectati
 
 | Method | Parameter | Parameter Description | Our Dynamic Logic (R-style pseudo-code) | Why our dynamic logic works |
 | :--- | :--- | :--- | :--- | :--- |
-| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.5` | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
+| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.10` | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
 | **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(1, round((sqrt(min_area_m2 / pi) * 0.5) / rast_res_m))` | Uses half the target radius to increase local sensitivity, allowing the algorithm to find distinct seeds in crowded areas. |
-| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(pts_per_m2)), (sqrt(min_area_m2 / pi) * 0.25))` | Bridges gaps between points while capping the radius at 25% of the target diameter to ensure objects remain spatially separated. |
-| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round(total_exp_pts * (eps^2 / target_radius^2))` | Scales the required point "mass" so that core points must meet the density profile of the actual target object. |
+| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(2.0 * (1/sqrt(pts_per_m2)), (sqrt(min_area_m2 / pi) * 0.25))` | Bridges gaps between points while capping the radius at 25% of the target diameter to ensure objects remain spatially separated. |
+| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * pts_per_m2) * (eps^2 / (min_area_m2 / pi)))` | Scales the required point "mass" so that core points must meet the density profile of the actual target object. |
+
+| Method | Parameter | Parameter Description | Dynamic Logic (R-style pseudo-code) | Logic Explanation | Why dynamic logic works |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.50` | Subtract the min height from the max height and take 50% of that total range. | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
+| **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(2, round((sqrt(min_area_m2 / pi) * 0.5) / rast_res_m))` | Calculate the target's radius, halve it, then divide by the pixel size to get a pixel count (minimum of 2). | Uses half the target radius to increase local sensitivity, allowing the algorithm to find distinct seeds in crowded areas. |
+| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(pts_per_m2)), (sqrt(min_area_m2 / pi) * 0.25))` | Take the smaller of: 1.5 times the average point spacing OR 25% of the target's physical radius. | Bridges gaps between points while capping the radius at 25% of the target diameter to ensure objects remain spatially separated. |
+| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * pts_per_m2) * (eps^2 / (min_area_m2 / pi)))` | Multiply total expected points by the ratio of the search circle area to the total target area. | Ensures that the minimum quantity of points found within the search radius is proportional to the overall density profile of a valid target |
 
 let's define a function to get these parameters based on the user-defined size thresholds and the input data description
 
@@ -334,14 +341,127 @@ get_segmentation_params_ans <- get_segmentation_params(
 dplyr::glimpse(get_segmentation_params_ans)
 ```
 
+we can see how these parameters change if the CHM resolution changes
+
+```{r}
+get_segmentation_params(
+    max_ht_m = max_ht_m
+    , min_ht_m = min_ht_m
+    , min_area_m2 = min_area_m2
+    , max_area_m2 = max_area_m2
+    # , pts_per_m2 = NULL
+    , rast_res_m = 0.5
+  ) %>% 
+  dplyr::glimpse()
+```
+
+and we can see how these parameters change using our CHM data but change the expected minimum pile 2D area
+
+```{r}
+get_segmentation_params(
+    max_ht_m = max_ht_m
+    , min_ht_m = min_ht_m
+    , min_area_m2 = 22
+    , max_area_m2 = max_area_m2
+    # , pts_per_m2 = NULL
+    , rast_res_m = terra::res(aoi_chm_rast_slice)[1]
+  ) %>% 
+  dplyr::glimpse()
+```
+
+the table summarizes how our rules-based approach creates dynamic parameters for use in watershed and DBSCAN segmentation. The height parameters manage vertical noise, the area parameters manage horizontal separation, and the data resolution parameters ensure the math stays consistent regardless of data density (raster resolution or point cloud point density).
+
+| Dynamic Parameter | Impact of Height (`max_ht_m` / `min_ht_m`) | Impact of Target Area (`min_area_m`) | Impact of Data Resolution (`res` / `density`) |
+| :--- | :--- | :--- | :--- |
+| **Watershed `tol`** | **Direct Driver:** Sets the vertical threshold at 10% of the scene's height range. | **None:** Vertical tolerance is independent of horizontal footprint. | **None:** Vertical sensitivity is independent of horizontal resolution. |
+| **Watershed `ext`** | **None:** Horizontal search window is independent of vertical range. | **Geometric Baseline:** Defines the physical radius used to scale the search window. | **Spatial Divider:** Converts the physical radius into a specific pixel count for the image matrix. |
+| **DBSCAN `eps`** | **None:** Point-to-point connectivity is independent of height. | **Physical Cap:** Provides a "Quarter-Radius" limit to prevent clusters from merging across objects. | **Connectivity Anchor:** Sets the search radius based on the average distance between points/centroids. |
+| **DBSCAN `minPts`** | **None:** Required point mass is independent of vertical range. | **Total Mass Baseline:** Defines the total expected points for the smallest valid target. | **Density Multiplier:** Calculates the local point count requirement relative to the data's sparsity. |
+
+```{r}
+sim_df_temp <-
+  tidyr::crossing(
+    rast_res_m = seq(0.1, 1.3, by = 0.1)
+    , min_area_m2 = seq(1, 50, length.out = 33)
+  ) %>% 
+  dplyr::mutate(
+    # Call the pre-defined function directly to ensure logic alignment
+    params = purrr::map2(
+      rast_res_m, min_area_m2, ~ get_segmentation_params(
+        max_ht_m = max_ht_m
+        , min_ht_m = min_ht_m
+        , min_area_m2 = .y
+        , max_area_m2 = .y * 5
+        , rast_res_m = .x
+      )
+    )
+    
+    # Extract values into individual columns for plotting
+    , ext = purrr::map_dbl(params, ~ .x$watershed$ext)
+    , eps = purrr::map_dbl(params, ~ .x$dbscan$eps)
+    , min_pts = purrr::map_dbl(params, ~ .x$dbscan$minPts)
+  )
+  # # Pivot to long format for faceted plotting
+  # tidyr::pivot_longer(
+  #   cols = c(ext, eps, min_pts),
+  #   names_to = "parameter",
+  #   values_to = "value"
+  # )
+# sim_df_temp %>% dplyr::glimpse()
+
+# plot
+p1_temp <-
+  ggplot2::ggplot(sim_df_temp, ggplot2::aes(x = rast_res_m, y = min_area_m2, fill = ext)) +
+  ggplot2::geom_tile(col = "gray") +
+  ggplot2::scale_fill_viridis_c(option = "magma") +
+  ggplot2::scale_x_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::scale_y_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::labs(title = "Watershed: `ext` (pixels)", fill = "pixels") +
+  ggplot2::theme_light() +
+  ggplot2::theme(legend.position = "bottom", plot.title = ggplot2::element_text(size = 9))
+
+p2_temp <-
+  ggplot2::ggplot(sim_df_temp, ggplot2::aes(x = rast_res_m, y = min_area_m2, fill = eps)) +
+  ggplot2::geom_tile(col = "gray") +
+  ggplot2::scale_fill_viridis_c(option = "magma") +
+  ggplot2::scale_x_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::scale_y_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::labs(title = "DBSCAN: `eps` (meters)", fill = "meters") +
+  ggplot2::theme_light() +
+  ggplot2::theme(legend.position = "bottom", plot.title = ggplot2::element_text(size = 9))
+
+p3_temp <-
+  ggplot2::ggplot(sim_df_temp, ggplot2::aes(x = rast_res_m, y = min_area_m2, fill = min_pts)) +
+  ggplot2::geom_tile(col = "gray") +
+  ggplot2::scale_fill_viridis_c(option = "magma") +
+  ggplot2::scale_x_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::scale_y_continuous(expand = c(0, 0), breaks = scales::breaks_extended(n=10)) +
+  ggplot2::labs(title = "DBSCAN: `minPts` (count)", fill = "count") +
+  ggplot2::theme_light() +
+  ggplot2::theme(legend.position = "bottom", plot.title = ggplot2::element_text(size = 9))
+
+# 5. Combine using patchwork
+(p1_temp + p2_temp + p3_temp) + 
+  patchwork::plot_annotation(
+    title = "Dynamic Watershed and DBSCAN Parameter Definition"
+    , subtitle = "across raster resolution and minimum target area gradients"
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10),plot.subtitle = ggplot2::element_text(size = 8))
+  ) +
+  patchwork::plot_layout(ncol = 3)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
 
 ## Watershed Segmentation
 
-let's run watershed segmentation using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
+let's go through the watershed segmentation process using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
 
 ```{r}
 # ?EBImage::watershed
-watershed_ans <- lidR::watershed(
+watershed_segs <- lidR::watershed(
     chm = aoi_chm_rast_slice
     # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
     , th_tree = 0.01
@@ -354,10 +474,170 @@ watershed_ans <- lidR::watershed(
       # Higher value smoothes out small objects.
     , ext = get_segmentation_params_ans$watershed$ext # 1
   )()
-# this is a raster
-watershed_ans
 ```
 
+the result is a raster with cells segmented and given a unique identifier
+
+```{r}
+# this is a raster
+watershed_segs
+```
+
+each value should be a unique "segment" which we can refine based on rules of expected size and shape of piles
+
+```{r}
+terra::freq(watershed_segs) %>% 
+  dplyr::slice_sample(n = 10)
+```
+
+where the "value" is the segment identifier and the count is the number of raster cells assigned to that segment
+
+how many predicted segments are there?
+
+```{r}
+terra::freq(watershed_segs) %>% dplyr::filter(!is.na(value)) %>% nrow()
+```
+
+let's plot the raster return from the watershed segmentation
+
+```{r}
+watershed_segs %>% 
+  terra::as.factor() %>% 
+  terra::plot(
+    col = c(
+      viridis::turbo(n = terra::minmax(watershed_segs)[2])
+      # , viridis::viridis(n = floor(terra::minmax(watershed_segs)[2]/3))
+      # , viridis::cividis(n = floor(terra::minmax(watershed_segs)[2]/3))
+    ) %>% sample()
+    , legend = F
+    , axes = F
+  )
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs %>% 
+      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+      setNames("pred_id") %>%
+      sf::st_as_sf() %>% 
+      sf::st_simplify() %>% 
+      sf::st_make_valid() %>% 
+      dplyr::filter(sf::st_is_valid(.))
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs %>% 
+      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+      setNames("pred_id") %>%
+      sf::st_as_sf() %>% 
+      sf::st_simplify() %>% 
+      sf::st_make_valid() %>% 
+      dplyr::filter(sf::st_is_valid(.))
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_05_chm_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+nice...we are getting close.
+
+xxx before we filter for area, we should combine segments that are touching...
+
+let's remove all candidate segments that do not meet the area criteria and simplify segments that are disconnected by keeping only the largest portion of the segment based on area. to do this, we'll convert the segmented raster into vector form for area calculations.
+
+```{r}
+xxx
+watershed_segs_sf <- watershed_segs %>% 
+  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+  setNames("pred_id") %>%
+  sf::st_as_sf() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.)) %>% 
+  # simplify multipolygons by keeping only the largest portion
+  dplyr::mutate(treeID = pred_id) %>% 
+  cloud2trees::simplify_multipolygon_crowns() %>% 
+  dplyr::select(-treeID) %>% 
+  # area filter
+  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
+  # filter out the segments that don't meet the size thresholds
+  dplyr::filter(
+    dplyr::coalesce(area_xxxx,0) >= min_area_m2
+    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
+  ) %>% 
+  dplyr::select(-c(area_xxxx))
+```
+
+how many predicted segments are there?
+
+```{r}
+nrow(watershed_segs_sf)
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_sf
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_sf
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_chm_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+## DBSCAN segmentation
 
 ```{r, include=FALSE, eval=FALSE}
 # set the dbscan parameters based on minimum expected object size and point density
@@ -456,56 +736,6 @@ watershed_ans %>%
   # dplyr::filter(focal_mean==25) %>% 
   ggplot2::ggplot() + ggplot2::geom_sf(mapping = ggplot2::aes(fill=as.factor(focal_mean)), color = NA)
 ```
-
-each value should be a unique "segment" which we can refine based on rules of expected size and shape of piles
-
-```{r}
-terra::freq(watershed_ans) %>% 
-  dplyr::slice_sample(n = 10)
-```
-
-where the "value" is the segment identifier and the count is the number of raster cells assigned to that segment
-
-how many predicted segments are there?
-
-```{r}
-terra::freq(watershed_ans) %>% dplyr::filter(!is.na(value)) %>% nrow()
-```
-
-let's plot the raster return from the watershed segmentation
-
-```{r}
-watershed_ans %>% 
-  terra::as.factor() %>% 
-  terra::plot(
-    col = c(
-      viridis::turbo(n = floor(terra::minmax(watershed_ans)[2]/3))
-      , viridis::viridis(n = floor(terra::minmax(watershed_ans)[2]/3))
-      , viridis::cividis(n = floor(terra::minmax(watershed_ans)[2]/3))
-    ) %>% sample()
-    , legend = F
-    , axes = F
-  )
-```
-
-plot it with the watershed segmented piles (brown) and the actual piles (blue)
-
-```{r}
-# plot it 
-terra::plotRGB(ortho_rast, stretch = "lin", colNA = "transparent")
-terra::plot(
-  watershed_ans %>% 
-    terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T)
-  , add = T, border = "brown", col = NA, lwd = 1.2
-)
-terra::plot(
-  slash_piles_polys %>% 
-    sf::st_transform(terra::crs(ortho_rast)) %>% terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1
-)
-```
-
-nice...we are getting close.
 
 ideally, we want objects that: i) meet the height threshold over the entire surface of the segment (no doughnuts); ii) are not irregularly shaped (relatively few inward angles);  iii) are circular in shape; and iv) meet an expected pile area threshold (minimum/maximum expected area)
 
