@@ -1140,342 +1140,415 @@ ggplot2::ggplot() +
 
 interesting.
 
-ideally, we want objects that: i) meet the height threshold over the entire surface of the segment (no doughnuts); ii) are not irregularly shaped (relatively few inward angles);  iii) are circular in shape; and iv) meet an expected pile area threshold (minimum/maximum expected area)
+## Candidate Geometric filtering
 
-### Geometric filtering: Irregularity Filtering
+slash piles are man-made objects typically constructed into common geometric forms in 2D (e.g. circular base) and 3D space (e.g. paraboloid) to facilitate efficient construction and burning [Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm). Our method leverages these traits by applying independent geometric filters to refine candidate segments. 
 
-now let's try to filter based on the geometric properties of the dbscan-detected segments. 
+First, we apply a regularity filter to remove candidates with irregularly-shaped bases. Then, an independent circularity filter removes candidates that do not meet expectations for round bases (typical of hand piles). By keeping these filters independent, the our method is flexible and allows users to prioritize generally regular shapes (e.g. circular or rectangular) or apply the circularity filter as an additional filtering step when circular pile bases are expected.
 
-we'll make a convex hull of the polygons generated from a raster to smooth out the square edges and any inward curves or indentations, resulting in a boundary that's always convex (no inward angles). using a convex hull we will be able to filter out:
+### Shape Irregularity: Convexity
 
-1) watershed detected segments that were actually lower branches of a tree. these will be shaped like a doughnut with circular shape but a hole in the center
-2) watershed detected segments that are irregularly shaped like coarse woody debris that was not organized into piles by humans
+Our shape irregularity filter compares the convex hull of the candidate segment to the raw polygon of the candidate segment. Specifically, we calculate the convexity ratio of the shape by:
 
-let's convert the watershed-detected segments from raster to vector data and create a convex hull of the shapes for comparison
+$$\frac{\text{Area of Polygon}}{\text{Area of Convex Hull}}$$
+
+This approach is effective for identifying polygons with deep indents, holes, or branching. A perfectly convex shape like a circle or square will have a convexity of 1.0 and as shapes become more irregular (or concave) the convexity drops toward 0. Convexity is is not sensitive to the overall elongation of a shape as a long, thin rectangle is technically convex and would have a ratio of 1.0, despite being irregular in its proportions.
+
+let's create a convex hull of the candidate segments for comparison and convexity calculation
 
 ```{r}
-# vectors of segments
-watershed_ans_poly <-
-  watershed_ans %>% 
-  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
-  setNames("pred_id") %>%
-  sf::st_as_sf() %>% 
+# convex hulls of segments
+
+# watershed_segs_poly
+watershed_segs_poly_chull <-
+  watershed_segs_poly %>% 
+  sf::st_convex_hull() %>% 
   sf::st_simplify() %>% 
   sf::st_make_valid() %>% 
-  dplyr::filter(sf::st_is_valid(.)) %>% 
-  dplyr::mutate(treeID=pred_id) %>% 
-  cloud2trees::simplify_multipolygon_crowns() %>% 
-  dplyr::select(-treeID)
-# convex hulls of segments
-watershed_ans_poly_chull <-
-  watershed_ans_poly %>% 
+  dplyr::filter(sf::st_is_valid(.))
+# dbscan_segs_poly
+dbscan_segs_poly_chull <-
+  dbscan_segs_poly %>% 
   sf::st_convex_hull() %>% 
   sf::st_simplify() %>% 
   sf::st_make_valid() %>% 
   dplyr::filter(sf::st_is_valid(.))
 ```
 
-lets make an example area that we'll use to demonstrate the filtering process of the watershed detected segments
+compare the convex hull shape to the raw polygons
 
-```{r, message=FALSE, warning=FALSE}
-example_aoi <-
-  slash_piles_polys %>% 
-  dplyr::filter(pile_id == 91) %>%
-  sf::st_as_sfc() %>% 
-  sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-  sf::st_buffer(55) %>% 
-  sf::st_bbox() %>% 
-  sf::st_as_sfc() %>% 
-  sf::st_as_sf()
-  # watershed_ans_poly %>% 
-  # # dplyr::filter(pred_id==241) %>%
-  # dplyr::filter(pred_id==11916) %>%
-  # # dplyr::slice_sample(n = 1) %>%
-  # sf::st_bbox() %>% 
-  # sf::st_as_sfc() %>% 
-  # sf::st_buffer(55)
-# chm of example
-buff_temp <- 7.3
-example_aoi_chm <- cloud2raster_ans$chm_rast %>% 
-  terra::crop(
-    example_aoi %>% 
-      sf::st_buffer(buff_temp) %>% 
-      sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
-      terra::vect()
-  ) %>% 
-  terra::mask(
-    example_aoi %>% 
-      sf::st_buffer(buff_temp) %>% 
-      sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
-      terra::vect()
+```{r}
+p1_temp <- ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly_chull, mapping=ggplot2::aes(color="convex hull")
+    , fill = NA, lwd = 2
+  ) + 
+  ggplot2::geom_sf(
+    data = watershed_segs_poly, mapping=ggplot2::aes(color="raw polygons")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::labs(subtitle = "watershed") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "top"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
   )
-# list of examples
-pred_id_temp <- watershed_ans_poly %>% 
-  sf::st_intersection(example_aoi) %>% 
-  dplyr::pull(pred_id)
-# plot it
-plt_ortho_example <- 
-  ortho_plt_fn(
-    my_ortho_rast = ortho_rast, stand = example_aoi
-    , buffer = buff_temp
+p2_temp <- ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_chull, mapping=ggplot2::aes(color="convex hull")
+    , fill = NA, lwd = 2
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly, mapping=ggplot2::aes(color="raw polygons")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::labs(subtitle = "dbscan") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "top"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
   )
+patchwork::wrap_plots(list(p1_temp,p2_temp))
 ```
 
-here is the CHM of the example area. can you pick out the slash piles?
-
-```{r}
-example_aoi_chm %>% 
-  terra::as.data.frame(xy=T) %>% 
-  dplyr::rename(f=3) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_tile(mapping = ggplot2::aes(x=x,y=y,fill=f)) +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::scale_fill_viridis_c(option = "plasma") +
-  ggplot2::labs(fill = "CHM (m)") +
-  ggplot2::scale_x_continuous(expand = c(0, 0)) +
-  ggplot2::scale_y_continuous(expand = c(0, 0)) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "top")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_chm.jpg", height = 8, width = 8)
-p_temp <- example_aoi_chm %>% 
-  terra::as.data.frame(xy=T) %>% 
-  dplyr::rename(f=3) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_tile(mapping = ggplot2::aes(x=x,y=y,fill=f)) +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::scale_fill_viridis_c(option = "plasma") +
-  ggplot2::labs(fill = "CHM (m)") +
-  ggplot2::scale_x_continuous(expand = c(0, 0)) +
-  ggplot2::scale_y_continuous(expand = c(0, 0)) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_chm_noleg.jpg", height = 8, width = 8)
-```
-
-here is the RGB of the example area. can you pick out the slash piles?
-
-```{r}
-plt_ortho_example + 
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8)
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb01.jpg", height = 8, width = 8)
-```
-
-we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+```{r, include=FALSE, eval=T}
+### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb02.jpg", height = 8, width = 8)
-```
-
-would you have done better if you had both the CHM and RGB data?
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_tile(
-    data = example_aoi_chm %>% 
-      terra::as.data.frame(xy=T) %>% 
-      dplyr::rename(f=3)
-    , mapping = ggplot2::aes(x=x,y=y,fill=f)
-    , alpha = 0.4
-  ) +
-  ggplot2::scale_fill_viridis_c(option = "plasma") +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb03.jpg", height = 8, width = 8)
-```
-
-now, we'll plot our example watershed detected segments as vectors (brown) compared with the ground truth piles (blue) 
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
+    data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   ) +
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb04a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+    data = watershed_segs_poly_chull
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+
+ggplot2::ggsave(filename = "../data/workflow_ex_07_rgb_watershed_cnddts.jpg", height = 8, width = 8)
+
+# plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   ) +
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
+    data = watershed_segs_poly_chull
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+ggplot2::ggsave(filename = "../data/workflow_ex_07_chm_watershed_cnddts.jpg", height = 8, width = 8)
+
+### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
   ) +
-  ggplot2::theme_void() +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_chull
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
   ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb04b.jpg", height = 8, width = 8)
+
+ggplot2::ggsave(filename = "../data/workflow_ex_07_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+
+# plot the filtered dbscan candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_chull
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+ggplot2::ggsave(filename = "../data/workflow_ex_07_chm_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-notice how the watershed detected segments have "blocky" outlines since they were generated from the CHM raster
-
-let's plot our example watershed detected segments as vectors (brown) and convex hull of the segments (orange) compared with the ground truth piles (blue)
+now, we'll calculate the convexity ratio for each remaining candidate segment
 
 ```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_chull %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "orangered", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb05a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_chull %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "orangered", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb05b.jpg", height = 8, width = 8)
-```
-
-notice how the most irregularly-shaped predicted segments have much less overlap with the convex hull shapes than the more regularly shaped segments
-
-let's filter out segments that have holes in them or are very irregularly shaped by comparing the area of the polygon and convex hull
-
-```{r}
-# min required overlap between the predicted pile and the convex hull of the predicted pile
-pct_chull_overlap <- 0.7
-# compare areas
-watershed_keep_overlaps_chull_pred_id <- watershed_ans_poly %>% 
+# watershed_segs_poly
+watershed_segs_poly <- 
+  watershed_segs_poly %>% 
   dplyr::mutate(poly_area_m2 = sf::st_area(.) %>% as.numeric()) %>% 
   dplyr::inner_join(
-    watershed_ans_poly_chull %>% 
+    watershed_segs_poly_chull %>% 
       dplyr::mutate(chull_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
       sf::st_drop_geometry()
     , by = "pred_id"
   ) %>% 
   dplyr::mutate(
-    pct_chull = poly_area_m2/chull_area_m2
+    convexity_ratio = poly_area_m2/chull_area_m2
+  )
+# dbscan_segs_poly
+dbscan_segs_poly <- 
+  dbscan_segs_poly %>% 
+  dplyr::mutate(poly_area_m2 = sf::st_area(.) %>% as.numeric()) %>% 
+  dplyr::inner_join(
+    dbscan_segs_poly_chull %>% 
+      dplyr::mutate(chull_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
+      sf::st_drop_geometry()
+    , by = "pred_id"
   ) %>% 
-  dplyr::filter(
-    pct_chull >= pct_chull_overlap
-  ) %>% 
-  dplyr::pull(pred_id)
+  dplyr::mutate(
+    convexity_ratio = poly_area_m2/chull_area_m2
+  )
 ```
+
+what is the convexity ratio for the remaining candidate segments in our demonstration area?
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly$convexity_ratio %>% summary()
+# dbscan_segs_poly
+dbscan_segs_poly$convexity_ratio %>% summary()
+```
+
+plot the convexity of the candidate segments using the raw polygons
+
+```{r}
+p1_temp <-
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly, mapping=ggplot2::aes(fill=convexity_ratio)
+    , color = NA
+  ) + 
+  ggplot2::scale_fill_fermenter(
+    n.breaks = 10, palette = "PuOr"
+    , direction = 1
+    , limits = c(0,1)
+    , labels = scales::percent
+    , breaks = seq(0, 1, by = 0.2)
+    , name = ""
+  ) +
+  ggplot2::labs(subtitle = "watershed") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+p2_temp <-
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly, mapping=ggplot2::aes(fill=convexity_ratio)
+    , color = NA
+  ) + 
+  ggplot2::scale_fill_fermenter(
+    n.breaks = 10, palette = "PuOr"
+    , direction = 1
+    , limits = c(0,1)
+    , labels = scales::percent
+    , breaks = seq(0, 1, by = 0.2)
+    , name = ""
+  ) +
+  ggplot2::labs(subtitle = "dbscan") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+patchwork::wrap_plots(
+  list(p1_temp,p2_temp)
+  , guides = "collect"
+  , 
+) &
+ggplot2::theme(
+    legend.position = "bottom"
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+```
+
+finally, let's filter the candidate segments with a user-defined expectation of shape irregularity on the 0-100% scale applied to the convexity ratio
+
+```{r}
+# # min required overlap between the predicted pile and the convex hull of the predicted pile
+min_convexity_ratio <- 0.8
+```
+
+what proportion of the remaining segments were filtered using this shape irregularity filter
+
+```{r}
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , old_segments = c(
+      watershed_segs_poly %>% nrow()
+      , dbscan_segs_poly %>% nrow()
+    )
+    , new_segments = c(
+      watershed_segs_poly %>% dplyr::filter(convexity_ratio>=min_convexity_ratio) %>% nrow()
+      , dbscan_segs_poly %>% dplyr::filter(convexity_ratio>=min_convexity_ratio) %>% nrow()
+    )
+    , area = c(
+      watershed_segs_poly %>% 
+        dplyr::filter(convexity_ratio>=min_convexity_ratio) %>% 
+        sf::st_union() %>% 
+        sf::st_area() %>% 
+        as.numeric()
+      , dbscan_segs_poly %>% 
+        dplyr::filter(convexity_ratio>=min_convexity_ratio) %>% 
+        sf::st_union() %>% 
+        sf::st_area() %>% 
+        as.numeric()
+    )
+  ) %>% 
+  dplyr::mutate(
+    pct_removed = scales::percent((new_segments-old_segments)/old_segments, accuracy = 0.1)
+    , dplyr::across(tidyselect::ends_with("segments"), ~scales::comma(.x,accuracy=1))
+    , area = scales::comma(area,accuracy=0.01)
+  ) %>% 
+  dplyr::relocate(method,pct_removed) %>% 
+  kableExtra::kbl(
+    caption = "Demonstration area candidate segments by method<br>filtered by segment convexity"
+    , col.names = c(
+      "method", "% removed"
+      , "orig. candidate segments"
+      , "filtered candidate segments"
+      , "filtered area (m<sup>2</sup>)"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+actually apply the filter ;)
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly <- watershed_segs_poly %>% 
+  dplyr::filter(convexity_ratio>=min_convexity_ratio)
+# dbscan_segs_poly
+dbscan_segs_poly <- dbscan_segs_poly %>% 
+  dplyr::filter(convexity_ratio>=min_convexity_ratio)
+```
+
+#### Watershed Segmentation
+
+plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_watershed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0701_chm_watershed_cnddts.jpg", height = 8, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+#### DBSCAN Segmentation
+
+plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered dbscan candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0701_chm_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### Convexity Filter Function
 
 let's make a function to ingest a spatial data frame and return polygons filtered for irregularity using this convex hull process
 
 ```{r}
-st_irregular_remove <- function(
+st_convexity_filter <- function(
   sf_data
-  # min required overlap between the predicted pile and the convex hull of the predicted pile
-  , pct_chull_overlap = 0.7
+  # min required overlap between the polygon and the convex hull of the polygon
+  , min_convexity_ratio = 0.7
 ) {
   if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
   # if not polygons
@@ -1504,10 +1577,10 @@ st_irregular_remove <- function(
           sf::st_drop_geometry()
       ) %>% 
       dplyr::mutate(
-        pct_chull = area_xxxx/chull_area_xxxx
+        convexity_ratio = area_xxxx/chull_area_xxxx
       ) %>% 
       dplyr::filter(
-        pct_chull >= pct_chull_overlap
+        convexity_ratio >= min_convexity_ratio
       ) %>% 
       dplyr::select(-c(area_xxxx,chull_area_xxxx))
     return(area_comp)
@@ -1515,25 +1588,12 @@ st_irregular_remove <- function(
 }
 ```
 
-run it
-
-```{r}
-# run it
-watershed_keep_overlaps_chull_pred_id <-
-  watershed_ans_poly %>% 
-    st_irregular_remove(pct_chull_overlap = pct_chull_overlap) %>% 
-    dplyr::pull(pred_id)
-```
-
-how many piles are remaining after this shape irregularity filtering?
-
-```{r}
-length(watershed_keep_overlaps_chull_pred_id)
-```
+xxx
 
 now, we'll look at which piles meet the minimum overlap threshold (black outline) between the segmented polygon and the convex hull and will be kept compared to those that did not meet the irregularity threshold (red) and will be removed
 
 ```{r}
+xxx
 p_temp <- plt_ortho_example +
   ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1685,11 +1745,11 @@ min_area_m2 <- 2
 # 15.125*3
 max_area_m2 <- 50
 
-# filter the remaining segments by area and st_irregular_remove removes irregular preds
+# filter the remaining segments by area and st_convexity_filter removes irregular preds
 watershed_ans_poly <- 
   watershed_ans_poly %>% 
     # dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-    st_irregular_remove(pct_chull_overlap = pct_chull_overlap) %>%
+    st_convexity_filter(pct_chull_overlap = pct_chull_overlap) %>%
     dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
     # filter out the segments that don't meet the size thresholds
     dplyr::filter(
@@ -2299,7 +2359,7 @@ after we calculate the height of the pile based on the maximum height withing th
         & dplyr::coalesce(max_height_m,0) >= min_ht_m
       ) %>% 
       # do one more pass of the irregularity filtering
-      st_irregular_remove(pct_chull_overlap = pct_chull_overlap)
+      st_convexity_filter(pct_chull_overlap = pct_chull_overlap)
 ```
 
 what did we do?
@@ -3306,7 +3366,7 @@ slash_pile_detect_watershed <- function(
     if(convexity_pct>0){
       # apply the irregularity filtering on the polygons
       watershed_ans_poly <- watershed_ans_poly %>% 
-        st_irregular_remove(pct_chull_overlap = convexity_pct)
+        st_convexity_filter(pct_chull_overlap = convexity_pct)
     }
 
     # check return
@@ -3472,7 +3532,7 @@ slash_pile_detect_watershed <- function(
         & dplyr::coalesce(max_height_m,0) >= min_ht_m
       ) %>% 
       # do one more pass of the irregularity filtering
-      st_irregular_remove(pct_chull_overlap = convexity_pct)
+      st_convexity_filter(pct_chull_overlap = convexity_pct)
       
       if(dplyr::coalesce(nrow(watershed_ans_poly),0)==0){
         stop(paste0(
@@ -3544,7 +3604,7 @@ slash_pile_detect_watershed <- function(
             & dplyr::coalesce(max_height_m,0) >= min_ht_m
           ) %>% 
           # do one more pass of the irregularity filtering
-          st_irregular_remove(pct_chull_overlap = convexity_pct) %>% 
+          st_convexity_filter(pct_chull_overlap = convexity_pct) %>% 
           # simplify multipolygons
           dplyr::mutate(treeID=dplyr::row_number()) %>% 
           cloud2trees::simplify_multipolygon_crowns() %>% 
