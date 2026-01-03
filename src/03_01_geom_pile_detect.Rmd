@@ -1,6 +1,6 @@
 # Geometry-based Slash Pile Detection{#raster_watershed}
 
-We will detail the geometry-based slash pile detection method which uses user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data. Since this is only a demonstration of the method, we will work with only a sample area from one of the study sites which we know includes slash piles. Full evaluation of the methodology will be performed later in the analysis.
+In this section, we will demonstrate the geometry-based slash pile detection method which relies upon user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data. Since this is only a demonstration of the method, we will work with only a sample area from one of the study sites which we know includes slash piles. Full evaluation of the methodology will be performed later in the analysis.
 
 We'll attempt to detect slash piles using raster-based methods with the CHM. These raster-based approaches are simple and efficient but rasterization simplifies/removes some of the rich 3D information in the point cloud. However, raster-based approaches for detecting individual trees in forest stands and coarse woody debris are common.
 
@@ -16,12 +16,22 @@ To attempt to identify slash piles from the CHM/DSM, we can use watershed segmen
 
 we'll focus on a 2,000 square meter example area
 
+```{r, include = F, eval = F}
+mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
+  mapview::mapview(psinf_slash_piles_polys)
+```
+
 ```{r}
 # boundary
-aoi_boundary <- psinf_slash_piles_polys %>% 
-  dplyr::filter(pile_id == 73) %>% 
+aoi_boundary <- 
+  psinf_slash_piles_polys %>% 
+  dplyr::filter(pile_id == 74) %>%
+  # dplyr::filter(pile_id == 73) %>%
+  # arnf_slash_piles_polys %>% 
+  # dplyr::filter(pile_id == 14) %>%
   sf::st_centroid() %>% 
   sf::st_buffer(
+    # sqrt(9600/4) ## numerator = desired plot size in m2
     sqrt(2000/4) ## numerator = desired plot size in m2
     , endCapStyle = "SQUARE"
   ) %>%
@@ -149,7 +159,7 @@ plt_aoi_chm_rgb(aoi_chm_rast) +
 ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb_chm.jpg", height = 8, width = 8)
 ```
 
-## Method Demonstration
+## Segmentation Methods
 
 Our slash pile detection approach will align with the land manager knowledge of physical metrics of slash pile form which are commonly used in forest inventories and silvicultural prescriptions. We'll start with input parameters like height and area thresholds.
 
@@ -199,11 +209,11 @@ to summarize, the size-based thresholds of our geometric, rules-based approach f
 * `min_area_m2` : numeric. The smallest 2D area (in square meters) a detected pile must cover to be considered valid.
 * `max_area_m2` : numeric. The largest 2D area (in square meters) a detected pile can cover to be considered valid.
 
-### Segmentation Methods
+### Overview of Methods
 
 The two primary segmentation methods we'll test are watershed segmentation and DBSCAN. Watershed segmentation, which we'll implement with `lidR::watershed()`, is a raster-based technique that treats a CHM as a topographic surface where height values are inverted to create basins. The algorithm identifies local maxima as "seeds" and expands them until they reach a boundary or "watershed" line. This method requires a tolerance parameter (`tol`) which defines "the minimum height of the object...between its highest point (seed) and the point where it contacts another object...If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest. Tolerance should be chosen according to the range of x." An extent parameter (`ext`) is used to define the search window for object seeds.
 
-The DBSCAN algorithm, which we'll implement with `dbscan::dbscan()`, is typically a point-cloud-based clustering algorithm that groups points based on their spatial density but DBSCAN can also be applied to raster data by converting the raster cells into a 2D point set using the cell centroids. The algorithm relies on an epsilon parameter (`eps`), which defines the search radius around a point, and a minimum points parameter (`minPts`), which sets the threshold for how many neighbors must exist within that radius to form a core cluster.
+The DBSCAN algorithm, which we'll implement with `dbscan::dbscan()`, is typically a point-based clustering algorithm that groups points based on their spatial density but DBSCAN can also be applied to raster data by converting the raster cells into a 2D point set using the cell centroids. The algorithm relies on an epsilon parameter (`eps`), which defines the search radius around a point, and a minimum points parameter (`minPts`), which sets the threshold for how many neighbors must exist within that radius to form a core cluster.
 
 Dynamically defining these parameters is critical for the usability and scalability of the method because it removes the guesswork typically required when moving between different datasets. For example, point clouds can vary in point density depending on the flight altitude or sensor, and rasters can vary in resolution. If parameters are kept static, a model tuned for a specific data structure or target object will be suboptimal for different data. We can link the segmentation algorithm parameters directly to the input data structure and the expected target object size so that the method automatically recalibrates itself.
 
@@ -228,6 +238,7 @@ We developed dynamic logic to automatically bridge the gap between the expectati
 let's define a function to get these parameters based on the user-defined size thresholds and the input data description
 
 ```{r}
+# function to get segmentation parameters
 get_segmentation_params <- function(
   max_ht_m
   , min_ht_m
@@ -455,7 +466,7 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-## Watershed Segmentation
+### Watershed Segmentation Demonstration
 
 let's go through the watershed segmentation process using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
 
@@ -566,78 +577,12 @@ ggplot2::ggsave(filename = "../data/workflow_ex_05_chm_wshed_cnddts.jpg", height
 
 nice...we are getting close.
 
-xxx before we filter for area, we should combine segments that are touching...
-
-let's remove all candidate segments that do not meet the area criteria and simplify segments that are disconnected by keeping only the largest portion of the segment based on area. to do this, we'll convert the segmented raster into vector form for area calculations.
-
-```{r}
-xxx
-watershed_segs_sf <- watershed_segs %>% 
-  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
-  setNames("pred_id") %>%
-  sf::st_as_sf() %>% 
-  sf::st_simplify() %>% 
-  sf::st_make_valid() %>% 
-  dplyr::filter(sf::st_is_valid(.)) %>% 
-  # simplify multipolygons by keeping only the largest portion
-  dplyr::mutate(treeID = pred_id) %>% 
-  cloud2trees::simplify_multipolygon_crowns() %>% 
-  dplyr::select(-treeID) %>% 
-  # area filter
-  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
-  # filter out the segments that don't meet the size thresholds
-  dplyr::filter(
-    dplyr::coalesce(area_xxxx,0) >= min_area_m2
-    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
-  ) %>% 
-  dplyr::select(-c(area_xxxx))
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
-how many predicted segments are there?
-
-```{r}
-nrow(watershed_segs_sf)
-```
-
-plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
-
-```{r}
-aoi_plt_ortho +
-  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_segs_sf
-    , fill = NA, color = "brown", lwd = 0.8
-  ) +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
-```
-
-plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
-
-```{r}
-plt_aoi_chm(aoi_chm_rast_slice) +
-  ggplot2::geom_sf(
-    data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_segs_sf
-    , fill = NA, color = "brown", lwd = 0.8
-  )
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_06_chm_wshed_cnddts.jpg", height = 8, width = 8)
-```
-
-## DBSCAN segmentation
+### DBSCAN Segmentation Demonstration
 
 ```{r, include=FALSE, eval=FALSE}
 # set the dbscan parameters based on minimum expected object size and point density
@@ -737,11 +682,469 @@ watershed_ans %>%
   ggplot2::ggplot() + ggplot2::geom_sf(mapping = ggplot2::aes(fill=as.factor(focal_mean)), color = NA)
 ```
 
+let's go through the DBSCAN segmentation process using `dbscan::dbscan()` which uses a kd-tree for efficient processing. As an aside, the `RANN` [package](https://jefferislab.github.io/RANN/) enables KD-tree searching/processing using the X and Y coordinates of the entire point cloud to build the tree which is a super-fast way to find the `x` number of near neighbors for each point in an input dataset (see `RANN::nn2()`).
+
+because the DBSCAN process is a point-based clustering algorithm that groups points based on their spatial density we need to convert the raster cells into a 2D point set using the cell centroids first
+
+```{r}
+## XY df
+xy_df_temp <- 
+  aoi_chm_rast_slice %>% 
+  # na.rm = T ensures we only process cells with CHM data
+  terra::as.data.frame(xy = T, na.rm = T) %>% 
+  dplyr::rename(
+    X=x,Y=y
+    , f=3
+  ) %>% 
+  dplyr::select(X,Y)
+# huh?
+xy_df_temp %>% dplyr::glimpse()
+# ggplot2::ggplot(data = xy_df_temp, mapping = ggplot2::aes(x=X,y=Y)) + ggplot2::geom_point(shape=".")
+```
+
+now, we can apply the `dbscan::dbscan()` function using the parameters we identified using our dynamic process defined in `get_segmentation_params()` 
+
+```{r}
+# get_segmentation_params_ans %>% dplyr::glimpse()
+# ?dbscan::dbscan
+dbscan_ans_temp <- dbscan::dbscan(
+  x = xy_df_temp
+  # eps primarily controls the spatial extent of a cluster, 
+  # as it defines how far points can be from each other to be considered part of the same dense region.
+  , eps = get_segmentation_params_ans$dbscan$eps
+  # minPts primarily controls the minimum density of a cluster, 
+  # as it dictates how many points must be packed together within that eps radius.
+  , minPts = get_segmentation_params_ans$dbscan$minPts
+)
+# huh?
+dbscan_ans_temp %>% str()
+```
+
+the result is a vector with a `cluster` identifier for each point we provided to the algorithm
+
+```{r}
+identical(
+  length(dbscan_ans_temp$cluster)
+  , nrow(xy_df_temp)
+)
+```
+
+add the cluster identifier to the XY point data
+
+```{r}
+# add the cluster to the data
+xy_df_temp$cluster <- dbscan_ans_temp$cluster
+# what?
+xy_df_temp %>% 
+  dplyr::count(cluster) %>% 
+  dplyr::arrange(desc(n)) %>% 
+  head()
+```
+
+to maintain processing consistency with the watershed result, we'll rasterize the XY data back to the original CHM grid. this will result in a raster with cells segmented and given the unique identifier. 
+
+*Note*: the cells/segments classified as noise from the `dbscan::dbscan()` algorithm are marked with a cluster identifier as "0"...we'll remove these prior to rasterizing
+
+```{r}
+# fill the rast with the cluster values
+dbscan_segs <- terra::rasterize(
+  x = xy_df_temp %>% 
+    dplyr::filter(cluster!=0) %>% 
+    sf::st_as_sf(coords = c("X", "Y"), crs = terra::crs(aoi_chm_rast_slice), remove = F) %>%
+    dplyr::ungroup() %>% 
+    dplyr::select(cluster) %>% 
+    terra::vect()
+  , y = aoi_chm_rast_slice
+  , field = "cluster"
+)
+```
+
+the result is a raster with cells segmented and given a unique identifier
+
+```{r}
+# this is a raster
+dbscan_segs
+```
+
+each value should be a unique "segment" which we can refine based on rules of expected size and shape of piles
+
+```{r}
+terra::freq(dbscan_segs) %>% 
+  dplyr::arrange(desc(count)) %>% 
+  head()
+```
+
+where the "value" is the segment identifier and the count is the number of raster cells assigned to that segment (compare to the count of the segmented points above ;)
+
+how many predicted segments are there?
+
+```{r}
+terra::freq(dbscan_segs) %>% dplyr::filter(!is.na(value)) %>% nrow()
+```
+
+let's plot the raster of the dbscan segmentation
+
+```{r}
+dbscan_segs %>% 
+  terra::as.factor() %>% 
+  terra::plot(
+    col = c(
+      viridis::turbo(n = terra::minmax(dbscan_segs)[2])
+    ) %>% sample()
+    , legend = F
+    , axes = F
+  )
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs %>% 
+      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+      setNames("pred_id") %>%
+      sf::st_as_sf() %>% 
+      sf::st_simplify() %>% 
+      sf::st_make_valid() %>% 
+      dplyr::filter(sf::st_is_valid(.))
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs %>% 
+      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+      setNames("pred_id") %>%
+      sf::st_as_sf() %>% 
+      sf::st_simplify() %>% 
+      sf::st_make_valid() %>% 
+      dplyr::filter(sf::st_is_valid(.))
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_05_chm_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+nice...we are getting close.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### Comparison of Candidate Segments
+
+we'll start by converting the candidate segments to polygons
+
+```{r}
+# watershed_segs
+watershed_segs_poly <-
+  watershed_segs %>% 
+  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+  setNames("pred_id") %>%
+  sf::st_as_sf() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>%
+  dplyr::filter(sf::st_is_valid(.))
+# dbscan_segs
+dbscan_segs_poly <- 
+  dbscan_segs %>% 
+  terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+  setNames("pred_id") %>%
+  sf::st_as_sf() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.))
+```
+
+count the number of unique candidate segments from each method and summarize the area covered by all segments
+
+```{r}
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , segments = c(
+      terra::freq(watershed_segs) %>% nrow()
+      , terra::freq(dbscan_segs) %>% nrow()
+    )
+    , area = c(
+      watershed_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+      , dbscan_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+    )
+  ) %>% 
+  dplyr::mutate(
+    segments = scales::comma(segments,accuracy=1)
+    , area = scales::comma(area,accuracy=0.01)
+  ) %>% 
+  kableExtra::kbl(
+    caption = "Demonstration area candidate segments by method"
+    , col.names = c(
+      "method", "candidate segments", "area (m<sup>2</sup>)"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+notice the dbscan segments cover a smaller area because noise points are identified and removed as part of the algorithm. in the next stage of our method, we'll include additional noise removal applied to both methodologies. In fact, all processing will be the same from here forward for both segementation methodologies.
+
+## Candidate Shape Refinement and Area filtering
+
+to better align the segmentation results with real-world pile construction we'll now simplify candidate segments composed of multiple separate parts representing a single identified feature (i.e. "multi-polygon" candidate segments. We'll simplify these segments by retaining only the largest contiguous portion using `cloud2trees` functionality. Because slash piles are constructed as distinct, isolated objects to prevent tree mortality during burning, this refinement step isolates the primary candidate body to eliminate detached noise and ensure each segment represents a discrete physical object before area-based filtering
+
+using the candidate segment polygons, apply the `cloud2trees::simplify_multipolygon_crowns()` function which keeps only the largest part of multi-polygon geometries and works for all `sf` polygon data (even though the term "crowns" is in the name)
+
+```{r}
+# watershed_segs
+watershed_segs_poly <-
+  watershed_segs_poly %>% 
+  # simplify multipolygons by keeping only the largest portion
+  dplyr::mutate(treeID = pred_id) %>% 
+  cloud2trees::simplify_multipolygon_crowns() %>% 
+  dplyr::select(-treeID)
+# dbscan_segs
+dbscan_segs_poly <- 
+  dbscan_segs_poly %>% 
+  # simplify multipolygons by keeping only the largest portion
+  dplyr::mutate(treeID = pred_id) %>% 
+  cloud2trees::simplify_multipolygon_crowns() %>% 
+  dplyr::select(-treeID)
+```
+
+we'll have the same number of unique candidate segments from each method but the area covered by those segments will now be smaller
+
+```{r}
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , segments = c(
+      nrow(watershed_segs_poly)
+      , nrow(dbscan_segs_poly)
+    )
+    , area = c(
+      watershed_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+      , dbscan_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+    )
+  ) %>% 
+  dplyr::mutate(
+    segments = scales::comma(segments,accuracy=1)
+    , area = scales::comma(area,accuracy=0.01)
+  ) %>% 
+  kableExtra::kbl(
+    caption = "Demonstration area candidate segments by method after removing noise polygon parts"
+    , col.names = c(
+      "method", "candidate segments", "area (m<sup>2</sup>)"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+now we'll remove all candidate segments that do not meet the area criteria based on the user-defined minimum and maximum area thresholds
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly <- 
+  watershed_segs_poly %>% 
+  dplyr::ungroup() %>% 
+  # area filter
+  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
+  # filter out the segments that don't meet the size thresholds
+  dplyr::filter(
+    dplyr::coalesce(area_xxxx,0) >= min_area_m2
+    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
+  ) %>% 
+  dplyr::select(-c(area_xxxx))
+# dbscan_segs_poly
+dbscan_segs_poly <- 
+  dbscan_segs_poly %>% 
+  dplyr::ungroup() %>% 
+  # area filter
+  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
+  # filter out the segments that don't meet the size thresholds
+  dplyr::filter(
+    dplyr::coalesce(area_xxxx,0) >= min_area_m2
+    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
+  ) %>% 
+  dplyr::select(-c(area_xxxx))
+```
+
+how many candidate segments were removed?
+
+```{r}
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , old_segments = c(
+      terra::freq(watershed_segs) %>% nrow()
+      , terra::freq(dbscan_segs) %>% nrow()
+    )
+    , new_segments = c(
+      nrow(watershed_segs_poly)
+      , nrow(dbscan_segs_poly)
+    )
+    , area = c(
+      watershed_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+      , dbscan_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+    )
+  ) %>% 
+  dplyr::mutate(
+    pct_removed = scales::percent((new_segments-old_segments)/old_segments, accuracy = 0.1)
+    , dplyr::across(tidyselect::ends_with("segments"), ~scales::comma(.x,accuracy=1))
+    , area = scales::comma(area,accuracy=0.01)
+  ) %>% 
+  dplyr::relocate(method,pct_removed) %>% 
+  kableExtra::kbl(
+    caption = "Demonstration area candidate segments by method<br>filtered by segment area"
+    , col.names = c(
+      "method", "% removed"
+      , "orig. candidate segments"
+      , "filtered candidate segments"
+      , "filtered area (m<sup>2</sup>)"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+### Watershed Segmentation
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_chm_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+nice...we are getting closer.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### DBSCAN Segmentation
+
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_06_chm_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+nice...we are getting closer.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### Quick methods comparison
+
+let's quickly look at the watershed and dbscan segments on the same plot
+
+```{r}
+ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly, mapping=ggplot2::aes(color="watershed")
+    , fill = NA, lwd = 2
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly, mapping=ggplot2::aes(color="dbscan")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("gray33", "aquamarine3"),name="") +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "top")
+```
+
+interesting.
+
 ideally, we want objects that: i) meet the height threshold over the entire surface of the segment (no doughnuts); ii) are not irregularly shaped (relatively few inward angles);  iii) are circular in shape; and iv) meet an expected pile area threshold (minimum/maximum expected area)
 
 ### Geometric filtering: Irregularity Filtering
 
-now let's try to filter based on the geometric properties of the watershed-detected segments. 
+now let's try to filter based on the geometric properties of the dbscan-detected segments. 
 
 we'll make a convex hull of the polygons generated from a raster to smooth out the square edges and any inward curves or indentations, resulting in a boundary that's always convex (no inward angles). using a convex hull we will be able to filter out:
 
@@ -1987,6 +2390,8 @@ terra::plot(
 As a final step, we'll use the convex hull shapes of our remaining segments. This helps to smooth out the often "blocky" edges of raster-based segments, which can look like they were generated in Minecraft. Additionally, by removing any segments with overlapping convex hull shapes, we can likely reduce false detections that are actually groups of small trees or shrubs, ensuring our results represent singular slash piles.
 
 ```{r}
+
+# st_combine_touching 
 ###############################################################################
 # dissolve groups of touching or overlapping polygons using st_union and st_cast
 ###############################################################################
@@ -2024,7 +2429,6 @@ st_combine_touching <- function(polygons_sf) {
 # dissolve only contiguous, non-overlapping polygons and combine with others.
 ###############################################################################
 st_dissolve_and_combine <- function(polygons_sf) {
-  
   # Input checks
   if (!inherits(polygons_sf, "sf")) stop("Input 'polygons_sf' must be an sf data frame.")
   if (!all(sf::st_geometry_type(polygons_sf) %in% c("POLYGON", "MULTIPOLYGON"))) {
