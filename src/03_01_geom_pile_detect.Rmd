@@ -25,6 +25,7 @@ mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions =
 # boundary
 aoi_boundary <- 
   psinf_slash_piles_polys %>% 
+  # dplyr::filter(pile_id == 195) %>%
   dplyr::filter(pile_id == 74) %>%
   # dplyr::filter(pile_id == 73) %>%
   # arnf_slash_piles_polys %>% 
@@ -116,7 +117,7 @@ ggplot2::ggsave(filename = "../data/workflow_ex_02_rgb.jpg", height = 8, width =
 
 we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -126,13 +127,13 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb.jpg", height = 8, width = 8)
 ```
 
 would you have done better if you had both the CHM and RGB data?
 
-```{r}
+```{r,eval=F}
 plt_aoi_chm_rgb <- function(chm) {
  aoi_plt_ortho +
     ggnewscale::new_scale_fill() +
@@ -155,7 +156,7 @@ plt_aoi_chm_rgb(aoi_chm_rast) +
   )
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb_chm.jpg", height = 8, width = 8)
 ```
 
@@ -226,7 +227,7 @@ We developed dynamic logic to automatically bridge the gap between the expectati
 | **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.50` | Subtract the min height from the max height and take 50% of that total range. | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
 | **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(1, round((sqrt(min_area_m2 / pi) * 0.5) / res))` | Calculate the target's radius, halve it, then divide by the pixel size to get a pixel count (minimum of 1). | Uses half the target radius to increase local sensitivity, allowing the algorithm to find distinct seeds in crowded areas. |
 | **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(density)), (sqrt(min_area_m2 / pi) * 0.50))` | Take the smaller of: 1.5 the average point spacing OR 50% of the target's physical radius. | Bridges gaps between points while capping the radius at 50% of the target diameter to ensure objects remain spatially separated. |
-| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * density) * (eps^2 / (min_area_m2 / pi)))` | Multiply total expected points by the ratio of the search circle area to the total target area. | Adjusts the minimum point threshold to ensure that 'core' points are only identified where the local cluster is as dense as the actual target object is expected to be. |
+| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * density) * (eps^2 / (min_area_m2 / pi)))` | Multiply total expected points by the ratio of the search circle area to the total target area. | Adjusts the minimum point threshold to ensure that core points are only identified where the local cluster is as dense as the actual target object is expected to be. |
 
 let's define a function to get these parameters based on the user-defined size thresholds and the input data description
 
@@ -377,10 +378,10 @@ the table summarizes how our rules-based approach creates dynamic parameters for
 
 | Dynamic Parameter | Impact of Height (`max_ht_m` / `min_ht_m`) | Impact of Target Area (`min_area_m`) | Impact of Data Resolution (`res` / `density`) |
 | :--- | :--- | :--- | :--- |
-| **Watershed `tol`** | **Direct Driver:** Sets the vertical threshold at 10% of the scene's height range. | **None:** Vertical tolerance is independent of horizontal footprint. | **None:** Vertical sensitivity is independent of horizontal resolution. |
+| **Watershed `tol`** | **Direct Driver:** Sets the vertical threshold at 50% of the target's height range. | **None:** Vertical tolerance is independent of horizontal footprint. | **None:** Vertical sensitivity is independent of horizontal resolution. |
 | **Watershed `ext`** | **None:** Horizontal search window is independent of vertical range. | **Geometric Baseline:** Defines the physical radius used to scale the search window. | **Spatial Divider:** Converts the physical radius into a specific pixel count for the image matrix. |
-| **DBSCAN `eps`** | **None:** Point-to-point connectivity is independent of height. | **Physical Cap:** Provides a "Quarter-Radius" limit to prevent clusters from merging across objects. | **Connectivity Anchor:** Sets the search radius based on the average distance between points/centroids. |
-| **DBSCAN `minPts`** | **None:** Required point mass is independent of vertical range. | **Total Mass Baseline:** Defines the total expected points for the smallest valid target. | **Density Multiplier:** Calculates the local point count requirement relative to the data's sparsity. |
+| **DBSCAN `eps`** | **None:** Point-to-point connectivity is independent of height. | **Physical Cap:** Provides a half-radius limit to prevent clusters from merging across objects. | **Connectivity Anchor:** Sets the search radius based on the average distance between points/raster cell centroids |
+| **DBSCAN `minPts`** | **None:** Required point mass is independent of vertical range. | **Total Mass Baseline:** Defines the total expected points for the smallest valid target. | **Density Multiplier:** Calculates the local point count requirement relative to the data density. |
 
 ```{r}
 sim_df_temp <-
@@ -520,7 +521,7 @@ watershed_segs %>%
 
 plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -540,7 +541,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -791,7 +792,7 @@ dbscan_segs %>%
 
 plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -811,7 +812,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1022,7 +1023,7 @@ dplyr::tibble(
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1036,7 +1037,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1069,7 +1070,7 @@ gc()
 
 plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1083,7 +1084,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1151,7 +1152,6 @@ let's create a convex hull of the candidate segments for comparison and convexit
 
 ```{r}
 # convex hulls of segments
-
 # watershed_segs_poly
 watershed_segs_poly_chull <-
   watershed_segs_poly %>% 
@@ -1208,7 +1208,7 @@ p2_temp <- ggplot2::ggplot() +
 patchwork::wrap_plots(list(p1_temp,p2_temp))
 ```
 
-```{r, include=FALSE, eval=T}
+```{r,eval=F, include=FALSE}
 ### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
@@ -1459,7 +1459,7 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1473,7 +1473,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1504,7 +1504,7 @@ gc()
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1518,7 +1518,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1666,7 +1666,7 @@ p2_temp <- ggplot2::ggplot() +
 patchwork::wrap_plots(list(p1_temp,p2_temp))
 ```
 
-```{r, include=FALSE, eval=T}
+```{r,eval=F, include=FALSE}
 ### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
@@ -1915,7 +1915,7 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1929,7 +1929,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1960,7 +1960,7 @@ gc()
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1974,7 +1974,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r, include=FALSE,eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -2063,183 +2063,274 @@ st_circularity_filter <- function(
 # Formula:\(PP=\frac{4\pi \times Area_{Polygon}}{Perimeter_{Polygon}^{2}}\)
 ```
 
-xxx
+#### Quick methods comparison
 
-### Area and Volume from CHM
-
-We'll use the CHM raster to calculate area, height, and volume for each candidate pile to reflect the irregular pile footprints and elevation profiles that better represent real-world objects than assuming perfect geometric shapes as is common for quantifying slash pile structure
-
-after we calculate the height of the pile based on the maximum height withing the lower CHM slice of the pile footprint, we will lastly apply our filter for the minimum expected pile height. this is the last filtering step to give us our final, structurally-detected slash pile prediction list
+let's quickly look at the watershed and dbscan segments on the same plot now that we have removed candidate segments that 1) do not meet the area thresholds; 2) do not meet the convexity ratio threshold; and 3) do not meet the circularity ratio threshold
 
 ```{r}
-xxx
-########################################
-# use the remaining segments that meet the geometric and area filtering
-# to filter the watershed raster
-########################################
-    smooth_watershed_ans <- watershed_ans %>% 
-      terra::mask(
-        watershed_ans_poly %>% #these are irregularity and area filtered already
-          dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id) %>% 
-          terra::vect()
-        , updatevalue=NA
-      )
-    names(smooth_watershed_ans) <- "pred_id"
-
-    ########################################
-    # mask the chm rast to these remaining segments
-    ########################################
-    smooth_chm_rast <- cloud2raster_ans$chm_rast %>% 
-      terra::clamp(upper = max_ht_m, lower = 0, values = F) %>% 
-      terra::mask(smooth_watershed_ans)
-    # terra::plot(smooth_chm_rast)
-    # now mask the watershed_ans raster to only keep cells that are in the originating CHM
-    smooth_watershed_ans <- smooth_watershed_ans %>% terra::mask(smooth_chm_rast)
-    # terra::plot(smooth_watershed_ans, col = viridis::turbo(555) %>% sample(), legend = F)
-  ########################################################################################
-  ## calculate raster-based area and volume 
-  ########################################################################################
-    # first, calculate the area of each cell
-    area_rast <- terra::cellSize(smooth_chm_rast)
-    names(area_rast) <- "area_m2"
-    # area_rast %>% terra::plot()
-    # then, multiply area by the CHM (elevation) for each cell to get a raster with cell volumes
-    vol_rast <- area_rast*smooth_chm_rast
-    names(vol_rast) <- "volume_m3"
-    # vol_rast %>% terra::plot()
-    # sum area within each segment to get the total area
-    area_df <- terra::zonal(x = area_rast, z = smooth_watershed_ans, fun = "sum", na.rm = T)
-    # area_df %>% dplyr::glimpse()
-    # sum volume within each segment to get the total volume
-    vol_df <- terra::zonal(x = vol_rast, z = smooth_watershed_ans, fun = "sum", na.rm = T)
-    # vol_df %>% dplyr::glimpse()
-    # max ht within each segment to get the max ht
-    ht_df <- terra::zonal(x = smooth_chm_rast, z = smooth_watershed_ans, fun = "max", na.rm = T) %>% 
-      dplyr::rename(max_height_m=2)
-      
-    # let's convert the smoothed and filtered watershed-detected segments from raster to vector data 
-    # vectors of segments
-    watershed_ans_poly <-
-      smooth_watershed_ans %>% 
-      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
-      sf::st_as_sf() %>% 
-      sf::st_simplify() %>% 
-      sf::st_make_valid() %>% 
-      dplyr::filter(sf::st_is_valid(.)) %>% 
-      dplyr::mutate(treeID=pred_id) %>% 
-      cloud2trees::simplify_multipolygon_crowns() %>% 
-      dplyr::select(-treeID)
-
-    # add area and volume to our vector data  
-    # we'll do this with a slick trick to perform multiple joins succinctly using purrr::reduce
-    watershed_ans_poly <- 
-      purrr::reduce(
-        list(watershed_ans_poly, area_df, vol_df, ht_df)
-        , dplyr::left_join
-        , by = 'pred_id'
-      ) %>% 
-      dplyr::mutate(
-        volume_per_area = volume_m3/area_m2
-      ) %>% 
-      # filter out the segments that don't meet the size thresholds
-      dplyr::filter(
-        dplyr::coalesce(area_m2,0) >= min_area_m2
-        & dplyr::coalesce(area_m2,0) <= max_area_m2
-        & dplyr::coalesce(max_height_m,0) >= min_ht_m
-      ) %>% 
-      # do one more pass of the irregularity filtering
-      st_convexity_filter(pct_chull_overlap = pct_chull_overlap)
-```
-
-what did we do?
-
-```{r}
-watershed_ans_poly %>% dplyr::glimpse()
-```
-
-how many piles are remaining after the shape irregularity filtering, area threshold filtering, and circle fitting filtering, and height filtering?
-
-```{r}
-nrow(watershed_ans_poly)
-```
-
-let's look at the remaining piles which have now been: 1) filtered to remove irregular shapes, 2) filtered based on the expected area threshold, 3) filtered to remove non-circular shapes, 4) filtered to remove piles that don't meet the expected vertical dimensions (i.e. pile height)
-
-example of watershed detected segments as vectors (brown) filtered to remove irregular shapes, segments outside of the expected area and height thresholds, and non-circular segments; compared with the ground truth piles (blue)
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+# watershed_segs_poly %>% dplyr::glimpse()
+# dbscan_segs_poly %>% dplyr::glimpse()
+ggplot2::ggplot() +
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
+    data = watershed_segs_poly, mapping=ggplot2::aes(color="watershed")
+    , fill = NA, lwd = 2
+  ) + 
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
+    data = dbscan_segs_poly, mapping=ggplot2::aes(color="dbscan")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("gray33", "aquamarine3"),name="") +
   ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "top")
 ```
 
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb10a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb10b.jpg", height = 8, width = 8)
+after all of that, the results of the two methods are the same for this particular demonstration area
+
+## Structural Metrics from CHM
+
+We'll use the CHM raster to calculate area, height, and volume for each candidate pile to reflect the irregular pile footprints and elevation profiles that better represent real-world objects than assuming perfect geometric shapes like traditional pile measurement methods ([Long and Boston, 2014](https://doi.org/10.5849/forsci.13-501); [Trofymow et al., 2014](https://doi.org/10.1139/cjfr-2013-0281); [Guth et al., 2025](https://doi.org/10.3389/ffgc.2025.1663753))
+
+Candidate slash pile structural metrics are derived from the CHM raster using zonal statistics to aggregate cell-level raster data within the boundaries of each pile. To ensure geodetic accuracy, an area raster is generated (`terra::cellSize()`) which accounts for minute variations in pixel area caused by the curvature of the Earth and the coordinate reference system. This area raster is then used as input for volume calculation, where it is multiplied by the CHM height values to create a volume raster. Summing the individual volume of every pixel within the candidate pile footprint yields the total pile volume with each cell in the volume raster treated as a rectangular prism with height from the CHM and base area from the area raster. Pile area is calculated by summing the area raster values within the candidate pile boundary and pile height is determined by the maximum CHM pixel value.
+
+we'll make a function to use polygon `sf` data and an input CHM raster to perform these calculations and return the data with metrics attached
+
+```{r}
+terra::plot(aoi_chm_rast_slice)
+terra::plot(watershed_segs_poly %>% terra::vect(), add = T, col = NA, lwd = 2, border = "red")
+aoi_chm_rast_slice %>% 
+  terra::crop(
+    watershed_segs_poly %>% 
+      sf::st_union() %>% 
+      sf::st_centroid() %>% 
+      sf::st_buffer(10) %>% 
+      terra::vect()
+  ) %>% 
+  terra::plot()
+
+########################################################################################
+## calculate raster-based area, height, and volume using zonal stats
+########################################################################################
+get_structural_metrics <- function(
+    sf_data
+    , chm_rast
+    # , sf_id = NA
+) {
+  # check polygons
+  if(!inherits(sf_data, "sf")){stop("must include `sf` data object in 'sf_data'")}
+  if( !all(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON"))) ){
+    stop(paste0(
+      "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
+    ))
+  }
+  sf_data <- sf_data %>% dplyr::ungroup()
+  
+  # check raster
+  # convert to SpatRaster if input is from 'raster' package
+  if(
+    inherits(chm_rast, "RasterStack") 
+    || inherits(chm_rast, "RasterBrick")
+  ){
+    chm_rast <- terra::rast(chm_rast)
+  }else if(!inherits(chm_rast, "SpatRaster")){
+    stop("Input 'chm_rast' must be a SpatRaster from the `terra` package")
+  }
+  chm_rast <- chm_rast %>% terra::subset(subset = 1)
+  if(
+    as.numeric(terra::global(chm_rast, fun = "isNA")) == terra::ncell(chm_rast) 
+    # || as.numeric(terra::global(chm_rast, fun = "isNA")) >= round(terra::ncell(chm_rast)*0.98)
+  ){
+    stop("Input 'chm_rast' has all missing values")
+  }
+  
+  # # check id
+  # if(!inherits(sf_id, "character")){
+  #   # stop("must include 'sf_id' as the unique identifier")
+  #   sf_data <- sf_data %>% 
+  #     dplyr::mutate(idxxxxx = dplyr::row_number())
+  #   sf_id <- "idxxxxx"
+  # }else{
+  #   if( !any( stringr::str_equal(names(sf_data), sf_id) ) ){
+  #     stop(paste0("could not locate '",sf_id,"' in sf_data"))
+  #   }
+  # }
+  
+  # check overlap
+  # Returns TRUE if any part of the vector geometry intersects the raster extent
+  if(
+    !any(terra::is.related(
+      x = sf_data %>% 
+        sf::st_transform(terra::crs(chm_rast)) %>% 
+        terra::vect()
+      , y = terra::ext(chm_rast)
+      , relation = "intersects"
+    ))
+  ){
+    stop("Input 'sf_data' does not overlap with 'chm_rast'")
+  }
+  #################################
+  # area, volume of each cell
+  #################################
+  area_rast_temp <- terra::cellSize(chm_rast)
+  names(area_rast_temp) <- "area_m2"
+  # area_rast_temp %>% terra::plot()
+  # then, multiply area by the CHM (elevation) for each cell to get a raster with cell volumes
+  vol_rast_temp <- area_rast_temp*chm_rast
+  names(vol_rast_temp) <- "volume_m3"
+  # vol_rast_temp %>% terra::plot()
+  #################################
+  # zonal stats
+  #################################
+  # sum area within each segment to get the total area
+  area_df_temp <- terra::zonal(
+      x = area_rast_temp
+      , z = sf_data %>% 
+        sf::st_transform(terra::crs(chm_rast)) %>% 
+        terra::vect()
+      , fun = "sum", na.rm = T
+    ) %>% 
+    setNames("area_m2") %>% 
+    dplyr::mutate(area_m2 = dplyr::na_if(area_m2, NaN))
+  # area_df_temp %>% dplyr::glimpse()
+  # sum volume within each segment to get the total volume
+  vol_df_temp <- terra::zonal(
+      x = vol_rast_temp
+      , z = sf_data %>% 
+        sf::st_transform(terra::crs(chm_rast)) %>% 
+        terra::vect()
+      , fun = "sum", na.rm = T
+    ) %>% 
+    setNames("volume_m3") %>% 
+    dplyr::mutate(volume_m3 = dplyr::na_if(volume_m3, NaN))
+  # vol_df_temp %>% dplyr::glimpse()
+  # max ht within each segment to get the max ht
+  ht_df_temp <- terra::zonal(
+      x = chm_rast
+      , z = sf_data %>% 
+        sf::st_transform(terra::crs(chm_rast)) %>% 
+        terra::vect()
+      , fun = "max", na.rm = T
+    ) %>% 
+    setNames("max_height_m") %>% 
+    dplyr::mutate(max_height_m = dplyr::na_if(max_height_m, NaN))
+  #################################
+  # attach to sf
+  #################################
+  if(
+    !identical(
+      nrow(sf_data)
+      , nrow(area_df_temp)
+      , nrow(vol_df_temp)
+      , nrow(ht_df_temp)
+    )
+  ){
+    stop("unable to find data in raster for given vectors")
+  }
+  
+  ret_dta <- sf_data %>%
+    dplyr::select( -dplyr::any_of(c(
+      "hey_xxxxxxxxxx"
+      , "area_m2"
+      , "volume_m3"
+      , "max_height_m"
+      , "volume_per_area"
+    ))) %>% 
+    dplyr::bind_cols(
+      area_df_temp
+      , vol_df_temp
+      , ht_df_temp
+    ) %>% 
+    dplyr::mutate(
+      volume_per_area = volume_m3/area_m2
+    )
+  # ret_dta <- sf_data %>%
+  #   purrr::reduce(
+  #     list(sf_data, area_df_temp, vol_df_temp, ht_df_temp)
+  #     , dplyr::left_join
+  #     , by = sf_id
+  #   ) %>% 
+  #   dplyr::mutate(
+  #     volume_per_area = volume_m3/area_m2
+  #   )
+  
+  return(
+    list(
+      sf_data = ret_dta
+      , area_rast = area_rast_temp
+      , volume_rast = vol_rast_temp
+    )
+  )
+}
+
+# get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
+#   dplyr::glimpse()
+# get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = arnf_chm_rast) %>% 
+#   dplyr::glimpse()
 ```
 
-```{r, include=FALSE,eval=FALSE}
-# let's look at the entire area again after applying this filter plotting the remaining watershed segmented piles (brown) and the actual piles (blue)
-# plot it 
-terra::plotRGB(ortho_rast, stretch = "lin", colNA = "transparent")
-terra::plot(
-  watershed_ans_poly %>% terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 1.2
-)
-terra::plot(
-  slash_piles_polys %>% 
-    sf::st_transform(terra::crs(ortho_rast)) %>% terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1
-)
+### Structural Rasters
+
+we can quickly look at the area raster that was used for the volume calculation
+
+```{r}
+get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
+  purrr::pluck("area_rast") %>% 
+  terra::plot(axes = F, col = grDevices::gray.colors(n=100), main = "area (m2)")
 ```
+
+and we can quickly look at the volume raster
+
+```{r}
+get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
+  purrr::pluck("volume_rast") %>% 
+  terra::plot(axes = F, col = grDevices::gray.colors(n=100), main = "volume (m3)")
+# terra::plot(
+#   aoi_slash_piles_polys %>% 
+#     sf::st_transform(terra::crs(aoi_chm_rast_slice)) %>% 
+#     terra::vect()
+#   , add = T, border = "blue", col = NA, lwd = 1.2
+# )
+```
+
+the volume raster mirrors the CHM but with volume as the cell value instead of height
+
+```{r}
+aoi_chm_rast_slice %>% 
+  terra::plot(axes = F, col = viridis::plasma(100), main = "CHM (m)")
+```
+
+### Demonstration Candidate Segment Metrics
+
+we'll use our `get_structural_metrics()` with the height-filtered CHM to compute the structural metrics for the candidate piles
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly <- get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
+  purrr::pluck("sf_data") %>% 
+  # we already have area so we'll drop the value from this function
+  dplyr::select(-area_m2)
+# dbscan_segs_poly
+dbscan_segs_poly <- get_structural_metrics(sf_data = dbscan_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
+  purrr::pluck("sf_data") %>% 
+  # we already have area so we'll drop the value from this function
+  dplyr::select(-area_m2)
+```
+
+what did we get back?
+
+```{r}
+watershed_segs_poly %>% dplyr::glimpse()
+```
+
+
+
+xxxxxx
 
 ### Shape Refinement
 
 As a final step, we'll use the convex hull shapes of our remaining segments. This helps to smooth out the often "blocky" edges of raster-based segments, which can look like they were generated in Minecraft. Additionally, by removing any segments with overlapping convex hull shapes, we can likely reduce false detections that are actually groups of small trees or shrubs, ensuring our results represent singular slash piles.
 
 ```{r}
-
+xxxxxx
 # st_combine_touching 
 ###############################################################################
 # dissolve groups of touching or overlapping polygons using st_union and st_cast
