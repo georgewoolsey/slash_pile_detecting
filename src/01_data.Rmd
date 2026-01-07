@@ -30,6 +30,7 @@ library(ggnewscale) # new scale
 # spatial analysis
 library(terra) # raster
 library(sf) # simple features
+library(lwgeom) # advanced functions for spatial operations
 library(lidR) # lidar data
 library(rgl) # 3d plots
 library(cloud2trees) # the cloud2trees

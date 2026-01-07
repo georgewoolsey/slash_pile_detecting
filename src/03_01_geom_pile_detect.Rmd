@@ -1018,7 +1018,7 @@ dplyr::tibble(
       "method", "% removed"
       , "orig. candidate segments"
       , "filtered candidate segments"
-      , "filtered area (m<sup>2</sup>)"
+      , "remaining candidate area (m<sup>2</sup>)"
     )
     , escape = F
   ) %>% 
@@ -1148,11 +1148,11 @@ First, we apply a regularity filter to remove candidates with irregularly-shaped
 
 ### Shape Irregularity: Convexity
 
-Our shape irregularity filter compares the convex hull of the candidate segment to the raw polygon of the candidate segment. Specifically, we calculate the convexity ratio of the shape by:
+Our first shape irregularity filter compares the convex hull of the candidate segment to the raw polygon of the candidate segment. Specifically, we calculate the convexity ratio or "solidity" of the shape ([Glasbey and Horgan 1995](https://doi.org/10.2307/2533987)) by:
 
 $$\frac{\text{Area of Polygon}}{\text{Area of Convex Hull}}$$
 
-This approach is effective for identifying polygons with deep indents, holes, or branching. A perfectly convex shape like a circle or square will have a convexity of 1.0 and as shapes become more irregular (or concave) the convexity drops toward 0. Convexity is is not sensitive to the overall elongation of a shape as a long, thin rectangle is technically convex and would have a ratio of 1.0, despite being irregular in its proportions.
+This approach is effective for identifying polygons with deep indents, holes, or branching. A perfectly convex shape like a circle, square, or triangle will have a convexity of 1.0 (because they have no indents) and as shapes become more irregular (or concave) the convexity drops toward 0. Convexity is is not sensitive to the overall elongation of a shape as a long, thin rectangle is technically convex and would have a ratio of 1.0, despite being irregular in its proportions.
 
 let's create a convex hull of the candidate segments for comparison and convexity calculation
 
@@ -1299,7 +1299,8 @@ watershed_segs_poly <-
   dplyr::inner_join(
     watershed_segs_poly_chull %>% 
       dplyr::mutate(chull_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
-      sf::st_drop_geometry()
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pred_id, chull_area_m2)
     , by = "pred_id"
   ) %>% 
   dplyr::mutate(
@@ -1312,7 +1313,8 @@ dbscan_segs_poly <-
   dplyr::inner_join(
     dbscan_segs_poly_chull %>% 
       dplyr::mutate(chull_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
-      sf::st_drop_geometry()
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pred_id, chull_area_m2)
     , by = "pred_id"
   ) %>% 
   dplyr::mutate(
@@ -1338,6 +1340,11 @@ p1_temp <-
     data = watershed_segs_poly, mapping=ggplot2::aes(fill=convexity_ratio)
     , color = NA
   ) + 
+  ggplot2::geom_sf_text(
+    data = watershed_segs_poly
+    , mapping=ggplot2::aes(label=scales::percent(convexity_ratio, accuracy=0.1))
+    , vjust = 1, hjust = 0, size = 3.5
+  ) + 
   ggplot2::scale_fill_fermenter(
     n.breaks = 10, palette = "PuOr"
     , direction = 1
@@ -1359,6 +1366,11 @@ p2_temp <-
   ggplot2::geom_sf(
     data = dbscan_segs_poly, mapping=ggplot2::aes(fill=convexity_ratio)
     , color = NA
+  ) + 
+  ggplot2::geom_sf_text(
+    data = dbscan_segs_poly
+    , mapping=ggplot2::aes(label=scales::percent(convexity_ratio, accuracy=0.1))
+    , vjust = 1, hjust = 0, size = 3.5
   ) + 
   ggplot2::scale_fill_fermenter(
     n.breaks = 10, palette = "PuOr"
@@ -1432,7 +1444,7 @@ dplyr::tibble(
       "method", "% removed"
       , "orig. candidate segments"
       , "filtered candidate segments"
-      , "filtered area (m<sup>2</sup>)"
+      , "remaining candidate area (m<sup>2</sup>)"
     )
     , escape = F
   ) %>% 
@@ -1452,7 +1464,7 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 #### Watershed Segmentation
 
-plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
 ```{r}
 aoi_plt_ortho +
@@ -1472,7 +1484,7 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
@@ -1497,7 +1509,7 @@ gc()
 
 #### DBSCAN Segmentation
 
-plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
 ```{r}
 aoi_plt_ortho +
@@ -1517,7 +1529,7 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered dbscan candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
@@ -1540,7 +1552,7 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-### Convexity Filter Function
+#### Convexity Filter Function
 
 let's make a function to ingest a spatial data frame and return polygons filtered for irregularity using this convex hull process
 
@@ -1586,696 +1598,479 @@ st_convexity_filter <- function(
     return(area_comp)
   }
 }
+# dbscan_segs_poly$convexity_ratio %>% summary()
+# dbscan_segs_poly %>% 
+#   st_convexity_filter(min_convexity_ratio = 0.9) %>%
+#   dplyr::pull(convexity_ratio) %>% 
+#   summary()
 ```
 
-xxx
+### Shape Irregularity: Circularity
 
-now, we'll look at which piles meet the minimum overlap threshold (black outline) between the segmented polygon and the convex hull and will be kept compared to those that did not meet the irregularity threshold (red) and will be removed
+Our second shape irregularity filter compares the minimum bounding circle of the candidate segment to the raw polygon of the candidate segment. Specifically, we calculate the circularity ratio sometimes referred to as the Reock Compactness Score ([Reock 1961](https://doi.org/10.2307/2109043)) of the shape by:
+
+$$\frac{\text{Area of Polygon}}{\text{Area of Minumum Bounding Circle}}$$
+
+This approach is used to measure how closely a shape is spread around its central point (dispersion) with a perfect circle receiving a score of 1.0 while long, thin shapes (like downed tree boles) will have low values approaching the lower limit of 0. This metric penalizes any shape that does not fill it's circumcircle (i.e. the smallest circle that contains the polygon). For context, a perfect square has a circularity ratio of $\frac{2}{\pi}\approx 0.637$ while an equilateral triangle has a ratio of $\frac{3\sqrt{3}}{4\pi}\approx 0.414$
+
+let's create the minimum bounding circle of the candidate segments using `lwgeom::st_minimum_bounding_circle()`
 
 ```{r}
-xxx
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_chull %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::mutate(
-        meets_overlap = pred_id %in% watershed_keep_overlaps_chull_pred_id
-      )
-    , ggplot2::aes(color = meets_overlap)
-    , fill = NA, lwd = 0.6
-  ) +
-  ggplot2::scale_color_manual(values = c("red","black")) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "top")
-p_temp
+# MBC of segments
+# watershed_segs_poly
+watershed_segs_poly_mbc <-
+  watershed_segs_poly %>% 
+  lwgeom::st_minimum_bounding_circle() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.))
+# dbscan_segs_poly
+dbscan_segs_poly_mbc <-
+  dbscan_segs_poly %>% 
+  lwgeom::st_minimum_bounding_circle() %>% 
+  sf::st_simplify() %>% 
+  sf::st_make_valid() %>% 
+  dplyr::filter(sf::st_is_valid(.))
 ```
 
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb06a.jpg", height = 8, width = 8)
-p_temp <- p_temp + ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb06b.jpg", height = 8, width = 8)
-# fill na
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_chull %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::mutate(
-        meets_overlap = pred_id %in% watershed_keep_overlaps_chull_pred_id
-      )
-    , ggplot2::aes(color = meets_overlap)
-    , fill = NA, lwd = 0.6
-  ) +
-  ggplot2::scale_color_manual(values = c("red","black")) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "top")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb06c.jpg", height = 8, width = 8)
-p_temp <- p_temp + ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb06d.jpg", height = 8, width = 8)
-```
-
-let's see which predictions we are left with after filtering for segment shape irregularity with based on the overlap with the convex hull
-
-plot the remaining example watershed detected segments as vectors (brown) compared with the ground truth piles (blue) 
+compare the MBC shape to the raw polygons
 
 ```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+p1_temp <- ggplot2::ggplot() +
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
+    data = watershed_segs_poly_mbc, mapping=ggplot2::aes(color="min. bounding circle")
+    , fill = NA, lwd = 2
+  ) + 
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb06e.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>%
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb06f.jpg", height = 8, width = 8)
-```
-
-it looks like the filtering using convex hulls successfully removed most segments with irregular shapes and holes.
-
-following this, we'll apply an area filter based on the expected minimum and maximum pile areas and then we will apply a circularity filter that uses least squares circle fitting to remove non-circular shapes. this expected area and geometric shape filtering is performed to ensure that only the most likely slash pile candidates are retained.
-
-### Area Filtering
-
-apply an area filter based on the minimum and maximum expected pile areas. in practice, the expected area range defined here would be based on the pile construction prescription and potentially adjusted based on a sample of field-measured values after treatment completion
-
-```{r}
-##### area thresholds
-min_area_m2 <- 2
-# Two standard US parking spaces, typically measuring 9 feet by 18 feet, 
-# are roughly equivalent to 30.25 square meters. Each space is approximately 15.125 square meters.
-# 15.125*3
-max_area_m2 <- 50
-
-# filter the remaining segments by area and st_convexity_filter removes irregular preds
-watershed_ans_poly <- 
-  watershed_ans_poly %>% 
-    # dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-    st_convexity_filter(pct_chull_overlap = pct_chull_overlap) %>%
-    dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
-    # filter out the segments that don't meet the size thresholds
-    dplyr::filter(
-      dplyr::coalesce(area_xxxx,0) >= min_area_m2
-      & dplyr::coalesce(area_xxxx,0) <= max_area_m2
-    ) %>% 
-    dplyr::select(-c(area_xxxx))
-
-```
-
-how many piles are remaining after the shape irregularity filtering and area filtering?
-
-```{r}
-watershed_ans_poly %>% nrow()
-```
-
-example of watershed detected segments as vectors (brown) filtered to remove irregular shapes and segments outside of the expected area thresholds; compared with the ground truth piles (blue)
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb07a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb07b.jpg", height = 8, width = 8)
-```
-
-it looks like we are on the right track. now we need to remove the remaining candidate segments that do not meet our expectations for having a circular base
-
-### Geometric filtering: Circularity Filtering
-
-now, let's apply a circle-fitting algorithm to remove non-circular segments from the remaining segments
-
-Least squares circle fitting is a method to find the circle that best approximates a set of data points by minimizing the sum of the squared distances between the points and the circle. The `lidR::fit_circle()` function finds the best-fitting flat, horizontal circle for a group of 3D points, even if some of those points are messy or don't quite fit. It determines the circle's center and size, and also provides an "angular range" to show how much of a complete circle the points actually form, which is a more reliable measure than a simple error value (e.g. RMSE).
-
-The "angular range" tells you how much of a complete circle the points in the watershed-detected segment actually cover. Imagine drawing a circle, and then only having points along a part of its edge, here's how to interpret it: 
-
-* 360 degrees suggests the points form a full, unbroken circle, like the base of a perfectly round slash pile.
-* 180 degrees would mean the points only form a half-circle or a semi-circle.
-
-A smaller range (e.g., 90 degrees) indicates just a partial arc or a small curve. This can help us determine if a group of points truly represents a circular shape, which is useful for identifying objects like slash piles that are expected to have a round base.
-
-we'll define a function to pass our `sf` polygon data of watershed detected segments and return a `sf` data of the fitted circles
-
-```{r}
-##########################
-# 1)
-# function to return sf circle from xy center and radius in given crs
-# to handle return from common circle fitting algorithms
-##########################
-point_xy_radius_to_circle_sf <- function(
-  center_x
-  , center_y
-  , radius
-  , crs = NULL
-) {
-  if(is.null(crs)){stop("need a crs, guy")}
-  # create a point geometry object
-  center_point <- sf::st_point(c(center_x, center_y))
-  # create an sf object from the point
-  center_sf <- sf::st_sf(
-    data.frame(
-      center_x = center_x
-      , center_y = center_y
-      , radius = radius
-    )
-    , geometry = sf::st_sfc(center_point)
-    , crs = crs
-  )
-  # create the circle geometry by buffering the point
-  circle_sf <- sf::st_buffer(center_sf, dist = radius)
-  return(circle_sf)
-}
-##########################
-# 2)
-# function to generate 2d xy points from polygon feature
-# to pass to common circle fitting algorithms
-# !!! only works with a singular polygon at a time
-##########################
-poly_to_points <- function(
-  sf_data
-  , as_spatial = F # if set to F, returns xy dataframe; if T returns sf data
-  , simplify_multipolygons = F # if set to T, multipolygons are simplified by keeping the largest segment
-) {
-  if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
-  # just work with the first
-  if(nrow(sf_data)>1){stop("this function only works with a single record at a time")}
-  # simplify_multipolygons
-  if(simplify_multipolygons){
-    sf_data <- sf_data %>% 
-      dplyr::mutate(treeID=1) %>% 
-      cloud2trees::simplify_multipolygon_crowns() %>% 
-      dplyr::select(-treeID)
-  }
-  # get point coordinates
-  xy_temp <- 
-    sf_data %>% 
-    sf::st_coordinates() %>% 
-    dplyr::as_tibble() %>% 
-    dplyr::filter(L1 == 1) %>% # keep only rows where L1 refers to the main ring
-    dplyr::rename_with(tolower) %>% 
-    dplyr::select(x,y) %>% 
-    dplyr::mutate(z=0)
-  # as_spatial
-  if(as_spatial){
-    xy_temp <- xy_temp %>% 
-      sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(sf_data), remove = F)
-  }
-  return(xy_temp)
-}
-# watershed_ans_poly %>% 
-#   dplyr::filter(pred_id %in% c(7717)) %>%
-#   # poly_to_points(as_spatial = T) %>% 
-#   poly_to_points(as_spatial = F) %>% 
-#   ggplot() + 
-#     # geom_sf()
-#     geom_point(aes(x=x,y=y))
-
-##########################
-# 3)
-# function to combine poly_to_points, lidR::fit_circle, and point_xy_radius_to_circle_sf
-# !!! only works with a singular polygon at a time
-##########################
-poly_circle_fit <- function(
-  poly
-  # if set to T, multipolygons are simplified by keeping the largest segment
-  , simplify_multipolygons = F
-  # number of iterations for the RANSAC fitting algorithm
-  , num_iterations = 111
-  # threshold value; points are considered inliers if their residuals are below this value
-  , inlier_threshold = 0.01
-) {
-  # poly_to_points
-  poly_to_points_ans <- poly_to_points(poly, as_spatial = F, simplify_multipolygons = simplify_multipolygons)
-  # fit_circle
-  fit_circle_ans <- lidR::fit_circle(
-    points = poly_to_points_ans %>% as.matrix()
-    # number of iterations for the RANSAC fitting algorithm
-    , num_iterations = num_iterations
-    # threshold value; points are considered inliers if their residuals are below this value
-    , inlier_threshold = inlier_threshold
-  )
-  # point_xy_radius_to_circle_sf
-  ans <- point_xy_radius_to_circle_sf(
-    center_x = fit_circle_ans$center_x
-    , center_y = fit_circle_ans$center_y
-    , radius = fit_circle_ans$radius
-    , crs = sf::st_crs(poly)
-  )
-  # add other vars
-  ans <- ans %>% 
-    dplyr::mutate(
-      covered_arc_degree = fit_circle_ans$covered_arc_degree
-      , percentage_inlier = fit_circle_ans$percentage_inlier
-      , percentage_inside = fit_circle_ans$percentage_inside
-      # , inliers = fit_circle_ans$inliers
-    )
-  # return
-  return(ans)
-}
-# watershed_ans_poly %>%
-#   dplyr::filter(pred_id == 7717) %>%
-#   poly_circle_fit() %>%
-#   ggplot() + geom_sf() + 
-#   geom_sf(
-#     data = filtered_watershed_ans_poly %>% dplyr::filter(pred_id == 7717) %>% poly_to_points(as_spatial = T)
-#   )
-
-# watershed_ans_poly %>%
-#   dplyr::filter(pred_id == 7717) %>%
-#   poly_circle_fit() %>% 
-#   dplyr::glimpse()
-
-##########################
-# 4)
-# function to combine poly_to_points, lidR::fit_circle, and point_xy_radius_to_circle_sf
-# !!! only works with a singular polygon at a time
-##########################
-sf_data_circle_fit <- function(sf_data, num_iterations = 111) {
-  if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
-  # apply poly_circle_fit() to each row to get fitted circle sf data
-  cf <- sf_data %>% 
-    dplyr::ungroup() %>% 
-    dplyr::mutate(id_xxx = dplyr::row_number()) %>% 
-    dplyr::nest_by(id_xxx) %>% 
-    dplyr::mutate(
-      circle_fit = poly_circle_fit(poly = data, num_iterations=num_iterations)
-    ) %>% 
-    dplyr::pull(circle_fit)
-  # combine with original data but drop original geom
-  df <- sf_data %>% 
-    sf::st_drop_geometry() %>% 
-    dplyr::bind_cols(cf) %>% 
-    sf::st_as_sf(crs = sf::st_crs(sf_data))
-  # return
-  return(df)
-}
-```
-
-let's apply the `sf_data_circle_fit()` function we just defined fits the best circle using `lidR::fit_circle()` to each watershed detected segment to get a spatial data frame with the best fitting circle for each segment
-
-```{r}
-# apply the sf_data_circle_fit() which takes each segment polygon, transforms it to points, and the fits the best circle
-set.seed(22)
-watershed_ans_poly_circle_fit <- sf_data_circle_fit(watershed_ans_poly, num_iterations = 88)
-# what is this?
-watershed_ans_poly_circle_fit %>% dplyr::glimpse()
-# watershed_ans_poly %>% dplyr::glimpse()
-```
-
-let's check out the distribution of the metrics that quantify the fit of the circle
-
-```{r}
-watershed_ans_poly_circle_fit %>% 
-  sf::st_drop_geometry() %>% 
-  dplyr::select(covered_arc_degree,percentage_inlier,percentage_inside) %>%
-  tidyr::pivot_longer(dplyr::everything()) %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = value, fill = name)) +
-    ggplot2::geom_density(color = NA) +
-    ggplot2::facet_wrap(facets = ggplot2::vars(name), scales = "free") +
-    ggplot2::scale_fill_viridis_d(option = "rocket", begin = 0.2, end = 0.8, alpha = 0.8) +
-    ggplot2::theme_light() +
-    ggplot2::theme(
-      axis.text.y = ggplot2::element_blank()
-      , axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5)
-      , axis.title.x = ggplot2::element_blank()
-      , legend.position = "none"
-      , strip.text = ggplot2::element_text(color = "black", size = 10)
-    )
-```
-
-let's look at the best fitting circles using the remaining piles from our example above
-
-example of watershed detected segments as vectors (brown) filtered to remove irregular shapes and segments outside of the expected area thresholds; best fitting circle of the segments (orange); compared with the ground truth piles (blue)
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_circle_fit %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::filter(
-        as.numeric(sf::st_area(.)) < (as.numeric(sf::st_area(example_aoi))*0.5)
-      )
-    , fill = NA, color = "orangered", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb08a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_circle_fit %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::filter(
-        as.numeric(sf::st_area(.)) < (as.numeric(sf::st_area(example_aoi))*0.5)
-      )
-    , fill = NA, color = "orangered", lwd = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb08b.jpg", height = 8, width = 8)
-```
-
-the best fitting circles on the linear watershed detected segments are not very well fitting, we can filter using the intersection over union (IoU) between the circle and the predicted segment. we'll use the IoU function we defined in this [earlier section](#iou_match). 
-
-```{r}
-watershed_circle_fit_iou <- 
-  watershed_ans_poly$pred_id %>% 
-  unique() %>% 
-  purrr::map(\(x)
-    ground_truth_single_match(
-      gt_inst = watershed_ans_poly %>% 
-        dplyr::filter(pred_id == x)
-      , gt_id = "pred_id"
-      , predictions = watershed_ans_poly_circle_fit %>% 
-        dplyr::filter(pred_id == x) %>% 
-        dplyr::select(pred_id) %>%
-        dplyr::rename(circ_pred_id = pred_id)
-      , pred_id = "circ_pred_id"
-      , min_iou_pct = 0
-    )    
-  ) %>% 
-  dplyr::bind_rows()
-# what did we get?
-watershed_circle_fit_iou %>% dplyr::glimpse()
-```
-
-what is the distribution of IoU of the watershed segments and the best fit circle of those segments?
-
-```{r}
-watershed_circle_fit_iou %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = iou)) +
-  ggplot2::geom_density(color = NA, fill = "navy", alpha = 0.8) +
-  ggplot2::labs(
-    x = "IoU of the watershed segments and the best fit circle"
-  ) +
-  ggplot2::scale_x_continuous(labels = scales::percent) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    axis.text.y = ggplot2::element_blank()
-    , legend.position = "none"
-    , strip.text = ggplot2::element_text(color = "black", size = 10)
-  )
-```
-
-let's color our predicted segments by the IoU with the best fitting circle
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::left_join(watershed_circle_fit_iou, by = "pred_id")
-    , mapping = ggplot2::aes(fill = iou)
-    , alpha = 0.9
-    , lwd = 0
-    , color = NA
-  ) +
-  ggplot2::geom_sf(
-    data = watershed_ans_poly_circle_fit %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::filter(
-        as.numeric(sf::st_area(.)) < (as.numeric(sf::st_area(example_aoi))*0.5)
-      )
-    , fill = NA, color = "orangered", lwd = 0.6
-  ) +
-  ggplot2::scale_fill_fermenter(
-    n.breaks = 10 # 10 use 10 if can go full range 0-1
-    , palette = "PuOr" # "BrBG"
-    , direction = 1
-    , limits = c(0,1) # use c(0,1) if can go full range 0-1
-    , labels = scales::percent
-    , na.value = "sienna4"
-  ) +
-  ggplot2::labs(fill="IoU") +
+    data = watershed_segs_poly, mapping=ggplot2::aes(color="raw polygons")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::labs(subtitle = "watershed") +
   ggplot2::theme_void() +
   ggplot2::theme(
     legend.position = "top"
-    , legend.text = ggplot2::element_text(size = 6, angle = 90, vjust = 0.5)
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+  )
+p2_temp <- ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_mbc, mapping=ggplot2::aes(color="min. bounding circle")
+    , fill = NA, lwd = 2
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly, mapping=ggplot2::aes(color="raw polygons")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::labs(subtitle = "dbscan") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "top"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+  )
+patchwork::wrap_plots(list(p1_temp,p2_temp))
+```
+
+```{r, include=FALSE, eval=T}
+### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly_mbc
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+
+ggplot2::ggsave(filename = "../data/workflow_ex_08_rgb_watershed_cnddts.jpg", height = 8, width = 8)
+
+# plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly_mbc
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+ggplot2::ggsave(filename = "../data/workflow_ex_08_chm_watershed_cnddts.jpg", height = 8, width = 8)
+
+### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_mbc
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+
+ggplot2::ggsave(filename = "../data/workflow_ex_08_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+
+# plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly_mbc
+    , fill = NA, color = "orangered", lwd = 1
+  ) + 
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
+ggplot2::ggsave(filename = "../data/workflow_ex_08_chm_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+now, we'll calculate the circularity ratio for each remaining candidate segment
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly <- 
+  watershed_segs_poly %>% 
+  dplyr::inner_join(
+    watershed_segs_poly_mbc %>% 
+      dplyr::mutate(mbc_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pred_id, mbc_area_m2)
+    , by = "pred_id"
+  ) %>% 
+  dplyr::mutate(
+    circularity_ratio = poly_area_m2/mbc_area_m2
+  )
+# dbscan_segs_poly
+dbscan_segs_poly <- 
+  dbscan_segs_poly %>% 
+  dplyr::inner_join(
+    dbscan_segs_poly_mbc %>% 
+      dplyr::mutate(mbc_area_m2 = sf::st_area(.) %>% as.numeric()) %>%
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pred_id, mbc_area_m2)
+    , by = "pred_id"
+  ) %>% 
+  dplyr::mutate(
+    circularity_ratio = poly_area_m2/mbc_area_m2
+  )
+```
+
+what is the circularity ratio for the remaining candidate segments in our demonstration area?
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly$circularity_ratio %>% summary()
+# dbscan_segs_poly
+dbscan_segs_poly$circularity_ratio %>% summary()
+```
+
+plot the circularity of the candidate segments using the raw polygons
+
+```{r}
+p1_temp <-
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly, mapping=ggplot2::aes(fill=circularity_ratio)
+    , color = NA
+  ) + 
+  ggplot2::geom_sf_text(
+    data = watershed_segs_poly
+    , mapping=ggplot2::aes(label=scales::percent(circularity_ratio, accuracy=0.1))
+    , vjust = 1, hjust = 0, size = 3.5
+  ) + 
+  ggplot2::scale_fill_fermenter(
+    n.breaks = 10, palette = "PuOr"
+    , direction = 1
+    , limits = c(0,1)
+    , labels = scales::percent
+    , breaks = seq(0, 1, by = 0.2)
+    , name = ""
+  ) +
+  ggplot2::labs(subtitle = "watershed") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+p2_temp <-
+  ggplot2::ggplot() +
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly, mapping=ggplot2::aes(fill=circularity_ratio)
+    , color = NA
+  ) + 
+  ggplot2::geom_sf_text(
+    data = dbscan_segs_poly
+    , mapping=ggplot2::aes(label=scales::percent(circularity_ratio, accuracy=0.1))
+    , vjust = 1, hjust = 0, size = 3.5
+  ) + 
+  ggplot2::scale_fill_fermenter(
+    n.breaks = 10, palette = "PuOr"
+    , direction = 1
+    , limits = c(0,1)
+    , labels = scales::percent
+    , breaks = seq(0, 1, by = 0.2)
+    , name = ""
+  ) +
+  ggplot2::labs(subtitle = "dbscan") +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "bottom"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+patchwork::wrap_plots(
+  list(p1_temp,p2_temp)
+  , guides = "collect"
+  , 
+) &
+ggplot2::theme(
+    legend.position = "bottom"
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+```
+
+finally, let's filter the candidate segments with a user-defined expectation of shape circularity on the 0-100% scale applied to the circularity ratio
+
+```{r}
+# # min required overlap between the predicted pile and the MBC of the predicted pile
+min_circularity_ratio <- 0.6
+```
+
+what proportion of the remaining segments were filtered using this shape circularity filter
+
+```{r}
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , old_segments = c(
+      watershed_segs_poly %>% nrow()
+      , dbscan_segs_poly %>% nrow()
+    )
+    , new_segments = c(
+      watershed_segs_poly %>% dplyr::filter(circularity_ratio>=min_circularity_ratio) %>% nrow()
+      , dbscan_segs_poly %>% dplyr::filter(circularity_ratio>=min_circularity_ratio) %>% nrow()
+    )
+    , area = c(
+      watershed_segs_poly %>% 
+        dplyr::filter(circularity_ratio>=min_circularity_ratio) %>% 
+        sf::st_union() %>% 
+        sf::st_area() %>% 
+        as.numeric()
+      , dbscan_segs_poly %>% 
+        dplyr::filter(circularity_ratio>=min_circularity_ratio) %>% 
+        sf::st_union() %>% 
+        sf::st_area() %>% 
+        as.numeric()
+    )
+  ) %>% 
+  dplyr::mutate(
+    pct_removed = scales::percent((new_segments-old_segments)/old_segments, accuracy = 0.1)
+    , dplyr::across(tidyselect::ends_with("segments"), ~scales::comma(.x,accuracy=1))
+    , area = scales::comma(area,accuracy=0.01)
+  ) %>% 
+  dplyr::relocate(method,pct_removed) %>% 
+  kableExtra::kbl(
+    caption = "Demonstration area candidate segments by method<br>filtered by segment circularity"
+    , col.names = c(
+      "method", "% removed"
+      , "orig. candidate segments"
+      , "filtered candidate segments"
+      , "remaining candidate area (m<sup>2</sup>)"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+actually apply the filter ;)
+
+```{r}
+# watershed_segs_poly
+watershed_segs_poly <- watershed_segs_poly %>% 
+  dplyr::filter(circularity_ratio>=min_circularity_ratio)
+# dbscan_segs_poly
+dbscan_segs_poly <- dbscan_segs_poly %>% 
+  dplyr::filter(circularity_ratio>=min_circularity_ratio)
+```
+
+#### Watershed Segmentation
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_watershed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
   )
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb08c.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_0801_chm_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
-we'll set a threshold for the minimum IoU to further filter for segments that are approximately round, this filter should remove linear objects from the watershed detections
-
-```{r}
-# min required IoU between the predicted pile and the best fit circle of the predicted pile
-pct_iou_circle_fit <- 0.55
-# compare iou
-watershed_keep_circle_fit_pred_id <- watershed_circle_fit_iou %>% 
-  dplyr::filter(iou>=pct_iou_circle_fit) %>% 
-  dplyr::pull(pred_id)
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
-how many piles are remaining after the shape irregularity filtering, area threshold filtering, and circle fitting filtering?
+#### DBSCAN Segmentation
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
 ```{r}
-length(watershed_keep_circle_fit_pred_id)
-```
-
-let's check out the remaining watershed detected piles after: 1) filtering out the irregularly shaped segments (filtered using the convex hull), 2) filtering for expected pile size, and 3) filtering out the non-circular segments (filtered using circle fitting)
-
-example of watershed detected segments as vectors (brown) filtered to remove irregular shapes, segments outside of the expected area thresholds, and non-circular segments; compared with the ground truth piles (blue)
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
+    data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   ) +
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
   ) +
-  ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none")
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb09a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
+    data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
   ) +
   ggplot2::geom_sf(
-    data = watershed_ans_poly %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_overlaps_chull_pred_id) %>% 
-      dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb09b.jpg", height = 8, width = 8)
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
 ```
+
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_0801_chm_dbscan_cnddts.jpg", height = 8, width = 8)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+#### Circularity Filter Function
+
+let's make a function to ingest a spatial data frame and return polygons filtered for irregularity using this minimum bounding circle process
+
+```{r}
+st_circularity_filter <- function(
+  sf_data
+  # min required overlap between the polygon and the minimum bounding circle of the polygon
+  , min_circularity_ratio = 0.6
+) {
+  if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
+  # if not polygons
+  if( !(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON")) %>% all()) ){
+    stop(paste0(
+      "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
+    ))
+  }
+  # minimum bounding circle of segments
+  poly_mbc <-
+    sf_data %>% 
+    lwgeom::st_minimum_bounding_circle() %>% 
+    sf::st_simplify() %>% 
+    sf::st_make_valid()
+    # dplyr::filter(sf::st_is_valid(.))
+  # compare areas
+  if(nrow(poly_mbc)!=nrow(sf_data)){
+    stop("could not make valid minimum bounding circle from provided polygon data")
+  }else{
+    area_comp <- sf_data %>% 
+      dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
+      dplyr::bind_cols(
+        poly_mbc %>% 
+          dplyr::mutate(mbc_area_xxxx = sf::st_area(.) %>% as.numeric()) %>%
+          dplyr::select(mbc_area_xxxx) %>% 
+          sf::st_drop_geometry()
+      ) %>% 
+      dplyr::mutate(
+        circularity_ratio = area_xxxx/mbc_area_xxxx
+      ) %>% 
+      dplyr::filter(
+        circularity_ratio >= min_circularity_ratio
+      ) %>% 
+      dplyr::select(-c(area_xxxx,mbc_area_xxxx))
+    return(area_comp)
+  }
+}
+# dbscan_segs_poly$circularity_ratio %>% summary()
+# dbscan_segs_poly %>%
+#   st_circularity_filter(min_circularity_ratio = 0.7) %>%
+#   dplyr::pull(circularity_ratio) %>%
+#   summary()
+```
+
+```{r, include = F, eval = F}
+### !!!!!!!!!!!!!!!!!!!! COULD ALSO INCLUDE:
+# Polsby-Popper Score (Isoperimetric Quotient)
+# Unique Function: Measures boundary complexity or "jaggedness". It is an isoperimetric measure that evaluates how much area is enclosed relative to the perimeter length.
+# Intuition: It compares the shape's area to the area of a circle with the same perimeter. This is the most sensitive metric to high-frequency "noise" or "wiggles" in a boundary; a circle with a "saw-tooth" edge will have a very low score even if it is not elongated or indented.
+# Range: [0,1]. A smooth-edged circle scores 1.0.
+# Formula:\(PP=\frac{4\pi \times Area_{Polygon}}{Perimeter_{Polygon}^{2}}\)
+```
+
+xxx
 
 ### Area and Volume from CHM
 
@@ -2284,6 +2079,7 @@ We'll use the CHM raster to calculate area, height, and volume for each candidat
 after we calculate the height of the pile based on the maximum height withing the lower CHM slice of the pile footprint, we will lastly apply our filter for the minimum expected pile height. this is the last filtering step to give us our final, structurally-detected slash pile prediction list
 
 ```{r}
+xxx
 ########################################
 # use the remaining segments that meet the geometric and area filtering
 # to filter the watershed raster
