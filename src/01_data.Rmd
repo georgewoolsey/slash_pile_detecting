@@ -273,7 +273,7 @@ my_ggmap_basemap <- function(sf_data, zoom_level = 14, buffer_box = 2600, my_crs
 
 plot the fancy basemap with the points
 
-```{r, fig.height=9, fig.width=7.5, eval=FALSE}
+```{r, fig.height=9, fig.width=7.5, eval=T}
 # get the basemap with our my_ggmap_basemap()
 plt_basemap <- my_ggmap_basemap(
   sf_data = all_stand_boundary %>% dplyr::group_by(site) %>% sf::st_point_on_surface()
@@ -312,7 +312,7 @@ plt2_temp <-
 plt2_temp
 ```
 
-```{r, include=FALSE, eval=F}
+```{r, include=FALSE, eval=T}
 ggplot2::ggsave(
   "../data/all_study_site_map.jpg"
   , dpi = "print"

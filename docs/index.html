@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+
+<link rel="next" href="data-overview.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="data-overview.html"><a href="data-overview.html"><i class="fa fa-check"></i><b>2</b> Data Overview</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="data-overview.html"><a href="data-overview.html#study-units-vector-data"><i class="fa fa-check"></i><b>2.1</b> Study Units Vector Data</a></li>
+<li class="chapter" data-level="2.2" data-path="data-overview.html"><a href="data-overview.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="data-overview.html"><a href="data-overview.html#standardize-pile-data"><i class="fa fa-check"></i><b>2.2.1</b> Standardize Pile Data</a></li>
+<li class="chapter" data-level="2.2.2" data-path="data-overview.html"><a href="data-overview.html#pile-form-measurements"><i class="fa fa-check"></i><b>2.2.2</b> Pile Form Measurements</a></li>
+<li class="chapter" data-level="2.2.3" data-path="data-overview.html"><a href="data-overview.html#image-annotation-comparison"><i class="fa fa-check"></i><b>2.2.3</b> Image-Annotation Comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="data-overview.html"><a href="data-overview.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="data-overview.html"><a href="data-overview.html#psinf-mixed-conifer-site"><i class="fa fa-check"></i><b>2.3.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.3.2" data-path="data-overview.html"><a href="data-overview.html#trfo-blm-pinyon-juniper-site"><i class="fa fa-check"></i><b>2.3.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.3.3" data-path="data-overview.html"><a href="data-overview.html#bhef-ponderosa-pine-site"><i class="fa fa-check"></i><b>2.3.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.3.4" data-path="data-overview.html"><a href="data-overview.html#arnf-ponderosa-pine-site"><i class="fa fa-check"></i><b>2.3.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="data-overview.html"><a href="data-overview.html#slash-pile-rgb-imagery"><i class="fa fa-check"></i><b>2.4</b> Slash Pile RGB Imagery</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="data-overview.html"><a href="data-overview.html#psinf-mixed-conifer-site-1"><i class="fa fa-check"></i><b>2.4.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.4.2" data-path="data-overview.html"><a href="data-overview.html#trfo-blm-pinyon-juniper-site-1"><i class="fa fa-check"></i><b>2.4.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.4.3" data-path="data-overview.html"><a href="data-overview.html#bhef-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.4.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.4" data-path="data-overview.html"><a href="data-overview.html#arnf-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.4.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.5" data-path="data-overview.html"><a href="data-overview.html#all"><i class="fa fa-check"></i><b>2.4.5</b> All</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>3</b> Point Cloud Processing</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>3.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#psinf-mixed-conifer-site-2"><i class="fa fa-check"></i><b>3.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="3.1.2" data-path="ptcld_process.html"><a href="ptcld_process.html#trfo-blm-pinyon-juniper-site-2"><i class="fa fa-check"></i><b>3.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="3.1.3" data-path="ptcld_process.html"><a href="ptcld_process.html#bhef-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>3.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="3.1.4" data-path="ptcld_process.html"><a href="ptcld_process.html#arnf-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>3.1.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="ptcld_process.html"><a href="ptcld_process.html#clean-up"><i class="fa fa-check"></i><b>3.2</b> Clean Up</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="raster_watershed.html"><a href="raster_watershed.html"><i class="fa fa-check"></i><b>4</b> Geometry-based Slash Pile Detection</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="raster_watershed.html"><a href="raster_watershed.html#demonstration-area"><i class="fa fa-check"></i><b>4.1</b> Demonstration Area</a></li>
+<li class="chapter" data-level="4.2" data-path="raster_watershed.html"><a href="raster_watershed.html#segmentation-methods"><i class="fa fa-check"></i><b>4.2</b> Segmentation Methods</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="raster_watershed.html"><a href="raster_watershed.html#overview-of-methods"><i class="fa fa-check"></i><b>4.2.1</b> Overview of Methods</a></li>
+<li class="chapter" data-level="4.2.2" data-path="raster_watershed.html"><a href="raster_watershed.html#watershed-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.2</b> Watershed Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.3" data-path="raster_watershed.html"><a href="raster_watershed.html#dbscan-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.3</b> DBSCAN Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.4" data-path="raster_watershed.html"><a href="raster_watershed.html#comparison-of-candidate-segments"><i class="fa fa-check"></i><b>4.2.4</b> Comparison of Candidate Segments</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="raster_watershed.html"><a href="raster_watershed.html#candidate-shape-refinement-and-area-filtering"><i class="fa fa-check"></i><b>4.3</b> Candidate Shape Refinement and Area filtering</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="raster_watershed.html"><a href="raster_watershed.html#watershed-segmentation"><i class="fa fa-check"></i><b>4.3.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.3.2" data-path="raster_watershed.html"><a href="raster_watershed.html#dbscan-segmentation"><i class="fa fa-check"></i><b>4.3.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.3.3" data-path="raster_watershed.html"><a href="raster_watershed.html#quick-methods-comparison"><i class="fa fa-check"></i><b>4.3.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="raster_watershed.html"><a href="raster_watershed.html#candidate-geometric-filtering"><i class="fa fa-check"></i><b>4.4</b> Candidate Geometric filtering</a>
+<ul>
+<li class="chapter" data-level="4.4.1" data-path="raster_watershed.html"><a href="raster_watershed.html#shape-irregularity-convexity"><i class="fa fa-check"></i><b>4.4.1</b> Shape Irregularity: Convexity</a></li>
+<li class="chapter" data-level="4.4.2" data-path="raster_watershed.html"><a href="raster_watershed.html#shape-irregularity-circularity"><i class="fa fa-check"></i><b>4.4.2</b> Shape Irregularity: Circularity</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</h1>
+<p class="author"><em>George Woolsey</em></p>
+<p class="date"><em>06 January, 2026</em></p>
+</div>
+<div id="introduction" class="section level1 hasAnchor" number="1">
+<h1><span class="header-section-number">Section 1</span> Introduction<a href="index.html#introduction" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Code in support of “A General Method using UAS Data for Automated Slash Pile Detection and Quantification”</p>
+<p>Increasing active forest management activities generate non-commercial residues (slash) that are often aggregated into piles for disposal. However, pile burning is associated with increased operational costs and significant external environmental costs (<a href="https://doi.org/10.1016/j.foreco.2021.119251">Mott et al., 2021</a>; <a href="https://doi.org/10.3389/ffgc.2024.1496190">Barker et al., 2025</a>; <a href="https://doi.org/10.1016/j.tfp.2025.101081">Axlund et al., 2025</a>), motivating the need for improved quantification and management. While remote sensing techniques using point clouds consistently offer improved pile quantification accuracy over traditional field methods (<a href="https://doi.org/10.1139/cjfr-2013-0281">Trofymow et al., 2014</a>; <a href="https://doi.org/10.3389/ffgc.2025.1663753">Guth et al., 2025</a>), there is a lack of automated methods for simultaneously detecting and quantifying piles across an broad treatment extents. To overcome this we propose a geometry-based, rules-based framework that leverages the proven success of object segmentation frameworks in CWD (e.g. <a href="https://doi.org/10.3390/rs17040651">dos Santos et al., 2025</a>) and tree detection (e.g. <a href="https://doi.org/10.3390/rs16203844">Tinkham &amp; Woolsey, 2024</a>) and offers superior managerial relevance due to its inherent traceability and direct alignment with known pile construction parameters defined in silvicultural prescriptions.</p>
+<div id="objective" class="section level2 hasAnchor" number="1.1">
+<h2><span class="header-section-number">1.1</span> Objective<a href="index.html#objective" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The objective of this study is to present a training-free, rules-based methodology for identifying slash piles from UAS data. The presented approach aims to enable high transferability by using user-defined geometric and size thresholds to identify pile candidates from aerial point cloud data, which can then be refined through a data fusion process incorporating spectral (i.e. RGB) data when available.</p>
+</div>
+<div id="data_desc" class="section level2 hasAnchor" number="1.2">
+<h2><span class="header-section-number">1.2</span> Data<a href="index.html#data_desc" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We have remote sensing data acquired from a UAS platform and accompanying ground truth data for four different study sites. For all study sites we have:</p>
+<ul>
+<li>Aerial RGB imagery captured by a UAS platform</li>
+<li>Aerial point cloud data generated by processing the UAS imagery using digital aerial photogrammetry (DAP) techniques (specifically, structure from motion [SfM])</li>
+<li>Image-annotated slash pile perimeters digitized in a Geographic Information System (GIS) using field-collected point locations as a guide overlaid on the UAS-collected RGB imagery</li>
+</ul>
+<p>For the one study site only we have:
+* Field-collected slash pile point locations with height and diameter measurements</p>
+<p>Data from all study sites will be used to validate the slash pile detection methodology. Data from the study site with field-collected pile measurements will be used to test the slash pile quantification accuracies acheived by the proposed methodology.</p>
+<p>The following table provides an overview of the four sites utilized in this study, detailing the unique characteristics of each location and how the data was collected. We structured the validation effort to compare performance across a wide spectrum of data collection platforms, pile sizes, construction methods, and surrounding vegetation types, which required specific parameter adaptations for each site. This summary highlights the distinct ecological and structural challenges inherent to each evaluation site.</p>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Site Name</th>
+<th align="left">Pile Type</th>
+<th align="left">Validation Data Type</th>
+<th align="left">Unique Features &amp; Ecology</th>
+<th align="left">Data Collection (UAS Platform &amp; Parameters)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>PSINF Mixed Conifer Site</strong></td>
+<td align="left">Hand Piles and smaller machine piles</td>
+<td align="left">Image-annotated footprints and field-measured height and diameter</td>
+<td align="left">Located in the Pike and San Isabel National Forest (PSINF) in CO, US. Mixed conifer stand with variable ground cover and canopy density.</td>
+<td align="left">Switchblade-Elite (Vision Aerial) with 24.2 MP RGB sensor (16 mm lens). Altitude xx m, 90% forward and 85% side overlap, 4 m/s speed.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>TRFO-BLM Pinyon-Juniper Site</strong></td>
+<td align="left">Hand Piles</td>
+<td align="left">Image-annotated footprints based on field collected point locations</td>
+<td align="left">Located on BLM land in CO, US. Arid environment with dry vegetation including standing dead pinyon-juniper. Piles are smaller, simpler, and hand-stacked.</td>
+<td align="left">Freefly Astro with Sony ILX-LR1 (35mm lens). Altitude 243.84 m (terrain following), 85% forward and 80% side overlap.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>BHEF Ponderosa Pine Site</strong></td>
+<td align="left">Machine Piles</td>
+<td align="left">Image-annotated footprints</td>
+<td align="left">Located in the Black Hills Experimental Forest (BHEF) in SD, US. Piles are massive, mechanically built, and irregularly shaped (e.g. not necessarily circular). Tree regeneration is expected.</td>
+<td align="left">DJI Phantom 4 Pro with 20 MP RGB sensor (8.8 mm lens). Altitude 80 m, 90% forward and 85% side overlap, 4 m/s speed.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>ARNF Ponderosa Pine Site</strong></td>
+<td align="left">Machine Piles</td>
+<td align="left">Image-annotated footprints</td>
+<td align="left">Located in the Arapahoe and Roosevelt National Forest (ARNF) in CO, US. Ponderosa pine forest with a climate similar to PSINF. Machine piles are massive but more circular and regular. Less regeneration is expected.</td>
+<td align="left">Switchblade-Elite (Vision Aerial) with 24.2 MP RGB sensor (16 mm lens). Altitude xx m, 90% forward and 85% side overlap, 4 m/s speed.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="analysis-plan" class="section level2 hasAnchor" number="1.3">
+<h2><span class="header-section-number">1.3</span> Analysis Plan<a href="index.html#analysis-plan" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We will follow the general analysis outline in five distinct sections:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Data Overview:</strong> We will detail the study sites, summarize the number of piles and the pile size based on available measurements, and review the RGB orthomosaic data</li>
+<li><strong>Point Cloud Processing:</strong> We will demonstrate how to process the point cloud data to generate the required inputs for the propose pile detection method.</li>
+<li><strong>Geometry-based Slash Pile Detection:</strong> We will detail the geometry-based slash pile detection method which uses user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data.</li>
+<li><strong>Spectral Refinement Methodology:</strong> We will detail the complementary spectral refinement methodology which uses RGB data to filter the structurally-detected candidate piles.</li>
+<li><strong>Structural-Only Methodology Evaluation:</strong> We will evaluate the accuracy of the structural-only methodology in terms of slash pile detection (F-score, Recall, Precision) across four distinct treatment units spanning unique prescriptions and forest types.</li>
+<li><strong>Data Fusion Methodology Evaluation:</strong> We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile detection (F-score, Recall, Precision) when using spectral data to refine predictions.</li>
+<li><strong>Sensitivity Analysis:</strong> Finally, we will perform a sensitivity analysis on the key user-defined parameters of the proposed method to systematically quantify the impact of each varied parameter on the stability and performance of the slash pile detection.</li>
+</ol>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+<a href="data-overview.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
