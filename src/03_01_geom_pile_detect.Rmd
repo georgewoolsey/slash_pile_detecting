@@ -1027,7 +1027,7 @@ get_segs_dbscan <- function(
 #   terra::plot(legend = F, col = grDevices::rainbow(n=111) %>% sample() )
 
 ############################################################################
-# intermediate function to check string
+# intermediate function to check string method
 ############################################################################
   # check the `method` argument
   check_segmentation_method <- function(method) {
@@ -1178,7 +1178,7 @@ get_segmentation_candidates <- function(
   # get_segmentation_params
   ########################
   # get_segmentation_params
-  get_segmentation_params_ans <- get_segmentation_params(
+  seg_params_ans <- get_segmentation_params(
       max_ht_m = max_ht_m
       , min_ht_m = min_ht_m
       , min_area_m2 = min_area_m2
@@ -1187,12 +1187,67 @@ get_segmentation_candidates <- function(
       , rast_res_m = terra::res(slice_chm_rast)[1]
     )
   # # huh?
-  # dplyr::glimpse(get_segmentation_params_ans)
+  # dplyr::glimpse(seg_params_ans)
   
   ########################
-  # get_segmentation_params
+  # segmentation
   ########################
+  if(check_segmentation_method_ans=="watershed"){
+    # ?EBImage::watershed
+    segs_rast <- lidR::watershed(
+      chm = slice_chm_rast
+      # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
+      , th_tree = 0.01
+      # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
+        # and the point where it contacts another object (checked for every contact pixel). 
+        # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
+        # Tolerance should be chosen according to the range of x
+      , tol = seg_params_ans$watershed$tol # max_ht_m-min_ht_m
+      # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
+        # Higher value smoothes out small objects.
+      , ext = seg_params_ans$watershed$ext # 1
+    )()
+    # match names of get_segs_dbscan()
+    names(segs_rast) <- "cluster"
+  }else if(check_segmentation_method_ans=="dbscan"){
+    segs_rast <- get_segs_dbscan(
+      chm_rast = slice_chm_rast
+      , eps = seg_params_ans$dbscan$eps
+      , minPts = seg_params_ans$dbscan$minPts
+    )
+  }else{
+    stop("incorrect method selected")
+  }
+  
+  # na check
+  if(
+    as.numeric(terra::global(segs_rast, fun = "isNA")) == terra::ncell(segs_rast) 
+  ){
+    warning("no segmentation candidates detected")
+  }
+  
+  ########################
+  # rast to poly
+  ########################
+  segs_sf <- rast_to_poly(segs_rast)
+  
+  ########################
+  # return
+  ########################
+  return(list(
+    segs_rast = segs_rast
+    , segs_sf = segs_sf
+  ))
 }
+
+# get_segmentation_candidates(
+#   chm_rast = aoi_chm_rast
+#   , method = "dbscan"
+#   , min_ht_m = 1
+#   , max_ht_m = 4
+#   , min_area_m2 = 1.5^2
+#   , max_area_m2 = 55
+# )
 ```
 
 
