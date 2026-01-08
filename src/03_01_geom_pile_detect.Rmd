@@ -25,15 +25,15 @@ mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions =
 # boundary
 aoi_boundary <- 
   psinf_slash_piles_polys %>% 
-  # dplyr::filter(pile_id == 195) %>%
-  dplyr::filter(pile_id == 74) %>%
-  # dplyr::filter(pile_id == 73) %>%
+  # dplyr::filter(pile_id == 195) %>% # machine
+  # dplyr::filter(pile_id == 74) %>% # hand
+  dplyr::filter(pile_id == 71) %>% # hand
   # arnf_slash_piles_polys %>% 
   # dplyr::filter(pile_id == 14) %>%
   sf::st_centroid() %>% 
   sf::st_buffer(
     # sqrt(9600/4) ## numerator = desired plot size in m2
-    sqrt(2000/4) ## numerator = desired plot size in m2
+    sqrt(4500/4) ## numerator = desired plot size in m2
     , endCapStyle = "SQUARE"
   ) %>%
   dplyr::mutate(dummy=1)
@@ -106,7 +106,7 @@ ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_012_chm_noleg.jpg
 
 here is the RGB of the example area. can you pick out the slash piles?
 
-```{r}
+```{r,eval=F}
 aoi_plt_ortho + 
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8)
 ```
@@ -902,6 +902,300 @@ dplyr::tibble(
 
 notice the dbscan segments cover a smaller area because noise points are identified and removed as part of the algorithm. in the next stage of our method, we'll include additional noise removal applied to both methodologies. In fact, all processing will be the same from here forward for both segementation methodologies.
 
+### Segmentation Function
+
+let's make a function to perform either the watershed (`lidR::watershed()`) or DBSCAN (`dbscan::dbscan()`) segmentation given an input CHM raster, target height range, and target area range. the output will include a raster and `sf` polygons of the candidate segments
+
+```{r}
+############################################################################
+# DBSCAN function
+# to align input of raster and output of raster as in lidR::watershed()
+# this enables dbscan, typically a point-based method, 
+# to be implemented with raster input data by using cell centroids
+############################################################################
+get_segs_dbscan <- function(
+  chm_rast
+  , eps
+  , minPts
+) {
+  ########################
+  # check raster
+  ########################
+  # convert to SpatRaster if input is from 'raster' package
+  if(
+    inherits(chm_rast, "RasterStack") 
+    || inherits(chm_rast, "RasterBrick")
+  ){
+    chm_rast <- terra::rast(chm_rast)
+  }else if(!inherits(chm_rast, "SpatRaster")){
+    stop("Input 'chm_rast' must be a SpatRaster from the `terra` package")
+  }
+  # first layer only
+  if(terra::nlyr(chm_rast)>1){warning("...only using first layer of raster stack for segmentation")}
+  chm_rast <- chm_rast %>% terra::subset(subset = 1)
+  # na check
+  if(
+    as.numeric(terra::global(chm_rast, fun = "isNA")) == terra::ncell(chm_rast) 
+    # || as.numeric(terra::global(chm_rast, fun = "isNA")) >= round(terra::ncell(chm_rast)*0.98)
+  ){
+    stop("Input 'chm_rast' has all missing values")
+  }
+  
+  ########################
+  # get cell centroids as points
+  ########################
+  ## XY df
+  xy_df_temp <- 
+    chm_rast %>% 
+    # na.rm = T ensures we only process cells with CHM data
+    terra::as.data.frame(xy = T, na.rm = T) %>% 
+    dplyr::rename(
+      X=x,Y=y
+      , f=3
+    ) %>% 
+    dplyr::select(X,Y)
+  # huh?
+  # xy_df_temp %>% dplyr::glimpse()
+  # ggplot2::ggplot(data = xy_df_temp, mapping = ggplot2::aes(x=X,y=Y)) + ggplot2::geom_point(shape=".")
+  
+  if(nrow(xy_df_temp)==0){stop("Input 'chm_rast' has all missing values")}
+  
+  ########################
+  # dbscan::dbscan()
+  ########################
+  # ?dbscan::dbscan
+  dbscan_ans_temp <- dbscan::dbscan(
+    x = xy_df_temp
+    # eps primarily controls the spatial extent of a cluster, 
+    # as it defines how far points can be from each other to be considered part of the same dense region.
+    , eps = eps
+    # minPts primarily controls the minimum density of a cluster, 
+    # as it dictates how many points must be packed together within that eps radius.
+    , minPts = minPts
+  )
+  # ensure the result is a vector with a `cluster` identifier for each point we provided to the algorithm
+  if(
+    !identical(
+      length(dbscan_ans_temp$cluster)
+      , nrow(xy_df_temp)
+    )
+  ){
+    stop("dbscan::dbscan() length mismatch")
+  }
+  # add the cluster identifier to the XY point data
+  xy_df_temp$cluster <- dbscan_ans_temp$cluster
+  # # what?
+  # xy_df_temp %>% 
+  #   dplyr::count(cluster) %>% 
+  #   dplyr::arrange(desc(n)) %>% 
+  #   head()
+  
+  if(
+    nrow( xy_df_temp %>% dplyr::filter(cluster!=0) ) == 0
+  ){
+    stop("dbscan::dbscan() result is all noise based on 'eps' and 'minPts'. try adjusting these parameters.")
+  }
+  
+  ########################
+  # back to raster data
+  ########################
+  # to maintain processing consistency with the watershed result
+    # we'll rasterize the XY data back to the original CHM grid
+    # this will result in a raster with cells segmented and given the unique identifier. 
+    # *Note*: the cells/segments classified as noise from the `dbscan::dbscan()` 
+    # algorithm are marked with a cluster identifier as "0"...we'll remove these prior to rasterizing
+  # fill the rast with the cluster values
+  dbscan_segs <- terra::rasterize(
+    x = xy_df_temp %>% 
+      dplyr::filter(cluster!=0) %>% 
+      sf::st_as_sf(coords = c("X", "Y"), crs = terra::crs(chm_rast), remove = F) %>%
+      dplyr::ungroup() %>% 
+      dplyr::select(cluster) %>% 
+      terra::vect()
+    , y = chm_rast
+    , field = "cluster"
+  ) %>% 
+  setNames("cluster")
+  # the result is a raster with cells segmented and given a unique identifier
+  # this is a raster
+  # dbscan_segs
+  return(dbscan_segs)
+}
+# # ?dbscan::dbscan
+# get_segs_dbscan(aoi_chm_rast_slice, minPts = 5, eps = 1) %>% 
+#   terra::as.factor() %>% 
+#   terra::plot(legend = F, col = grDevices::rainbow(n=111) %>% sample() )
+
+############################################################################
+# intermediate function to check string
+############################################################################
+  # check the `method` argument
+  check_segmentation_method <- function(method) {
+    if(!inherits(method,"character")){stop("no method")}
+      # clean method
+      method <- dplyr::coalesce(method, "") %>%
+        tolower() %>%
+        stringr::str_squish() %>% 
+        unique()
+      # potential methods
+      pot_methods <- c("watershed", "dbscan") %>% unique()
+      find_method <- paste(pot_methods, collapse="|")
+      # can i find one?
+      which_methods <- stringr::str_extract_all(string = method, pattern = find_method) %>%
+        unlist() %>%
+        unique()
+      # make sure at least one is selected
+      n_methods_not <- base::setdiff(
+          pot_methods
+          , which_methods
+        ) %>% 
+        length()
+      
+      if(n_methods_not>=length(pot_methods)){
+        stop(paste0(
+          "`method` parameter must be one of:\n"
+          , "    "
+          , paste(pot_methods, collapse=", ")
+        ))
+      }else{
+        return(which_methods)
+      }
+  }
+# check_segmentation_method(c("watershed", "dbscn", "dbsca"))
+# check_segmentation_method("dbscn")
+
+############################################################################
+# intermediate function to convert rast to polygon
+############################################################################
+rast_to_poly <- function(rast){
+  # ?terra::as.polygons
+  rast %>% 
+    terra::subset(1) %>% 
+    terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+    setNames("pred_id") %>%
+    sf::st_as_sf() %>% 
+    sf::st_simplify() %>% 
+    sf::st_make_valid() %>%
+    dplyr::filter(sf::st_is_valid(.))  
+}
+############################################################################
+# full segmentation function
+# given an input CHM raster, target height range, and target area range. 
+# the output will include a raster and `sf` polygons of the candidate segments
+# automatically adjusts segmentation method parameters using get_segmentation_params()
+############################################################################
+get_segmentation_candidates <- function(
+  chm_rast
+  , method = "watershed" # "watershed" or "dbscan"
+  , max_ht_m
+  , min_ht_m
+  , min_area_m2
+  , max_area_m2
+){
+  ########################
+  # threshold checks
+  ########################
+  max_ht_m <- max_ht_m[1] 
+  min_ht_m <- min_ht_m[1] 
+  min_area_m2 <- min_area_m2[1] 
+  max_area_m2 <- max_area_m2[1] 
+  if(
+    (is.na(tryCatch(as.numeric(max_ht_m), error = function(e) NA)) || 
+     identical(as.numeric(max_ht_m), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(max_ht_m), error = function(e) NA))) ||
+    (is.na(tryCatch(as.numeric(min_ht_m), error = function(e) NA)) || 
+     identical(as.numeric(min_ht_m), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(min_ht_m), error = function(e) NA))) ||
+    (is.na(tryCatch(as.numeric(max_area_m2), error = function(e) NA)) || 
+     identical(as.numeric(max_area_m2), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(max_area_m2), error = function(e) NA))) ||
+    (is.na(tryCatch(as.numeric(min_area_m2), error = function(e) NA)) || 
+     identical(as.numeric(min_area_m2), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(min_area_m2), error = function(e) NA))) ||
+    !(as.numeric(max_ht_m) > as.numeric(min_ht_m)) ||
+    !(as.numeric(max_area_m2) > as.numeric(min_area_m2)) ||
+    as.numeric(max_ht_m)<0 ||
+    as.numeric(min_ht_m)<0 ||
+    as.numeric(min_area_m2)<0 ||
+    as.numeric(max_area_m2)<0
+  ){
+    # Code to execute if any condition is met (e.g., print an error message)
+    stop("Error: One or more of `max_ht_m`,`min_ht_m`,`min_area_m2`,`max_area_m2` are not valid numbers, or the conditions max_area_m2>min_area_m2 or max_ht_m>min_ht_m are not met.")
+  }else{
+    max_ht_m <- as.numeric(max_ht_m)[1] 
+    min_ht_m <- as.numeric(min_ht_m)[1] 
+    min_area_m2 <- as.numeric(min_area_m2)[1] 
+    max_area_m2 <- as.numeric(max_area_m2)[1] 
+  }
+  
+  ########################
+  # check raster
+  ########################
+  # convert to SpatRaster if input is from 'raster' package
+  if(
+    inherits(chm_rast, "RasterStack") 
+    || inherits(chm_rast, "RasterBrick")
+  ){
+    chm_rast <- terra::rast(chm_rast)
+  }else if(!inherits(chm_rast, "SpatRaster")){
+    stop("Input 'chm_rast' must be a SpatRaster from the `terra` package")
+  }
+  # first layer only
+  if(terra::nlyr(chm_rast)>1){warning("...only using first layer of raster stack for segmentation")}
+  chm_rast <- chm_rast %>% terra::subset(subset = 1)
+  # na check
+  if(
+    as.numeric(terra::global(chm_rast, fun = "isNA")) == terra::ncell(chm_rast) 
+    # || as.numeric(terra::global(chm_rast, fun = "isNA")) >= round(terra::ncell(chm_rast)*0.98)
+  ){
+    stop("Input 'chm_rast' has all missing values")
+  }
+  
+  ########################
+  # check method
+  ########################
+  check_segmentation_method_ans <- check_segmentation_method(method = method)
+  if(length(check_segmentation_method_ans)>1){
+    warning(
+      paste0( "...using only ", check_segmentation_method_ans[1], " method for segmentation")
+    )
+  }
+  check_segmentation_method_ans <- check_segmentation_method_ans[1]
+  
+  ########################
+  # slice CHM
+  ########################
+  # lower CHM slice
+  slice_chm_rast <- terra::clamp(aoi_chm_rast, upper = max_ht_m, lower = 0, values = F)
+  # na check
+  if(
+    as.numeric(terra::global(slice_chm_rast, fun = "isNA")) == terra::ncell(slice_chm_rast) 
+  ){
+    stop("Input 'chm_rast' has no values at or below 'max_ht_m' value")
+  }
+  
+  ########################
+  # get_segmentation_params
+  ########################
+  # get_segmentation_params
+  get_segmentation_params_ans <- get_segmentation_params(
+      max_ht_m = max_ht_m
+      , min_ht_m = min_ht_m
+      , min_area_m2 = min_area_m2
+      , max_area_m2 = max_area_m2
+      # , pts_per_m2 = NULL
+      , rast_res_m = terra::res(slice_chm_rast)[1]
+    )
+  # # huh?
+  # dplyr::glimpse(get_segmentation_params_ans)
+  
+  ########################
+  # get_segmentation_params
+  ########################
+}
+```
+
+
 ## Candidate Shape Refinement and Area filtering
 
 to better align the segmentation results with real-world pile construction we'll now simplify candidate segments composed of multiple separate parts representing a single identified feature (i.e. "multi-polygon" candidate segments. We'll simplify these segments by retaining only the largest contiguous portion using `cloud2trees` functionality. Because slash piles are constructed as distinct, isolated objects to prevent tree mortality during burning, this refinement step isolates the primary candidate body to eliminate detached noise and ensure each segment represents a discrete physical object before area-based filtering
@@ -1664,7 +1958,7 @@ compare the MBC shape to the raw polygons
 p1_temp <- ggplot2::ggplot() +
   ggplot2::geom_sf(
     data = watershed_segs_poly_mbc, mapping=ggplot2::aes(color="min. bounding circle")
-    , fill = NA, lwd = 2
+    , fill = NA, lwd = 1.5
   ) + 
   ggplot2::geom_sf(
     data = watershed_segs_poly, mapping=ggplot2::aes(color="raw polygons")
@@ -1681,7 +1975,7 @@ p1_temp <- ggplot2::ggplot() +
 p2_temp <- ggplot2::ggplot() +
   ggplot2::geom_sf(
     data = dbscan_segs_poly_mbc, mapping=ggplot2::aes(color="min. bounding circle")
-    , fill = NA, lwd = 2
+    , fill = NA, lwd = 1.5
   ) + 
   ggplot2::geom_sf(
     data = dbscan_segs_poly, mapping=ggplot2::aes(color="raw polygons")
@@ -2792,13 +3086,11 @@ dplyr::tibble(
     , escape = F
   ) %>% 
   kableExtra::kable_styling()
-
-
 ```
 
-wow that is a lot of filtering
+wow that is a lot of filtering, but it looks like the result for this demonstration area is decently accurate (we'll perform full validation of the method later). That is, there are no false positive predictions (commission errors) and few false negative predictions (omission errors)
 
-## Watershed Pile Detection Function{#slash_pile_detect_watershed}
+## Pile Detection Function{#slash_pile_detect_watershed}
 
 The rule-based method for slash pile detection using CHM raster data we reviewed above generally follows this outline:
 
@@ -2887,39 +3179,10 @@ slash_pile_detect_watershed <- function(
     terra::subset(subset = 1) %>% 
     terra::clamp(upper = max_ht_m, lower = 0, values = F)
   
-  # could make this a parameter
-  # could automatically adjust for raster cell size: 
-    # higher res (smaller cell size) get bigger ws, lower res (larger cell size) get smaller/no ws???
-  # get resolution which will be used to test against the minimum expected pile area
-  chm_res <- max(terra::res(chm_rast)[1:2],na.rm = T)
-  
-  ws_for_smooth <- ws_for_smooth_fn(chm_res = chm_res, min_area_m2 = min_area_m2) # 3 # needs to be the same for the watershed seg and CHM smooth
-  # search_area = (res^2) * (ws^2)
-  
   ########################################################################################
-  ## 1) watershed segmentation
+  ## 1) Segmentation
   ########################################################################################
-    # let's run watershed segmentation using `lidR::watershed()` which is based on the bioconductor package `EBIimage`
-    # return is a raster with the first layer representing the identified watershed segments
-    watershed_ans <- lidR::watershed(
-        chm = chm_rast
-        , th_tree = min(0.1,min_ht_m)
-      )()
-    names(watershed_ans) <- "pred_id"
-
-    # vectors of segments
-    watershed_ans_poly <-
-      watershed_ans %>% 
-      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
-      setNames("pred_id") %>%
-      sf::st_as_sf() %>% 
-      sf::st_simplify() %>% 
-      sf::st_make_valid() %>% 
-      dplyr::filter(sf::st_is_valid(.)) %>% 
-      # simplify multipolygons by keeping the largest polygon of each multipolygon
-      dplyr::mutate(treeID=pred_id) %>% 
-      cloud2trees::simplify_multipolygon_crowns() %>% 
-      dplyr::select(-treeID)
+    
 
   ########################################################################################
   ## 2) irregularity filtering
