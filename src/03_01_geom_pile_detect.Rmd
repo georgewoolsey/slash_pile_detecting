@@ -224,18 +224,26 @@ We developed dynamic logic to automatically bridge the gap between the expectati
 
 | Method | Parameter | Parameter Description | Our Dynamic Logic (R-style pseudo-code) | Logic Explanation | Why our dynamic logic works |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.50` | Subtract the min height from the max height and take 50% of that total range. | Adapts vertical sensitivity to the "range of x," preventing minor height fluctuations from creating false objects. |
-| **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(1, round((sqrt(min_area_m2 / pi) * 0.5) / res))` | Calculate the target's radius, halve it, then divide by the pixel size to get a pixel count (minimum of 1). | Uses half the target radius to increase local sensitivity, allowing the algorithm to find distinct seeds in crowded areas. |
-| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(density)), (sqrt(min_area_m2 / pi) * 0.50))` | Take the smaller of: 1.5 the average point spacing OR 50% of the target's physical radius. | Bridges gaps between points while capping the radius at 50% of the target diameter to ensure objects remain spatially separated. |
-| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * density) * (eps^2 / (min_area_m2 / pi)))` | Multiply total expected points by the ratio of the search circle area to the total target area. | Adjusts the minimum point threshold to ensure that core points are only identified where the local cluster is as dense as the actual target object is expected to be. |
+| **Watershed** | `tol` | Minimum height difference to distinguish objects. | `(max_ht_m - min_ht_m) * 0.50` | Sets the vertical threshold at 50% of the target's defined Z search space. | Prevents over-segmentation by requiring vertical "valleys" to be significant relative to the target's height. |
+| **Watershed** | `ext` | Radius of the search window for detecting seeds. | `max(1, round((target_radius_m * 0.5) / rast_res_m))` | Uses 50% of the target radius as the search window, converted to pixels with a 1-pixel minimum. | Maintains a consistent physical search area regardless of raster resolution, ensuring seeds are centered on objects. |
+| **DBSCAN** | `eps` | Maximum distance to consider points as neighbors. | `min(1.5 * (1/sqrt(pts_per_m2)), (target_radius_m * 0.5 * 0.5))` | Selects the smaller of 1.5-times the point spacing or 50% of the effective radius (25% of target radius). | Ensures the point-search stays localized, effectively preventing separate objects from "bridging" together. |
+| **DBSCAN** | `minPts` | Minimum points required to form a cluster core. | `round((min_area_m2 * pts_per_m2) * (eps^2 / (target_radius_m^2)))` | Scales total expected points by the ratio of the search circle area to the total target area. | Dynamically adjusts the density threshold based on the search radius, allowing for consistent detection across varying data densities. |
 
 let's define a function to get these parameters based on the user-defined size thresholds and the input data description
 
 ```{r}
+target_radius_m <- sqrt(min_area_m2 / pi)
+effective_radius_m <- target_radius_m * 0.5
+ext_val <- max(1, round(effective_radius_m / rast_res_m))
+spacing <- 1 / sqrt(pts_per_m2)
+connectivity_eps <- 1.5 * spacing
+max_allowable_eps <- effective_radius_m * 0.5
+eps_val <- min(connectivity_eps, max_allowable_eps)
+  
 # function to get segmentation parameters
 get_segmentation_params <- function(
-  max_ht_m
-  , min_ht_m
+  min_ht_m
+  , max_ht_m
   , min_area_m2
   , max_area_m2
   , pts_per_m2 = NULL
@@ -376,12 +384,12 @@ get_segmentation_params(
 
 the table summarizes how our rules-based approach creates dynamic parameters for use in watershed and DBSCAN segmentation. The height parameters manage vertical noise, the area parameters manage horizontal separation, and the data resolution parameters ensure the math stays consistent regardless of data density (raster resolution or point cloud point density).
 
-| Dynamic Parameter | Impact of Height (`max_ht_m` / `min_ht_m`) | Impact of Target Area (`min_area_m`) | Impact of Data Resolution (`res` / `density`) |
+| Dynamic Parameter | Impact of Height (`max_ht_m` / `min_ht_m`) | Impact of Target Area (`min_area_m2`) | Impact of Data Structure (`rast_res_m` / `pts_per_m2`) |
 | :--- | :--- | :--- | :--- |
-| **Watershed `tol`** | **Direct Driver:** Sets the vertical threshold at 50% of the target's height range. | **None:** Vertical tolerance is independent of horizontal footprint. | **None:** Vertical sensitivity is independent of horizontal resolution. |
-| **Watershed `ext`** | **None:** Horizontal search window is independent of vertical range. | **Geometric Baseline:** Defines the physical radius used to scale the search window. | **Spatial Divider:** Converts the physical radius into a specific pixel count for the image matrix. |
-| **DBSCAN `eps`** | **None:** Point-to-point connectivity is independent of height. | **Physical Cap:** Provides a half-radius limit to prevent clusters from merging across objects. | **Connectivity Anchor:** Sets the search radius based on the average distance between points/raster cell centroids |
-| **DBSCAN `minPts`** | **None:** Required point mass is independent of vertical range. | **Total Mass Baseline:** Defines the total expected points for the smallest valid target. | **Density Multiplier:** Calculates the local point count requirement relative to the data density. |
+| **Watershed `tol`** | **Direct Driver:** Sets the vertical threshold at 50% of the target's defined Z search space. | **None:** Vertical tolerance is independent of horizontal footprint. | **None:** Vertical sensitivity is independent of horizontal resolution. |
+| **Watershed `ext`** | **None:** Horizontal search window is independent of vertical range. | **Geometric Baseline:** Defines the physical radius used to scale the search window at a 1:2 ratio. | **Spatial Divider:** Converts the physical radius into a pixel count using `rast_res_m` with a 1-pixel minimum. |
+| **DBSCAN `eps`** | **None:** Point-to-point connectivity is independent of height. | **Physical Cap:** Limits search distance to 50% of the effective radius (25% of target radius) to ensure separation. | **Connectivity Anchor:** Sets the search radius at 1.5-times the spacing derived from `pts_per_m2` to maintain tight clusters. |
+| **DBSCAN `minPts`** | **None:** Required point mass is independent of vertical range. | **Total Mass Baseline:** Defines the total expected points for the smallest valid target. | **Density Multiplier:** Calculates the local point count requirement relative to the `pts_per_m2` value. |
 
 ```{r}
 sim_df_temp <-
@@ -1087,8 +1095,8 @@ rast_to_poly <- function(rast){
 get_segmentation_candidates <- function(
   chm_rast
   , method = "watershed" # "watershed" or "dbscan"
-  , max_ht_m
   , min_ht_m
+  , max_ht_m
   , min_area_m2
   , max_area_m2
 ){
@@ -1120,7 +1128,7 @@ get_segmentation_candidates <- function(
     as.numeric(max_area_m2)<0
   ){
     # Code to execute if any condition is met (e.g., print an error message)
-    stop("Error: One or more of `max_ht_m`,`min_ht_m`,`min_area_m2`,`max_area_m2` are not valid numbers, or the conditions max_area_m2>min_area_m2 or max_ht_m>min_ht_m are not met.")
+    stop("Error: One or more of `min_ht_m`,`max_ht_m`,`min_area_m2`,`max_area_m2` are not valid numbers, or the conditions max_area_m2>min_area_m2 or max_ht_m>min_ht_m are not met.")
   }else{
     max_ht_m <- as.numeric(max_ht_m)[1] 
     min_ht_m <- as.numeric(min_ht_m)[1] 
@@ -1237,6 +1245,8 @@ get_segmentation_candidates <- function(
   return(list(
     segs_rast = segs_rast
     , segs_sf = segs_sf
+    , slice_chm_rast = slice_chm_rast
+    , seg_mthd_params = seg_params_ans
   ))
 }
 
@@ -1250,6 +1260,11 @@ get_segmentation_candidates <- function(
 # )
 ```
 
+our `get_segmentation_candidates()` is the workhorse of our methodology. it includes all input data and parameter (e.g. height, area thresholds) checks and includes the following processing steps:
+
+1) *CHM Height Filtering*: A maximum height filter is applied to the CHM to retaining only raster cells below a maximum expected slash pile height (e.g. 4 m), isolating a "slice" of the CHM.
+2) *Segmentation Method Setup*: Applies the dynamic parameter logic used in the Watershed or DBSCAN segmentation method. This logic ensures scale-invariant object detection by maintaining constant proportions between the algorithm search windows and the physical dimensions of the target object. This dynamic approach allows the method parameters to adapt automatically to the input data resolution so that the resulting candidate segments remain spatially consistent with target objects.
+3) *Candidate Segmentation*: Watershed or DBSCAN segmentation is performed on the filtered CHM raster to identify and delineate initial candidate piles based on their structural form.
 
 ## Candidate Shape Refinement and Area filtering
 
@@ -3150,283 +3165,210 @@ wow that is a lot of filtering, but it looks like the result for this demonstrat
 The rule-based method for slash pile detection using CHM raster data we reviewed above generally follows this outline:
 
 * *CHM Generation*: A Canopy Height Model (CHM) is generated from the point cloud data. The CHM is generated by removing the ground surface effectively representing a Digital Surface Model (DSM) without ground, ensuring all values are heights above bare earth.
-* *CHM Height Filtering*: A maximum height filter is applied to the CHM to retaining only raster cells below a maximum expected slash pile height (e.g. 4 m), isolating a "slice" of the CHM. A final step includes filtering candidate segments based on an expected minimum height threshold as well to remove any piles shorter than this expectation.
-* *Candidate Segmentation*: Watershed segmentation is performed on the filtered CHM raster to identify and delineate initial candidate piles based on their structural form.
-* *First Irregularity Filtering*: Candidate pile locations are initially filtered to remove highly irregular shapes by assessing their overlap with their convex hull (e.g. >70% overlap). This step helps exclude lower tree branches (objects with holes in the lower CHM slice) and unorganized coarse woody debris.
-* *Area Filtering*: A filter is applied based on the minimum and maximum expected pile areas.
-* *Circularity Filtering*: A final geometric screen uses least squares circle fitting on each candidate pile, removing any that do not have a strong overlap (based on an Intersection over Union, or IoU, threshold) with the best-fit circle (e.g., >50%). This removes non-circular features such as rectangular boulders and downed tree stems.
-* *Shape Refinement & Overlap Removal*: Lastly, segments are smoothed using their convex hull to remove the "blocky" raster edges (like they were made in Minecraft). Overlapping convex hull shapes are then removed to prevent false positives from clustered small trees or shrubs, ensuring singular pile detections.
+* *CHM Height Filtering*: A maximum height filter is applied to the CHM to retaining only raster cells below a maximum expected slash pile height (e.g. 4 m), isolating a "slice" of the CHM.
+* *Segmentation Method Setup*: Applies the dynamic parameter logic used in the Watershed or DBSCAN segmentation method. This logic ensures scale-invariant object detection by maintaining constant proportions between the algorithm search windows and the physical dimensions of the target object. This dynamic approach allows the method parameters to adapt automatically to the input data resolution so that the resulting candidate segments remain spatially consistent with target objects.
+* *Candidate Segmentation*: Watershed or DBSCAN segmentation is performed on the filtered CHM raster to identify and delineate initial candidate piles based on their structural form.
+* *Shape Refinement & Area Filtering*: To align segmentation results with real-world pile construction, we simplify candidate segments by retaining only their largest contiguous portion to eliminate detached noise and ensure each feature represents a discrete physical object. The results are then filtered based on the area expectations.
+* *Shape Irregularity: Convexity Filtering*: Candidate pile locations are filtered to remove highly irregular shapes by assessing their overlap with their convex hull. This process removes irregular objects like branched tree crowns or segments with holes while allowing solid, regular shapes (e.g. circles, rectangles, triangles) to pass.
+* *Circularity Filtering*: A circularity filter is applied to measure a shape's dispersion by dividing the candidate polygon area by the area of its minimum bounding circle. This second-stage shape irregularity filter targets the round bases typical of manual construction by penalizing elongated or non-circular shapes that do not adequately fill their circumcircle.
+* *Final Shape Refinement & Overlap Removal*: Lastly, segments are smoothed using their convex hull to remove the "blocky" raster edges (like they were made in Minecraft). Overlapping convex hull shapes are then removed to prevent false positives from clustered small trees or shrubs, ensuring singular pile detections.
 
 Let's package all of the steps we demonstrated when [formulating the methodology](#raster_watershed) into a single function which can possibly be integrated into the `cloud2trees` package.
 
 The parameters are defined as follows:
 
-* `max_ht_m` : numeric. The maximum height (in meters) a slash pile is expected to be. This value helps us focus on a specific "slice" of the data, ignoring anything taller than a typical pile.
 * `min_ht_m` : numeric. The minimum height (in meters) a detected pile must reach to be considered valid.
+* `max_ht_m` : numeric. The maximum height (in meters) a slash pile is expected to be. This value helps us focus on a specific "slice" of the data, ignoring anything taller than a typical pile.
 * `min_area_m2` : numeric. The smallest 2D area (in square meters) a detected pile must cover to be considered valid.
 * `max_area_m2` : numeric. The largest 2D area (in square meters) a detected pile can cover to be considered valid.
-* `convexity_pct` : numeric. A value between 0 and 1 that controls how strict the filtering is for regularly shaped piles. A value of 1 means only piles that are perfectly smooth and rounded, with no dents or inward curves are kept. A value of 0 allows for both perfectly regular and very irregular shapes. This filter works alongside `circle_fit_iou_pct` to refine the pile's overall shape.
-* `circle_fit_iou_pct` : numeric. A value between 0 and 1 that controls how the filtering is for circular pile shapes. Setting it to 1 means only piles that are perfectly circular are kept. A value of 0 allows for a wide range of shapes, including very circular and non-circular ones (like long, straight lines).
-* `smooth_segs` :  logical. Setting this option to TRUE will: 1) smooth out the "blocky" edges of detected piles (which can look like they were made in Minecraft) by using their overall shape; and 2) remove any detected piles that overlap significantly with other smoothed piles to help ensure each detection is a single slash pile, not a cluster of small trees or shrubs.
+* `min_convexity_ratio` : numeric. A value between 0 and 1 that controls how strict the filtering is for regularly shaped piles. A value of 1 means only piles that are perfectly smooth and rounded, with no dents or inward curves are kept (e.g. perfect square, rectangle, circle, triangle). A value of 0 allows for both perfectly regular and very irregular shapes. This filter works alongside `min_circularity_ratio` to identify slash piles based on expected morphology.
+* `min_circularity_ratio` : numeric. A value between 0 and 1 that controls how strict the filtering is for circular pile shapes. Setting it to 1 means only piles that are perfectly circular are kept. A value of 0 allows for a wide range of shapes, including very circular and non-circular ones (like long, straight lines). For context, a perfect square has a circularity ratio of $\frac{2}{\pi}\approx 0.637$ while an equilateral triangle has a ratio of $\frac{3\sqrt{3}}{4\pi}\approx 0.414$. This filter works alongside `min_convexity_ratio` to identify slash piles based on expected morphology.
+* `smooth_segs` :  logical. Setting this option to TRUE will: 1) smooth out the "blocky" edges of detected piles (which can look like they were made in Minecraft) by using their overall shape; and 2) remove any detected piles that overlap significantly with other smoothed piles to help ensure each detection is a single slash pile, not a cluster of objects like small trees or shrubs.
 
 ```{r}
 # detect funciton
-slash_pile_detect_watershed <- function(
+slash_pile_detect <- function(
   chm_rast
+  , seg_method = "watershed"
   #### height and area thresholds for the detected piles
   # these should be based on data from the literature or expectations based on the prescription
-  , max_ht_m = 4 # set the max expected pile height
-  , min_ht_m = 0.5 # set the min expected pile height
-  , min_area_m2 = 2 # set the min expected pile area
-  , max_area_m2 = 50 # set the max expected pile area
-  #### irregularity filtering
+  , min_ht_m # set the min expected pile height
+  , max_ht_m # set the max expected pile height
+  , min_area_m2 # set the min expected pile area
+  , max_area_m2 # set the max expected pile area
+  #### convexity filtering
   # 1 = perfectly convex (no inward angles); 0 = so many inward angles
   # values closer to 1 remove more irregular segments; 
     # values closer to 0 keep more irregular segments (and also regular segments)
-  # these will all be further filtered for their circularity and later smoothed to remove blocky edges
-  # and most inward angles by applying a convex hull to the original detected segment
-  , convexity_pct = 0.7 # min required overlap between the predicted pile and the convex hull of the predicted pile
+  # these will all be further filtered for their circularity if desired
+  , min_convexity_ratio # min required overlap between the predicted pile and the convex hull of the predicted pile
   #### circularity filtering
   # 1 = perfectly circular; 0 = not circular (e.g. linear) but also circular
-  # min required IoU between the predicted pile and the best fit circle of the predicted pile
-  , circle_fit_iou_pct = 0.5
+  # min required overlap between the candidate pile segment polygon and the minimum bounding circle of the polygon
+  , min_circularity_ratio
   #### shape refinement & overlap removal
   ## smooth_segs = T ... convex hulls of raster detected segments are returned, any that overlap are removed
   ## smooth_segs = F ... raster detected segments are returned (blocky) if they meet all prior rules
   , smooth_segs = T
 ) {
   # checks
-  if(!inherits(chm_rast,"SpatRaster")){stop("`chm_rast` must be raster data with the class `SpatRaster` ")}
-  max_ht_m <- max_ht_m[1] 
-  min_ht_m <- min_ht_m[1] 
-  min_area_m2 <- min_area_m2[1] 
-  max_area_m2 <- max_area_m2[1] 
-  if(
-    (is.na(tryCatch(as.numeric(max_ht_m), error = function(e) NA)) || 
-     identical(as.numeric(max_ht_m), numeric(0)) || 
-     !is.numeric(tryCatch(as.numeric(max_ht_m), error = function(e) NA))) ||
-    (is.na(tryCatch(as.numeric(min_ht_m), error = function(e) NA)) || 
-     identical(as.numeric(min_ht_m), numeric(0)) || 
-     !is.numeric(tryCatch(as.numeric(min_ht_m), error = function(e) NA))) ||
-    (is.na(tryCatch(as.numeric(max_area_m2), error = function(e) NA)) || 
-     identical(as.numeric(max_area_m2), numeric(0)) || 
-     !is.numeric(tryCatch(as.numeric(max_area_m2), error = function(e) NA))) ||
-    (is.na(tryCatch(as.numeric(min_area_m2), error = function(e) NA)) || 
-     identical(as.numeric(min_area_m2), numeric(0)) || 
-     !is.numeric(tryCatch(as.numeric(min_area_m2), error = function(e) NA))) ||
-    !(as.numeric(max_ht_m) > as.numeric(min_ht_m)) ||
-    !(as.numeric(max_area_m2) > as.numeric(min_area_m2)) ||
-    as.numeric(max_ht_m)<0 ||
-    as.numeric(min_ht_m)<0 ||
-    as.numeric(min_area_m2)<0 ||
-    as.numeric(max_area_m2)<0
-  ){
-    # Code to execute if any condition is met (e.g., print an error message)
-    stop("Error: One or more of `max_ht_m`,`min_ht_m`,`min_area_m2`,`max_area_m2` are not valid numbers, or the conditions max_area_m2>min_area_m2 or max_ht_m>min_ht_m are not met.")
-  }else{
-    max_ht_m <- as.numeric(max_ht_m)[1] 
-    min_ht_m <- as.numeric(min_ht_m)[1] 
-    min_area_m2 <- as.numeric(min_area_m2)[1] 
-    max_area_m2 <- as.numeric(max_area_m2)[1] 
-  }
-  # just get the first layer and "slice" the raster based on the height threshold
-  chm_rast <- chm_rast %>% 
-    terra::subset(subset = 1) %>% 
-    terra::clamp(upper = max_ht_m, lower = 0, values = F)
-  
+  if(!inherits(smooth_segs, "logical") || is.na(smooth_segs)){stop("define `smooth_segs` as logical")}
+  ########################
+  # shape irregularity checks
+  ########################
+    min_convexity_ratio <- min_convexity_ratio[1] 
+    min_circularity_ratio <- min_circularity_ratio[1] 
+    if(
+      (is.na(tryCatch(as.numeric(min_convexity_ratio), error = function(e) NA)) || 
+       identical(as.numeric(min_convexity_ratio), numeric(0)) || 
+       !is.numeric(tryCatch(as.numeric(min_convexity_ratio), error = function(e) NA))) ||
+      (is.na(tryCatch(as.numeric(min_circularity_ratio), error = function(e) NA)) || 
+       identical(as.numeric(min_circularity_ratio), numeric(0)) || 
+       !is.numeric(tryCatch(as.numeric(min_circularity_ratio), error = function(e) NA))) ||
+      as.numeric(min_convexity_ratio)<0 ||
+      as.numeric(min_convexity_ratio)>0 ||
+      as.numeric(min_circularity_ratio)<0 ||
+      as.numeric(min_circularity_ratio)>0
+    ){
+      # Code to execute if any condition is met (e.g., print an error message)
+      stop("Error: One or more of `min_convexity_ratio`,`min_circularity_ratio` are not valid numbers between 0 and 1.")
+    }
   ########################################################################################
   ## 1) Segmentation
   ########################################################################################
+    get_segmentation_candidates_ans <- get_segmentation_candidates(
+      chm_rast = chm_rast
+      , method = seg_method
+      , min_ht_m = min_ht_m
+      , max_ht_m = max_ht_m
+      , min_area_m2 = min_area_m2
+      , max_area_m2 = max_area_m2
+    )
     
-
-  ########################################################################################
-  ## 2) irregularity filtering
-  ########################################################################################
-    # let's first filter out segments that have holes in them 
-    # or are very irregularly shaped by comparing the area of the polygon and convex hull
-
-    # convexity_pct = min required overlap between the predicted pile and the convex hull of the predicted pile
-    if(convexity_pct>0){
-      # apply the irregularity filtering on the polygons
-      watershed_ans_poly <- watershed_ans_poly %>% 
-        st_convexity_filter(pct_chull_overlap = convexity_pct)
-    }
-
-    # check return
-    if(dplyr::coalesce(nrow(watershed_ans_poly),0)==0){
+    # get results individual objects
+    segs_rast <- get_segmentation_candidates_ans$segs_rast
+    segs_sf <- get_segmentation_candidates_ans$segs_sf
+    slice_chm_rast <- get_segmentation_candidates_ans$slice_chm_rast
+    # seg_mthd_params <- get_segmentation_candidates_ans$seg_mthd_params
+    
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
       stop(paste0(
-        "no segments detected using the given CHM and irregularity expectations"
-        , "\n     try adjusting `convexity_pct` "
+        "no segments detected using the given CHM and size expectations"
+        , "\n     try adjusting size threshold parameters:"
+        , "\n     `min_ht_m`,`max_ht_m`,`min_area_m2`,`max_area_m2`"
+      ))
+    }
+  ########################################################################################
+  ## 2) shape refinement and area filtering
+  ########################################################################################
+    # to better align the segmentation results with real-world pile construction we'll now 
+    # simplify candidate segments composed of multiple separate parts representing a single identified feature (i.e. "multi-polygon" candidate segments. 
+    # We'll simplify these segments by retaining only the largest contiguous portion using `cloud2trees` functionality. 
+    # Because slash piles are constructed as distinct, isolated objects to prevent tree mortality during burning, this refinement step isolates the primary 
+    # candidate body to eliminate detached noise and ensure each segment represents a discrete physical object before area-based filtering
+    segs_sf <- 
+      segs_sf %>% 
+      # simplify multipolygons by keeping only the largest portion
+      dplyr::mutate(treeID = pred_id) %>% 
+      cloud2trees::simplify_multipolygon_crowns() %>% 
+      dplyr::select(-treeID) %>% 
+      # area filtering
+      st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2)
+    
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
+      stop(paste0(
+        "no segments detected using the given CHM and size expectations"
+        , "\n     try adjusting size threshold parameters:"
+        , "\n     `min_area_m2`,`max_area_m2`"
       ))
     }
 
   ########################################################################################
-  ## 3) area filtering
+  ## 3) convexity filtering
   ########################################################################################
-    # filter out the segments that don't meet the size thresholds
-    watershed_ans_poly <- watershed_ans_poly %>% 
-      dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
-      dplyr::filter(
-        dplyr::coalesce(area_xxxx,0) >= min_area_m2
-        & dplyr::coalesce(area_xxxx,0) <= max_area_m2
-      ) %>% 
-      dplyr::select(-c(area_xxxx))
+    # let's first filter out segments that have holes in them 
+    # or are very irregularly shaped by comparing the area of the polygon and convex hull
+    # min_convexity_ratio = min required overlap between the predicted pile and the convex hull of the predicted pile
+    if(min_convexity_ratio>0){
+      # apply the convexity filtering on the polygons
+      segs_sf <- st_convexity_filter(
+          sf_data = segs_sf
+          # min required overlap between the polygon and the convex hull of the polygon
+          , min_convexity_ratio = min_convexity_ratio
+        )
+    }
+
+    # check return
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
+      stop(paste0(
+        "no segments detected using the given CHM and `min_convexity_ratio` expectations"
+        , "\n     try adjusting `min_convexity_ratio` "
+      ))
+    }
    
   ########################################################################################
   ## 4) circularity filtering
   ########################################################################################
-    # let's apply a circle-fitting algorithm to remove non-circular segments from the remaining segments
-    # let's apply the `sf_data_circle_fit()` function that
-    # fits the best circle using `lidR::fit_circle()` to each watershed detected segment 
-    # to get a spatial data frame with the best fitting circle for each segment
-    if(circle_fit_iou_pct==0){
-        watershed_keep_circle_fit_pred_id <- unique(watershed_ans_poly$pred_id)
-    }else{
-      # apply the sf_data_circle_fit() which takes each segment polygon, transforms it to points, and the fits the best circle
-      watershed_ans_poly_circle_fit <- sf_data_circle_fit(watershed_ans_poly)
-      
-      # filter using the intersection over union (IoU) between the circle and the predicted segment. 
-      # we'll use the IoU function we defined 
-      # we map over this to only compare the segment to it's own best circle fit...not all
-      # we should consider doing this in bulk.....another day
-      watershed_circle_fit_iou <- 
-        watershed_ans_poly$pred_id %>% 
-        unique() %>% 
-        purrr::map(\(x)
-          ground_truth_single_match(
-            gt_inst = watershed_ans_poly %>% 
-              dplyr::filter(pred_id == x)
-            , gt_id = "pred_id"
-            , predictions = watershed_ans_poly_circle_fit %>% 
-              dplyr::filter(pred_id == x) %>% 
-              dplyr::select(pred_id) %>% # keeping other columns causes error?
-              dplyr::rename(circ_pred_id = pred_id)
-            , pred_id = "circ_pred_id"
-            , min_iou_pct = 0 # set to 0 just to return pct
-          )    
-        ) %>% 
-        dplyr::bind_rows()
-      
-      # threshold for the minimum IoU to further filter for segments that are approximately round, 
-      # this filter should remove linear objects from the watershed detections
-        # compare iou
-        watershed_keep_circle_fit_pred_id <- watershed_circle_fit_iou %>% 
-          dplyr::filter(iou>=circle_fit_iou_pct) %>% 
-          dplyr::pull(pred_id) 
+    # let's apply a minimum bounding circle algorithm to remove non-circular segments from the remaining segments
+    if(min_circularity_ratio>0){
+      # apply the circularity filtering on the polygons
+      segs_sf <- st_circularity_filter(
+          sf_data = segs_sf
+          # min required overlap between the polygon and the minimum bounding circle of the polygon
+          , min_circularity_ratio = min_circularity_ratio
+        )
     }
-      
-    if(
-      identical(watershed_keep_circle_fit_pred_id, numeric(0))
-      || any(is.null(watershed_keep_circle_fit_pred_id))
-      || any(is.na(watershed_keep_circle_fit_pred_id))
-      || length(watershed_keep_circle_fit_pred_id)<1
-    ){
+
+    # check return
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
       stop(paste0(
-        "no segments detected using the given CHM and circularity expectations"
-        , "\n     try adjusting `circle_fit_iou_pct` "
+        "no segments detected using the given CHM and `min_circularity_ratio` expectations"
+        , "\n     try adjusting `min_circularity_ratio` "
       ))
     }
   
   ########################################################################################
-  ## 5) raster smoothing
+  ## 5) calculate CHM-based structural metrics for the candidate piles
   ########################################################################################
-    ########################################
-    # use the remaining segments that meet the geometric and area filtering
-    # to smooth the watershed raster
-    ########################################
-    smooth_watershed_ans <- watershed_ans %>% 
-      terra::mask(
-        watershed_ans_poly %>% #these are irregularity and area filtered already
-          dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id) %>% 
-          terra::vect()
-        , updatevalue=NA
-      )
-    if(dplyr::coalesce(ws_for_smooth,0)>=3){
-      # smooths the raster using the majority value
-      smooth_watershed_ans <- smooth_watershed_ans %>% 
-        terra::focal(w = ws_for_smooth, fun = "modal", na.rm = T, na.policy = "only") # only fill NA cells  
+    # we'll use our `get_structural_metrics()` with the height-filtered CHM to compute the structural metrics for the candidate piles
+    segs_sf <- 
+      get_structural_metrics(
+        sf_data = segs_sf
+        , chm_rast = slice_chm_rast
+      ) %>% 
+      purrr::pluck("sf_data") %>% 
+      # we may already have area so we'll use only the value from this function
+      dplyr::select( -dplyr::any_of(c(
+        "hey_xxxxxxxxxx"
+        , "poly_area_m2"
+      )))
+    
+    # check return
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
+      stop(paste0(
+        "trouble getting the structural metrics"
+        , "\n     try adjusting .... something "
+      ))
     }
     
-    names(smooth_watershed_ans) <- "pred_id"
-
-    ########################################
-    # mask the chm rast to these remaining segments and smooth to match the smoothing for the segments
-    ########################################
-    smooth_chm_rast <- chm_rast %>% 
-      terra::mask(smooth_watershed_ans)
-    
-    if(dplyr::coalesce(ws_for_smooth,0)>=3){
-      # smooths the raster to match the smoothing in the watershed segments
-      smooth_chm_rast <- smooth_chm_rast %>% 
-        terra::focal(w = ws_for_smooth, fun = "mean", na.rm = T, na.policy = "only") #only for cells that are NA
-    }
-
-    # now mask the watershed_ans raster to only keep cells that are in the originating CHM
-    smooth_watershed_ans <- smooth_watershed_ans %>% 
-      terra::mask(smooth_chm_rast)
-
-  ########################################################################################
-  ## calculate raster-based area and volume 
-  ########################################################################################
-    # first, calculate the area of each cell
-    area_rast <- terra::cellSize(smooth_chm_rast)
-    names(area_rast) <- "area_m2"
-    # area_rast %>% terra::plot()
-    # then, multiply area by the CHM (elevation) for each cell to get a raster with cell volumes
-    vol_rast <- area_rast*smooth_chm_rast
-    names(vol_rast) <- "volume_m3"
-    # vol_rast %>% terra::plot()
-    # sum area within each segment to get the total area
-    area_df <- terra::zonal(x = area_rast, z = smooth_watershed_ans, fun = "sum", na.rm = T)
-    # sum volume within each segment to get the total volume
-    vol_df <- terra::zonal(x = vol_rast, z = smooth_watershed_ans, fun = "sum", na.rm = T)
-    # max ht within each segment to get the max ht
-    ht_df <- terra::zonal(x = smooth_chm_rast, z = smooth_watershed_ans, fun = "max", na.rm = T) %>% 
-      dplyr::rename(max_height_m=2)
-      
-    # let's convert the smoothed and filtered watershed-detected segments from raster to vector data 
-    # vectors of segments
-    watershed_ans_poly <-
-      smooth_watershed_ans %>% 
-      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
-      sf::st_as_sf() %>% 
-      sf::st_simplify() %>% 
-      sf::st_make_valid() %>% 
-      dplyr::filter(sf::st_is_valid(.)) %>% 
-      dplyr::mutate(treeID=pred_id) %>% 
-      cloud2trees::simplify_multipolygon_crowns() %>% 
-      dplyr::select(-treeID)
-
-    # add area and volume to our vector data  
-    # we'll do this with a slick trick to perform multiple joins succinctly using purrr::reduce
-    watershed_ans_poly <- 
-      purrr::reduce(
-        list(watershed_ans_poly, area_df, vol_df, ht_df)
-        , dplyr::left_join
-        , by = 'pred_id'
-      ) %>% 
-      dplyr::mutate(
-        volume_per_area = volume_m3/area_m2
-      ) %>% 
-      # filter out the segments that don't meet the size thresholds
+    # filter for height
+    segs_sf <- segs_sf %>% 
       dplyr::filter(
-        dplyr::coalesce(area_m2,0) >= min_area_m2
-        & dplyr::coalesce(area_m2,0) <= max_area_m2
-        & dplyr::coalesce(max_height_m,0) >= min_ht_m
-      ) %>% 
-      # do one more pass of the irregularity filtering
-      st_convexity_filter(pct_chull_overlap = convexity_pct)
-      
-      if(dplyr::coalesce(nrow(watershed_ans_poly),0)==0){
-        stop(paste0(
-          "no segments detected using the given CHM and expected size thresholds"
-          , "\n     try adjusting `max_ht_m`, `min_area_m2`, `max_area_m2` "
-        ))
-      }
-   
-
+        max_height_m >= min_ht_m
+        & max_height_m <= max_ht_m
+      )
+    
+    # check return
+    if(dplyr::coalesce(nrow(segs_sf),0)==0){
+      stop(paste0(
+        "no segments detected using the given CHM and size expectations"
+        , "\n     try adjusting size threshold parameters:"
+        , "\n     `min_ht_m`,`max_ht_m`"
+      ))
+    }
+    
   ########################################################################################
-  ## 4) shape refinement & overlap removal
+  ## 6) shape refinement & overlap removal
   ########################################################################################
     # use the convex hull shapes of our remaining segments. 
     # This helps to smooth out the often 'blocky' edges of raster-based segments
@@ -3436,153 +3378,59 @@ slash_pile_detect_watershed <- function(
     # ensuring our results represent singular slash piles.
     
     if(smooth_segs){
-      ### ORIGINAL didn't combine touching segments first
-      # return_dta <- watershed_ans_poly %>% 
-      #   sf::st_convex_hull() %>% 
-      #   sf::st_simplify() %>% 
-      #   sf::st_make_valid() %>% 
-      #   dplyr::filter(sf::st_is_valid(.)) %>% 
-      #   dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id) %>% 
-      #   st_remove_overlaps() %>% 
-      #   # now we need to re-do the volume and area calculations
-      #   dplyr::mutate(
-      #     area_m2 = sf::st_area(.) %>% as.numeric()
-      #     , volume_m3 = area_m2*volume_per_area
-      #   ) %>% 
-      #   dplyr::filter(
-      #     dplyr::coalesce(area_m2,0) >= min_area_m2
-      #     & dplyr::coalesce(area_m2,0) <= max_area_m2
-      #   )
+      # take the convex hull and apply our `st_remove_overlaps()` function to the remaining candidate segments. 
+      # Finally, we filter for area based on the smoothed shape 
+      segs_sf <-
+        segs_sf %>% 
+        sf::st_convex_hull() %>% 
+        sf::st_simplify() %>% 
+        sf::st_make_valid() %>% 
+        dplyr::filter(sf::st_is_valid(.)) %>% 
+        st_remove_overlaps() %>%
+        # now we need to re-do the volume and area calculations
+        dplyr::mutate(
+          area_m2 = sf::st_area(.) %>% as.numeric()
+          , volume_m3 = area_m2*volume_per_area
+        ) %>% 
+        st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2)
       
-      # combine polygons that share a common border but don't overlap
-        comb_watershed_ans_poly <- watershed_ans_poly %>% 
-          dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id) %>% 
-          st_dissolve_and_combine() %>% 
-          dplyr::rename(id_comb_xxx = id) 
-      # recalculate metrics
-        agg_comb_watershed_ans_poly <- comb_watershed_ans_poly %>% 
-          sf::st_intersection(
-            watershed_ans_poly %>% 
-              dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id)
-          ) %>% 
-          sf::st_drop_geometry() %>% 
-          dplyr::group_by(id_comb_xxx) %>% 
-          dplyr::summarise(
-            area_m2 = sum(area_m2, na.rm = T)
-            , volume_m3 = sum(volume_m3, na.rm = T)
-            , max_height_m = max(max_height_m, na.rm = T)
-          ) %>% 
-          dplyr::mutate(
-            volume_per_area = volume_m3/area_m2
-          )
-      # bring together
-        comb_watershed_ans_poly <- 
-          comb_watershed_ans_poly %>% 
-          dplyr::inner_join(agg_comb_watershed_ans_poly, by = "id_comb_xxx") %>% 
-          dplyr::rename(pred_id = id_comb_xxx) %>% 
-          # filter out the segments that don't meet the size thresholds
-          dplyr::filter(
-            dplyr::coalesce(area_m2,0) >= min_area_m2
-            & dplyr::coalesce(area_m2,0) <= max_area_m2
-            & dplyr::coalesce(max_height_m,0) >= min_ht_m
-          ) %>% 
-          # do one more pass of the irregularity filtering
-          st_convexity_filter(pct_chull_overlap = convexity_pct) %>% 
-          # simplify multipolygons
-          dplyr::mutate(treeID=dplyr::row_number()) %>% 
-          cloud2trees::simplify_multipolygon_crowns() %>% 
-          dplyr::select(-treeID)
-        
-        # watershed_ans_poly %>% dplyr::glimpse()
-        # comb_watershed_ans_poly %>% dplyr::glimpse()
-      
-      # apply st_convex_hull
-        return_dta <- comb_watershed_ans_poly %>% 
-          sf::st_convex_hull() %>% 
-          sf::st_simplify() %>% 
-          sf::st_make_valid() %>% 
-          dplyr::filter(sf::st_is_valid(.)) %>% 
-          st_remove_overlaps() %>% 
-          # now we need to re-do the volume and area calculations
-          dplyr::mutate(
-            area_m2 = sf::st_area(.) %>% as.numeric()
-            , volume_m3 = area_m2*volume_per_area
-          ) %>% 
-          dplyr::filter(
-            dplyr::coalesce(area_m2,0) >= min_area_m2
-            & dplyr::coalesce(area_m2,0) <= max_area_m2
-          )
-      
-    }else{
-      return_dta <- watershed_ans_poly %>% 
-        dplyr::filter(pred_id %in% watershed_keep_circle_fit_pred_id)
+      # check return
+      if(dplyr::coalesce(nrow(segs_sf),0)==0){
+        stop(paste0(
+          "no segments detected after removing overlapping final segments"
+          , "\n     try with `smooth_segs = F`"
+        ))
+      }
     }
     
     # calculate diameter
-    return_dta <- st_calculate_diameter(return_dta)
+    segs_sf <- st_calculate_diameter(segs_sf)
       
   # return
-    return(return_dta)
+    return(list(
+      segs_sf = segs_sf
+      , seg_mthd_params = get_segmentation_candidates_ans$seg_mthd_params
+      , slice_chm_rast = get_segmentation_candidates_ans$slice_chm_rast
+    ))
 }
-#################################################
-# intermediat functions
-#################################################
-# rounds to nearest odd since ws for terra::focal() only takes odd
-round_to_nearest_odd <- function(x) {
-  rounded_int <- round(x)
+```
 
-  # step 2: check if the rounded integer is already odd
-  is_odd <- (rounded_int %% 2 != 0)
+remove all other parameters that might interfere with this function
 
-  # step 3: for numbers that rounded to an even integer, find the nearest odd
-  odd_down <- rounded_int - 1
-  odd_up <- rounded_int + 1
-
-  # calculate the absolute distances from the original number 'x'
-  dist_down <- abs(x - odd_down)
-  dist_up <- abs(x - odd_up)
-
-  # step 4: use ifelse for vectorized conditional logic
-  result <- ifelse(
-    is_odd
-    , rounded_int # if the initially rounded integer is odd, use it
-    , ifelse(
-      dist_down < dist_up
-      , odd_down # if odd_down is strictly closer
-      , odd_up # if odd_up is closer or equidistant
-    )
-  )
-
-  return(result)
-}
-# round_to_nearest_odd(c(2,2.2,1.5,0))
-
-# find window size given res and min expected area
-ws_for_smooth_fn <- function(chm_res,min_area_m2){
-  if(length(min_area_m2)>1){stop("min_area_m2 must be a single numeric value")}
-  # return
-  dplyr::case_when( 
-    T ~ 0 ## all will be 0 so smoothing won't happen
-    ###!!!!!! original attempt down here...just remove T ~ 0 !!!!!!###
-    , (chm_res*3) > (min_area_m2/2) ~ 0 # the minimum ws of 3 exceeds half of the expected area (coarse)
-    , T ~ round( (min_area_m2/4) / chm_res ) %>% round_to_nearest_odd() %>% max(3) # has to be odd and at least 3
-  )
-}
-# dplyr::tibble(res = seq(0.01,0.5,by=0.01)) %>% 
-#   dplyr::rowwise() %>% 
-#   dplyr::mutate(
-#     ws = ws_for_smooth_fn(res, 2) # min_area_m2=2
-#     , area = ifelse(ws==0, res*res,
-#       (res^2) * (ws^2))
-#     , area_prop = area/2 # min_area_m2=2
-#   ) %>% 
-# ggplot() +
-#   # geom_line(aes(x=res,y=ws)) +
-#   # geom_line(aes(x=res,y=area)) +
-#   geom_line(aes(x=res,y=area_prop)) +
-#   # scale_y_continuous(breaks = scales::breaks_extended(n=22)) +
-#   scale_y_continuous(breaks = scales::breaks_extended(n=22), labels = scales::percent) +
-#   scale_x_continuous(breaks = scales::breaks_extended(n=20))
+```{r, results=F}
+remove(
+  min_ht_m
+  , max_ht_m
+  , min_area_m2
+  , max_area_m2
+  , min_convexity_ratio
+  , min_circularity_ratio
+  , get_segmentation_params_ans
+  , dbscan_segs, watershed_segs
+  , dbscan_segs_poly_chull, dbscan_segs_poly_mbc
+  , watershed_segs_poly_chull, watershed_segs_poly_mbc
+)
+gc()
 ```
 
 let's test this real quick on our example area
@@ -3593,10 +3441,10 @@ let's test this real quick on our example area
 #   example_aoi %>% sf::st_transform(sf::st_crs(example_aoi_chm)) %>% terra::vect()
 #   , add = T, border = "black", col = NA, lwd = 1.2
 # )
-slash_pile_detect_watershed_ans_temp <- slash_pile_detect_watershed(
-  chm_rast = example_aoi_chm
-  , max_ht_m = 4.5
+slash_pile_detect_watershed_ans_temp <- slash_pile_detect(
+  chm_rast = aoi_chm_rast
   , min_ht_m = 0.5
+  , max_ht_m = 4.5
   , min_area_m2 = 2
   , max_area_m2 = 50
   , convexity_pct = 0.8
