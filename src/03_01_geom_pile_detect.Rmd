@@ -956,30 +956,62 @@ dplyr::tibble(
 now we'll remove all candidate segments that do not meet the area criteria based on the user-defined minimum and maximum area thresholds
 
 ```{r}
+st_filter_area <- function(sf_data, min_area_m2, max_area_m2) {
+  # check input data
+  if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
+  if( !all(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON"))) ){
+    stop(paste0(
+      "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
+    ))
+  }  
+  # check thresholds
+  min_area_m2 <- min_area_m2[1] 
+  max_area_m2 <- max_area_m2[1] 
+  if(
+    (is.na(tryCatch(as.numeric(max_area_m2), error = function(e) NA)) || 
+     identical(as.numeric(max_area_m2), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(max_area_m2), error = function(e) NA))) ||
+    (is.na(tryCatch(as.numeric(min_area_m2), error = function(e) NA)) || 
+     identical(as.numeric(min_area_m2), numeric(0)) || 
+     !is.numeric(tryCatch(as.numeric(min_area_m2), error = function(e) NA))) ||
+    !(as.numeric(max_area_m2) > as.numeric(min_area_m2)) ||
+    as.numeric(min_area_m2)<0 ||
+    as.numeric(max_area_m2)<0
+  ){
+    # Code to execute if any condition is met (e.g., print an error message)
+    stop("Error: One or more of `min_area_m2`,`max_area_m2` are not valid numbers, or the condition max_area_m2>min_area_m2 not met.")
+  }else{
+    min_area_m2 <- as.numeric(min_area_m2)[1] 
+    max_area_m2 <- as.numeric(max_area_m2)[1] 
+  }
+  # return
+  return(
+    sf_data %>% 
+      dplyr::ungroup() %>% 
+      # area filter
+      dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
+      # filter out the segments that don't meet the size thresholds
+      dplyr::filter(
+        dplyr::coalesce(area_xxxx,0) >= min_area_m2
+        & dplyr::coalesce(area_xxxx,0) <= max_area_m2
+      ) %>% 
+      dplyr::select(-c(area_xxxx))
+  )
+  
+}
+```
+
+apply our `st_filter_area()` function
+
+```{r}
 # watershed_segs_poly
 watershed_segs_poly <- 
   watershed_segs_poly %>% 
-  dplyr::ungroup() %>% 
-  # area filter
-  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
-  # filter out the segments that don't meet the size thresholds
-  dplyr::filter(
-    dplyr::coalesce(area_xxxx,0) >= min_area_m2
-    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
-  ) %>% 
-  dplyr::select(-c(area_xxxx))
+  st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2)
 # dbscan_segs_poly
 dbscan_segs_poly <- 
   dbscan_segs_poly %>% 
-  dplyr::ungroup() %>% 
-  # area filter
-  dplyr::mutate(area_xxxx = sf::st_area(.) %>% as.numeric()) %>% 
-  # filter out the segments that don't meet the size thresholds
-  dplyr::filter(
-    dplyr::coalesce(area_xxxx,0) >= min_area_m2
-    & dplyr::coalesce(area_xxxx,0) <= max_area_m2
-  ) %>% 
-  dplyr::select(-c(area_xxxx))
+  st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2)
 ```
 
 how many candidate segments were removed?
@@ -1557,7 +1589,7 @@ st_convexity_filter <- function(
 ) {
   if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
   # if not polygons
-  if( !(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON")) %>% all()) ){
+  if( !all(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON"))) ){
     stop(paste0(
       "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
     ))
@@ -2013,7 +2045,7 @@ st_circularity_filter <- function(
 ) {
   if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
   # if not polygons
-  if( !(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON")) %>% all()) ){
+  if( !all(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON"))) ){
     stop(paste0(
       "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
     ))
@@ -2086,6 +2118,11 @@ ggplot2::ggplot() +
 
 after all of that, the results of the two methods are the same for this particular demonstration area
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
 ## Structural Metrics from CHM
 
 We'll use the CHM raster to calculate area, height, and volume for each candidate pile to reflect the irregular pile footprints and elevation profiles that better represent real-world objects than assuming perfect geometric shapes like traditional pile measurement methods ([Long and Boston, 2014](https://doi.org/10.5849/forsci.13-501); [Trofymow et al., 2014](https://doi.org/10.1139/cjfr-2013-0281); [Guth et al., 2025](https://doi.org/10.3389/ffgc.2025.1663753))
@@ -2095,18 +2132,6 @@ Candidate slash pile structural metrics are derived from the CHM raster using zo
 we'll make a function to use polygon `sf` data and an input CHM raster to perform these calculations and return the data with metrics attached
 
 ```{r}
-terra::plot(aoi_chm_rast_slice)
-terra::plot(watershed_segs_poly %>% terra::vect(), add = T, col = NA, lwd = 2, border = "red")
-aoi_chm_rast_slice %>% 
-  terra::crop(
-    watershed_segs_poly %>% 
-      sf::st_union() %>% 
-      sf::st_centroid() %>% 
-      sf::st_buffer(10) %>% 
-      terra::vect()
-  ) %>% 
-  terra::plot()
-
 ########################################################################################
 ## calculate raster-based area, height, and volume using zonal stats
 ########################################################################################
@@ -2307,12 +2332,19 @@ we'll use our `get_structural_metrics()` with the height-filtered CHM to compute
 watershed_segs_poly <- get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
   purrr::pluck("sf_data") %>% 
   # we already have area so we'll drop the value from this function
-  dplyr::select(-area_m2)
+  dplyr::select( -dplyr::any_of(c(
+    "hey_xxxxxxxxxx"
+    , "poly_area_m2"
+  )))
 # dbscan_segs_poly
 dbscan_segs_poly <- get_structural_metrics(sf_data = dbscan_segs_poly, chm_rast = aoi_chm_rast_slice) %>% 
   purrr::pluck("sf_data") %>% 
   # we already have area so we'll drop the value from this function
-  dplyr::select(-area_m2)
+  dplyr::select( -dplyr::any_of(c(
+    "hey_xxxxxxxxxx"
+    , "poly_area_m2"
+  )))
+
 ```
 
 what did we get back?
@@ -2321,17 +2353,103 @@ what did we get back?
 watershed_segs_poly %>% dplyr::glimpse()
 ```
 
-
-
-xxxxxx
-
-### Shape Refinement
-
-As a final step, we'll use the convex hull shapes of our remaining segments. This helps to smooth out the often "blocky" edges of raster-based segments, which can look like they were generated in Minecraft. Additionally, by removing any segments with overlapping convex hull shapes, we can likely reduce false detections that are actually groups of small trees or shrubs, ensuring our results represent singular slash piles.
+plot the metrics of pile area, height, and volume
 
 ```{r}
-xxxxxx
-# st_combine_touching 
+# p1_temp <-
+p_fn_temp <- function(dta,fill_col,col_nm=latex2exp::TeX("area $\\textrm{m}^2$"),pal="Oranges"){
+  ggplot2::ggplot(data = dta) +
+  ggplot2::geom_sf(
+    mapping=ggplot2::aes(fill=.data[[fill_col]])
+    # mapping=ggplot2::aes(fill={{fill_col}})
+    , color = NA
+  ) + 
+  ggplot2::geom_sf_text(
+    # mapping=ggplot2::aes(label=scales::comma({{fill_col}}, accuracy=0.1))
+    mapping=ggplot2::aes(label=scales::comma(.data[[fill_col]], accuracy=0.1))
+    , vjust = 1, hjust = -1.3, size = 2.5
+  ) + 
+  ggplot2::scale_fill_distiller(palette = pal, name = col_nm, direction = 1) +
+  ggplot2::theme_void() +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , plot.subtitle = ggplot2::element_text(hjust = 0.5)
+    , panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1)
+    , legend.text = ggplot2::element_text(size = 7)
+  )
+}
+# lists
+pal_temp <- c("Blues","Purples","Greens")
+nm_temp <- c(
+  latex2exp::TeX("area $\\textrm{m}^2$")
+  , latex2exp::TeX("volume $\\textrm{m}^3$")
+  , "height m"
+)
+col_temp <- c(
+  "area_m2"
+  , "volume_m3"
+  , "max_height_m"
+)
+# watershed
+ws_p_temp <- 1:length(col_temp) %>% 
+  purrr::map(
+    \(x)
+    p_fn_temp(
+      watershed_segs_poly
+      , fill_col = col_temp[x]
+      , col_nm = nm_temp[x]
+      , pal = pal_temp[x]
+    )
+  )
+# dbscan
+db_p_temp <- 1:length(col_temp) %>% 
+  purrr::map(
+    \(x)
+    p_fn_temp(
+      dbscan_segs_poly
+      , fill_col = col_temp[x]
+      , col_nm = nm_temp[x]
+      , pal = pal_temp[x]
+    )
+  )
+p1_temp <- patchwork::wrap_plots(
+    ws_p_temp
+  ) + 
+  patchwork::plot_annotation(
+    title = "watershed"
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 14))
+  )
+p2_temp <- patchwork::wrap_plots(
+    db_p_temp
+  ) + 
+  patchwork::plot_annotation(
+    title = "dbscan"
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 14))
+  )
+
+patchwork::wrap_plots(
+  list(
+    patchwork::wrap_elements( p1_temp )
+    , patchwork::wrap_elements( p2_temp )
+  )
+  , nrow = 2
+)
+```
+
+after all of that, the results of the two methods are the same for this particular demonstration area
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+## Final Shape Refinement
+
+In the final stage, we generate convex hulls for the segments to smooth the blocky, pixelated edges inherent in raster data (which can look like they were generated in Minecraft). Any segments with overlapping convex hulls are then removed to help filter out false detections which may be groups of small trees or shrubs. This step is intended to reflect real-world conditions where distinct slash piles are constructed with enough spacing to remain spatially independent rather than overlapping. Finally, we'll apply one more filter for the area and height thresholds.
+
+```{r, include = F, eval = F}
+### !!!!!!!!!!!!!!!! IF WE WANT TO COMBINE POLYGONS THAT SHARE A COMMON BORDER BUT DON'T OVERLAP
+### !!!!!!!!!!!!!!!! st_dissolve_and_combine()
 ###############################################################################
 # dissolve groups of touching or overlapping polygons using st_union and st_cast
 ###############################################################################
@@ -2421,14 +2539,16 @@ st_dissolve_and_combine <- function(polygons_sf) {
   
   return(final_result)
 }
+```
 
+```{r}
 ###############################################################################
 # make a function to remove overlapping polygons from a sf data frame
 ###############################################################################
 st_remove_overlaps <- function(sf_data) {
   if(!inherits(sf_data, "sf")){stop("must pass `sf` data object")}
   # if not polygons
-  if( !(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON")) %>% all()) ){
+  if( !all(sf::st_is(sf_data, type = c("POLYGON", "MULTIPOLYGON"))) ){
     stop(paste0(
       "`sf_data` data must be an `sf` class object with POLYGON geometry (see [sf::st_geometry_type()])"
     ))
@@ -2458,660 +2578,225 @@ st_remove_overlaps <- function(sf_data) {
   comb_temp <- comb_temp %>% 
     dplyr::filter(new_id %in% overlap_temp) %>% 
     sf::st_union()
-  # remove from the original data  
+  # remove all input polygons from the original data that have any overlaps
   return(sf::st_difference(sf_data,comb_temp))
 }
 ```
 
-save this filtered data as our predictions
+take the convex hull and apply our `st_remove_overlaps()` function to the remaining candidate segments. Finally, we filter for area based on the smoothed shape 
 
 ```{r}
-# save this filtered data as our predictions
-predicted_watershed_piles_sf <- 
-  watershed_ans_poly %>% 
+# watershed_segs_poly
+watershed_segs_poly <-
+  watershed_segs_poly %>% 
   sf::st_convex_hull() %>% 
   sf::st_simplify() %>% 
   sf::st_make_valid() %>% 
   dplyr::filter(sf::st_is_valid(.)) %>% 
-  st_remove_overlaps()
-# attach a flag for those in stand
-predicted_watershed_piles_sf <- predicted_watershed_piles_sf %>% 
+  st_remove_overlaps() %>%
+  # now we need to re-do the volume and area calculations
   dplyr::mutate(
-    is_in_stand = pred_id %in% (predicted_watershed_piles_sf %>% 
-      sf::st_intersection(stand_boundary %>% sf::st_transform(sf::st_crs(predicted_watershed_piles_sf))) %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::pull(pred_id))
+    area_m2 = sf::st_area(.) %>% as.numeric()
+    , volume_m3 = area_m2*volume_per_area
+  ) %>% 
+  st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2) %>% 
+  # filter for height
+  dplyr::filter(
+    max_height_m >= min_ht_m
+    & max_height_m <= max_ht_m
   )
-```
-
-let's see how many segments were originally detected using the watershed method and how many we are left with after our filtering for shape irregularity, pile area and height expectations, circularity, and potential overlaps after smoothing?
-
-```{r}
-dplyr::tibble(
-  n_segments = c(
-    terra::freq(watershed_ans) %>% dplyr::filter(!is.na(value)) %>% nrow()
-    , nrow(predicted_watershed_piles_sf)
-  )
-  , which_segments = c("original segments", "filtered segments")
-)
-```
-
-wow that is a lot of filtering...but will it be enough?
-
-now let's look at our final detected segments (brown) compared with the ground truth piles (blue) in the example area we have been looking at
-
-```{r}
-plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = predicted_watershed_piles_sf %>% 
-      dplyr::filter(pred_id %in% pred_id_temp)
-    # , fill = NA, color = "brown", lwd = 0.6
-    , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(filename = "../data/workflow_ex_rgb11a.jpg", height = 8, width = 8)
-p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly))
-    , fill = NA, color = "blue", lwd = 0.6
-  ) +
-  ggplot2::geom_sf(
-    data = predicted_watershed_piles_sf %>% 
-      dplyr::filter(pred_id %in% pred_id_temp)
-    , fill = NA, color = "brown", lwd = 0.6
-    # , fill = "brown", color = NA, lwd = 0, alpha = 0.6
-  ) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb11b.jpg", height = 8, width = 8)
-```
-
-that looks like it did what we wanted it to do, though note there are a false negative predictions (omission) and false positive predictions (commissions) in this example area as well as many true positive matches
-
-let's look at the entire area again after applying this filter, plotting the remaining watershed segmented piles (brown) and the actual piles (blue)
-
-```{r}
-# plot it 
-terra::plotRGB(ortho_rast, stretch = "lin", colNA = "transparent")
-terra::plot(
-  predicted_watershed_piles_sf %>% 
-    terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 1.2
-)
-terra::plot(
-  slash_piles_polys %>% 
-    sf::st_transform(terra::crs(ortho_rast)) %>% terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1
-)
-```
-
-nice! let's save these data
-
-```{r,warning=F, message=F, results='hide'}
-predicted_watershed_piles_sf %>% 
-  sf::st_write("../data/predicted_watershed_piles_sf.gpkg", append = F)
-watershed_ans_poly %>% 
-  sf::st_write("../data/watershed_ans_poly.gpkg", append = F)
-```
-
-```{r, include=FALSE, eval=FALSE}
-### read already generated data if we're testing
-predicted_watershed_piles_sf <- sf::st_read("../data/predicted_watershed_piles_sf.gpkg")
-##
-watershed_ans_poly <- sf::st_read("../data/watershed_ans_poly.gpkg")
-watershed_ans_poly_chull <- watershed_ans_poly %>% 
+# dbscan_segs_poly
+dbscan_segs_poly <-
+  dbscan_segs_poly %>% 
   sf::st_convex_hull() %>% 
   sf::st_simplify() %>% 
   sf::st_make_valid() %>% 
-  dplyr::filter(sf::st_is_valid(.))
-```
-
-## Instance Matching
-
-We didn't "train" any model here, just developed a rules-based method for detecting piles from aerial point cloud data. As such, we can evaluate the methods performance on the "full" set of ground truth pile data.
-
-let's see how we did given the list of predictions compared to the ground truth data using the instance matching process we outlined in this [earlier section](#iou_match).
-
-### Example Area
-
-first, we'll look at the example area that we have been working with
-
-```{r}
-ground_truth_prediction_match_ans <- ground_truth_prediction_match(
-  ground_truth = slash_piles_polys %>% 
-    dplyr::inner_join(
-      slash_piles_polys %>% 
-      sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-      sf::st_intersection(example_aoi) %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::select(pile_id)
-    ) %>% 
-    sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-    dplyr::arrange(desc(field_diameter_m))
-  , gt_id = "pile_id"
-  , predictions = predicted_watershed_piles_sf %>% dplyr::filter(pred_id %in% pred_id_temp)
-  , pred_id = "pred_id"
-  , min_iou_pct = 0.05
-)
-```
-
-final plotting it
-
-```{r}
-pal_match_grp <- c(
-  "omission"=viridis::cividis(3)[1]
-  , "commission"= "gray88" #viridis::cividis(3)[2]
-  , "true positive"=viridis::cividis(3)[3]
-)
-# plot it
-p_temp <- plt_ortho_example +
-# ggplot2::ggplot() +
-  ggplot2::geom_sf(data = example_aoi %>% sf::st_transform(sf::st_crs(ortho_rast)), fill = NA, color = "black", lwd = 0.8) +
-  ggplot2::geom_sf(
-    data = 
-      slash_piles_polys %>% 
-      dplyr::inner_join(
-        slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(watershed_ans_poly)) %>% 
-        sf::st_intersection(example_aoi) %>% 
-        sf::st_drop_geometry() %>% 
-        dplyr::select(pile_id)
-      ) %>% 
-      dplyr::left_join(
-        ground_truth_prediction_match_ans %>% 
-          dplyr::select(pile_id,match_grp)
-        , by = "pile_id"
-      ) %>% 
-      sf::st_transform(sf::st_crs(ortho_rast))
-    , mapping = ggplot2::aes(fill = match_grp)
-    , color = NA ,alpha=0.6
-  ) + 
-  ggplot2::geom_sf(
-    data =
-      predicted_watershed_piles_sf %>% 
-      dplyr::filter(pred_id %in% pred_id_temp) %>% 
-      dplyr::left_join(
-        ground_truth_prediction_match_ans %>%
-          dplyr::select(pred_id,match_grp)
-        , by = "pred_id"
-      ) %>% 
-      sf::st_transform(sf::st_crs(ortho_rast))
-    , mapping = ggplot2::aes(fill = match_grp, color = match_grp)
-    , alpha = 0
-    , lwd = 0.8
-  ) +
-  ggplot2::scale_fill_manual(values = pal_match_grp, name = "") +
-  ggplot2::scale_color_manual(values = pal_match_grp, name = "") +
-  ggplot2::theme(legend.position = "top") +
-  ggplot2::guides(
-    fill = ggplot2::guide_legend(override.aes = list(color = c(NA,NA,pal_match_grp["commission"])))
-    , color = "none"
+  dplyr::filter(sf::st_is_valid(.)) %>% 
+  st_remove_overlaps() %>%
+  # now we need to re-do the volume and area calculations
+  dplyr::mutate(
+    area_m2 = sf::st_area(.) %>% as.numeric()
+    , volume_m3 = area_m2*volume_per_area
+  ) %>% 
+  st_filter_area(min_area_m2 = min_area_m2, max_area_m2 = max_area_m2) %>% 
+  # filter for height
+  dplyr::filter(
+    max_height_m >= min_ht_m
+    & max_height_m <= max_ht_m
   )
-p_temp
+# dbscan_segs_poly %>% dplyr::glimpse()
+```
+
+### Watershed Segmentation
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r,eval=F}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  ) +
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r,eval=F, include=FALSE}
+ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_wshed_cnddts.jpg", height = 8, width = 8)
+```
+
+plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+
+```{r}
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
+  ggplot2::geom_sf(
+    data = watershed_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
+  )
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb12a.jpg", height = 8, width = 8)
-p_temp <- p_temp + ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb12b.jpg", height = 8, width = 8)
+ggplot2::ggsave(filename = "../data/workflow_ex_09_chm_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
-### Full Study Area
+nice
 
-we'll look at only predicted and ground truth piles that intersect with the unit boundary for our instance matching
-
-```{r}
-ground_truth_prediction_match_ans <- ground_truth_prediction_match(
-  ground_truth = slash_piles_polys %>% 
-    dplyr::filter(is_in_stand) %>% 
-    dplyr::arrange(desc(field_diameter_m)) %>% 
-    sf::st_transform(sf::st_crs(predicted_watershed_piles_sf))
-  , gt_id = "pile_id"
-  , predictions = predicted_watershed_piles_sf %>% dplyr::filter(is_in_stand)
-  , pred_id = "pred_id"
-  , min_iou_pct = 0.05
-)
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
-let's look at that spatially for the entire area
+### DBSCAN Segmentation
 
-```{r}
-# plot it
-ortho_plt_fn(my_ortho_rast = ortho_rast, stand = stand_boundary %>% sf::st_transform(sf::st_crs(ortho_rast)), buffer = 10) +
-# ggplot2::ggplot() +
-  ggplot2::geom_sf(data = stand_boundary %>% sf::st_transform(sf::st_crs(ortho_rast)), fill = NA, color = "black", lwd = 0.8) +
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
+
+```{r,eval=F}
+aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
-    data = 
-      slash_piles_polys %>% 
-      dplyr::filter(is_in_stand) %>% 
-      dplyr::left_join(
-        ground_truth_prediction_match_ans %>% 
-          dplyr::select(pile_id,match_grp)
-        , by = "pile_id"
-      ) %>% 
-      sf::st_transform(sf::st_crs(ortho_rast))
-    , mapping = ggplot2::aes(fill = match_grp)
-    , color = NA ,alpha=0.6
-  ) + 
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
+  ) +
   ggplot2::geom_sf(
-    data =
-      predicted_watershed_piles_sf %>% 
-      dplyr::filter(is_in_stand) %>% 
-      dplyr::left_join(
-        ground_truth_prediction_match_ans %>%
-          dplyr::select(pred_id,match_grp)
-        , by = "pred_id"
-      ) %>% 
-      sf::st_transform(sf::st_crs(ortho_rast))
-    , mapping = ggplot2::aes(fill = match_grp, color = match_grp)
-    , alpha = 0
-    , lwd = 0.3
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
   ) +
-  ggplot2::scale_fill_manual(values = pal_match_grp, name = "") +
-  ggplot2::scale_color_manual(values = pal_match_grp, name = "") +
-  ggplot2::theme(legend.position = "top") +
-  ggplot2::guides(
-    fill = ggplot2::guide_legend(override.aes = list(color = c(NA,NA,pal_match_grp["commission"])))
-    , color = "none"
-  )
-ggplot2::ggsave("../data/watershed_pred_match.jpg", height = 8, width = 10.5)
+  ggplot2::theme(legend.position = "none")
 ```
 
-counts of instance matching results
-
-```{r}
-ground_truth_prediction_match_ans %>% 
-  dplyr::count(match_grp) %>% 
-  dplyr::mutate(pct = (n/sum(n)) %>% scales::percent(accuracy=0.1))
+```{r,eval=F, include=FALSE}
+ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-it looks like we did a really good job correctly predicting the location of actual piles (yellow) but that we incorrectly predicted pile locations at a relatively high rate. Our false positive predictions (i.e. commmissions) were frequently located in areas with quaking aspen (*Populus tremuloides*) which has many more short trees than the treated conifer areas.
-
-let's quickly look at the IoU values on the true positives
+plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
 
 ```{r}
-ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
-```
-
-#### Detection Accuracy{#det_accuracy_wshed_ex}
-
-we'll aggregate the raw instance match data to calculate our detection accuracy metrics
-
-```{r}
-agg_ground_truth_match(ground_truth_prediction_match_ans)
-```
-
-let's plot our confusion matrix
-
-```{r}
-confusion_matrix_temp <- agg_ground_truth_match(ground_truth_prediction_match_ans)
-confusion_matrix_scores_temp <- confusion_matrix_scores_fn(confusion_matrix_temp)
-# plot
-confusion_matrix_temp %>% 
-  dplyr::select(tidyselect::ends_with("_n")) %>% 
-  tidyr::pivot_longer(dplyr::everything()) %>% 
-  dplyr::mutate(
-    presence = ifelse(name %in% c("tp_n", "fn_n"),1,0)
-    , estimate = ifelse(name %in% c("tp_n", "fp_n"),1,0)
-  ) %>% 
-  dplyr::mutate(
-    is_false = as.factor(ifelse(presence!=estimate,1,0))
-    , presence_fact = factor(presence,levels = 0:1,labels = c("Observed Absent", "Observed Present"))
-    , estimate_fact = factor(estimate,levels = 0:1,labels = c("Predicted Absent", "Predicted Present"))
-    , pct = value/sum(value)
-  ) %>% 
-  ggplot(mapping = aes(y = estimate_fact, x = presence_fact)) +
-  geom_tile(aes(fill = is_false), color = "white",alpha=0.8) +
-  geom_text(aes(label = scales::comma(value,accuracy=1)), vjust = 1,size = 8) +
-  geom_text(aes(label = scales::percent(pct,accuracy=0.1)), vjust = 3.5, size=5) +
-  scale_fill_manual(values= c("turquoise","tomato2")) +
-  scale_x_discrete(position = "top") +
-  labs(
-    y = "Predicted"
-    , x = "Observed"
-    , subtitle = paste0(
-      "True positive rate (recall) = "
-        , confusion_matrix_scores_temp$recall %>% 
-          scales::percent(accuracy = 0.1)
-      , "\nPrecision (PPV) = "
-        , confusion_matrix_scores_temp$precision %>% 
-          scales::percent(accuracy = 0.1)
-      , "\nF1-score = "
-        , confusion_matrix_scores_temp$f_score %>% 
-          scales::percent(accuracy = 0.1)
-    )
+plt_aoi_chm(aoi_chm_rast_slice) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "blue", lwd = 0.6
   ) +
-  theme_light() + 
-  theme(
-    legend.position = "none"
-    , panel.grid = element_blank()
-    , plot.title = element_text(size = 9)
-    , plot.subtitle = element_text(size = 9)
+  ggplot2::geom_sf(
+    data = dbscan_segs_poly
+    , fill = NA, color = "brown", lwd = 0.8
   )
 ```
 
-#### Quantification Accuracy
-
-let's add structural measurements to our instance matching data
-
-first, we'll review what structural information we already have for the predicted segments
-
-```{r}
-predicted_watershed_piles_sf %>% dplyr::glimpse()
+```{r, include=FALSE,eval=TRUE}
+ggplot2::ggsave(filename = "../data/workflow_ex_09_chm_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-Our quantification accuracy evaluation will be restricted to measurements that were directly collected across both sites (i.e. training and validation site). The ground truth dataset only includes direct data for field-measured height, field-measured diameter, and image-annotated area (based on pile perimeters). Accuracy and error metrics, such as ME, RMSE, and MAPE, will be only calculated for these direct measurements.
+nice
 
-We exclude quantification accuracy metrics for derived values, such as volume, because the resulting value would not constitute a true "error". Comparing our predicted volume to a volume that was *not* directly measured, but instead calculated using a geometric assumption (like assuming a perfectly circular base and paraboloid shape) would be inappropriate. This is because any resulting difference between the prediction and the ground truth would be a blend of three inseparable factors: the error of the remote-sensing prediction method, the error in the direct field measurements (diameter/height), and the error introduced by the geometric shape assumption. Reporting such combined errors would be misleading, as it would be impossible to isolate the true performance of our remote-sensing method alone.
-
-Instead, data involving these derived values (e.g., predicted volume versus the volume based on field measurements and a shape assumption) will be treated simply as data points for insight into the differences. Using geometric shape assumptions for estimating pile volume is the standard practice when implementing prescriptions or preparing for slash pile burning ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)). This comparison will help us understand the discrepancy between our irregularly shaped CHM-derived volume and the volume calculated assuming a perfectly circular base and paraboloid shape with field-measured height and diameter. This approach will still provide valuable context about the impact of the perfectly circular base and paraboloid geometric assumptions without falsely attributing the error of the simplified model to the remote-sensing method itself.
-
-tl;dr: we already have height and area for our predicted piles, we need to calculate diameter. we will not use volume of the ground truth piles to calculate the error in volume measurement of predicted piles because we did not directly measure volume of the ground truth piles.
-
-use our `st_calculate_diameter()` function to add diameter to the predicted piles
-
-```{r}
-predicted_watershed_piles_sf <- st_calculate_diameter(predicted_watershed_piles_sf)
-# predicted_watershed_piles_sf %>% dplyr::glimpse()
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
 ```
 
-now, we'll add pile measurement data for both the ground truth and prediction data to our instance matched data. we'll also calculate difference columns for the different measurements based on the formulas in this [prior section](#quant_metrics_form)
+### Quick methods comparison
+
+let's quickly look at the watershed and dbscan segments on the same plot
 
 ```{r}
-# add pile measurement data
-ground_truth_prediction_match_ans <- 
-  ground_truth_prediction_match_ans %>% 
-  # join on gt area data
-  dplyr::left_join(
-    slash_piles_polys %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::select(pile_id, height_m, image_gt_area_m2, field_diameter_m) %>% 
-      dplyr::rename(
-        gt_height_m = height_m
-        , gt_area_m2 = image_gt_area_m2
-        , gt_diameter_m = field_diameter_m
-      )
-    , by = "pile_id"
-  ) %>% 
-  # join on pred area data
-  dplyr::left_join(
-    predicted_watershed_piles_sf %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::select(pred_id, max_height_m, area_m2, diameter_m) %>% 
-      dplyr::rename(
-        pred_height_m = max_height_m
-        , pred_area_m2 = area_m2
-        , pred_diameter_m = diameter_m
-      )
-    , by = "pred_id"
-  ) %>% 
-  # calculate difference columns
-  dplyr::mutate(
-    # area_m2
-    diff_area_m2 = pred_area_m2-gt_area_m2
-    , pct_diff_area_m2 = (gt_area_m2-pred_area_m2)/gt_area_m2
-    # height_m
-    , diff_height_m = pred_height_m-gt_height_m
-    , pct_diff_height_m = (gt_height_m-pred_height_m)/gt_height_m
-    # diameter_m
-    , diff_diameter_m = pred_diameter_m-gt_diameter_m
-    , pct_diff_diameter_m = (gt_diameter_m-pred_diameter_m)/gt_diameter_m
-  )
-```
-
-let's check out the relationship between our predictions and the ground truth data
-
-```{r}
-df_temp <- ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp == "true positive") %>% 
-  dplyr::select(
-    pile_id
-    , (tidyselect::starts_with("pred_") | tidyselect::starts_with("gt_"))
-  ) %>% 
-  dplyr::select(-c(pred_id)) %>% 
-  tidyr::pivot_longer(cols = -pile_id) %>% 
-  dplyr::mutate(
-    which_data = stringr::str_extract(name, "^[^_]+")
-    , name = stringr::str_remove(name, paste0(which_data,"_"))
-  ) %>% 
-  tidyr::pivot_wider(
-    names_from = which_data
-    , values_from = value
-  ) %>% 
-  dplyr::mutate(
-    name = dplyr::case_match(
-      name
-      , "height_m" ~ "Height (m)"
-      , "area_m2" ~ "Area (m2)"
-      , "diameter_m" ~ "Diameter (m)"
-    )
-  )
-plt_list_temp <- 
-  unique(df_temp$name) %>% 
-  purrr::map(function(x){
-    # get limit
-    max_val <- df_temp %>% 
-      dplyr::ungroup() %>% 
-      dplyr::filter(name==x) %>% 
-      dplyr::summarise(max_gt = max(gt,na.rm = T),max_pred = max(pred,na.rm = T)) %>% 
-      tidyr::pivot_longer(dplyr::everything()) %>% 
-      dplyr::pull(value) %>% 
-      max(na.rm = T)
-    
-    plt <- df_temp %>% 
-      dplyr::filter(name==x) %>% 
-      ggplot2::ggplot(mapping = ggplot2::aes(x = gt, y = pred)) +
-      ggplot2::geom_abline(lwd = 1.5) +
-      ggplot2::geom_point(color = "navy", size = 2, alpha = 0.9) +
-      ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
-      ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
-      ggplot2::facet_grid(cols = dplyr::vars(name)) +
-      ggplot2::scale_x_continuous(limits = c(0,max_val), breaks = scales::breaks_extended(n=7)) +
-      ggplot2::scale_y_continuous(limits = c(0,max_val), breaks = scales::breaks_extended(n=7)) +
-      ggplot2::labs(
-        x = "ground truth"
-        , y = "predicted"
-      ) +
-      ggplot2::theme_light() +
-      ggplot2::theme(
-        strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
-      )
-    return(plt)
-  })
-patchwork::wrap_plots(
-  plt_list_temp
-  , ncol = 3
-)
-```
-
-the method performed well at extracting the diameter of the pile when compared to the field-measured value with a slight overestimation overall. with respect to pile area, the method performed very well compared to the image-annotated pile perimeters but tended to under-predict area for the largest piles. the method's height estimation was more variable in it's accuracy when compared to the field-measured values and, on-average, performed well for the shorter and intermediate height piles but under-predicted pile height for the tallest piles, this suggests that we set our maximum height threshold too low (set at `r max_ht_m` for this demonstration) for these larger piles.
-
-let's look closer at the difference in area for each pile spatially
-
-```{r}
-# look at this spatially
 ggplot2::ggplot() +
   ggplot2::geom_sf(
-    data = predicted_watershed_piles_sf %>% 
-      dplyr::inner_join(
-        ground_truth_prediction_match_ans %>% dplyr::select(pred_id,diff_area_m2,pct_diff_area_m2)
-      )
-    , mapping = ggplot2::aes(fill = pct_diff_area_m2)
-    , color = NA
-  ) +
+    data = watershed_segs_poly, mapping=ggplot2::aes(color="watershed")
+    , fill = NA, lwd = 2
+  ) + 
   ggplot2::geom_sf(
-    data = slash_piles_polys %>% 
-      dplyr::inner_join(
-        ground_truth_prediction_match_ans %>% dplyr::select(pile_id)
-      )
-    , fill = NA, color = "blue"
-  ) +
-  ggplot2::scale_fill_stepsn(
-    n.breaks = 7
-    , colors = scales::pal_div_gradient()(seq(1, 0, length.out = 7))
-    , limits = c(-max(abs(fivenum(ground_truth_prediction_match_ans$pct_diff_area_m2))),max(abs(fivenum(ground_truth_prediction_match_ans$pct_diff_area_m2))))
-    , labels = scales::percent_format(accuracy = 1)
-    , show.limits = T
-  ) +
-  ggplot2::labs(fill = "% difference area") +
-  ggplot2::theme_void()
-# and get a summary of the percent error
-summary(ground_truth_prediction_match_ans$pct_diff_area_m2)
+    data = dbscan_segs_poly, mapping=ggplot2::aes(color="dbscan")
+    , fill = NA, lwd = 1
+  ) + 
+  ggplot2::scale_color_manual(values = c("gray33", "aquamarine3"),name="") +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "top")
 ```
 
-the ground truth, image-annotated area is well aligned with the predicted area for most piles (negative values indicate the predicted area is larger than the ground truth area and vice-versa)
+exactly the same
 
-and let's look at the distribution of the difference in area (m2) calculated as the predicted area minus the image-annotated area so that negative difference values mean our predictions were smaller and positive values mean our predictions were larger (this is opposite of our percent difference value)
-
-```{r}
-# plot the difference of the area
-ground_truth_prediction_match_ans %>% 
-  ggplot2::ggplot(
-    mapping = ggplot2::aes(x = diff_area_m2)
-  ) +
-  ggplot2::geom_density(fill = "gray", color = NA) +
-  ggplot2::geom_vline(xintercept = median(ground_truth_prediction_match_ans$diff_area_m2,na.rm=T)) +
-  ggplot2::annotate(
-    "text", x = median(ground_truth_prediction_match_ans$diff_area_m2,na.rm=T), y = 0
-    , label = paste("median:",scales::comma(median(ground_truth_prediction_match_ans$diff_area_m2,na.rm=T),accuracy=0.1),"m2")
-    , hjust = 1.01, vjust = 1
-  ) +
-  ggplot2::labs(y="density",x="area difference (m2)", subtitle = "Difference in area between predicted and image-annotated slash piles (m2)") +
-  ggplot2::theme_light() +
-  ggplot2::theme(axis.text.y = ggplot2::element_blank())
-  # ggplot2::geom_boxplot(outliers = F)
-
-```
-
-O_O nice
-
-finally, we'll aggregate the raw instance matches to calculate quantification accuracy metrics
+let's see how many segments were originally detected using each method and how many we are left with after our filtering for shape irregularity, pile area and height expectations, circularity, and potential overlaps after smoothing?
 
 ```{r}
-# agg_ground_truth_match()
-agg_ground_truth_match(ground_truth_prediction_match_ans) %>% 
-  dplyr::glimpse()
-```
-
-our area predictions are not very good, we'll have to check out if those image-annotated areas are accurate
-
-also, we can make a pretty table of these detection and quantification accuracy metrics
-
-```{r}
-agg_ground_truth_match(ground_truth_prediction_match_ans) %>% 
-  # first select to arrange eval_metric
-  dplyr::select(
-    # detection
-    f_score, recall, precision
-    # quantification
-    , tidyselect::ends_with("_mean")
-    , tidyselect::ends_with("_rmse")
-    # , tidyselect::ends_with("_rrmse")
-    , tidyselect::ends_with("_mape")
-  ) %>% 
-  # second select to arrange pile_metric
-  dplyr::select(
-    # detection
-    f_score, recall, precision
-    # quantification
-    , c(tidyselect::contains("volume") & !tidyselect::contains("paraboloid"))
-    , tidyselect::contains("area")
-    , tidyselect::contains("height")
-    , tidyselect::contains("diameter")
+dplyr::tibble(
+    method = c("watershed", "DBSCAN")
+    , old_segments = c(
+      terra::freq(watershed_segs) %>% nrow()
+      , terra::freq(dbscan_segs) %>% nrow()
+    )
+    , new_segments = c(
+      nrow(watershed_segs_poly)
+      , nrow(dbscan_segs_poly)
+    )
+    # area
+    , old_area = c(
+      terra::cellSize(watershed_segs) %>% 
+        terra::crop(watershed_segs,mask=T) %>% 
+        terra::global(fun="sum", na.rm=T) %>% 
+        as.numeric()
+      , terra::cellSize(dbscan_segs) %>% 
+        terra::crop(dbscan_segs,mask=T) %>% 
+        terra::global(fun="sum", na.rm=T) %>% 
+        as.numeric()
+    )
+    , new_area = c(
+      watershed_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+      , dbscan_segs_poly %>% sf::st_union() %>% sf::st_area() %>% as.numeric()
+    )
   ) %>% 
   dplyr::mutate(
-    dplyr::across(
-      .cols = c(f_score, recall, precision, tidyselect::ends_with("_mape"))
-      , .fn = ~ scales::percent(.x, accuracy = 1)
-    )
-    , dplyr::across(
-      .cols = c(tidyselect::ends_with("_mean"))
-      , .fn = ~ scales::comma(.x, accuracy = 0.01)
-    )
-    , dplyr::across(
-      .cols = c(tidyselect::ends_with("_rmse"))
-      , .fn = ~ scales::comma(.x, accuracy = 0.1)
-    )
+    segments_pct_removed = scales::percent((new_segments-old_segments)/old_segments, accuracy = 0.1)
+    , dplyr::across(tidyselect::ends_with("segments"), ~scales::comma(.x,accuracy=1))
+    , area_pct_removed = scales::percent((new_area-old_area)/old_area, accuracy = 0.1)
+    , dplyr::across(tidyselect::ends_with("area"), ~scales::comma(.x,accuracy=0.1))
   ) %>% 
-  tidyr::pivot_longer(
-    cols = c(
-      f_score, recall, precision
-      , tidyselect::ends_with("_rmse")
-      , tidyselect::ends_with("_rrmse")
-      , tidyselect::ends_with("_mean")
-      , tidyselect::ends_with("_mape")
-    )
-    , names_to = "metric"
-    , values_to = "value"
+  dplyr::select(
+    method
+    ,tidyselect::ends_with("_segments"), segments_pct_removed
+    ,tidyselect::ends_with("_area"), area_pct_removed
   ) %>% 
-  dplyr::mutate(
-    eval_metric = stringr::str_extract(metric, "(_rmse|_rrmse|_mean|_mape|f_score|recall|precision)$") %>% 
-      stringr::str_remove_all("_") %>% 
-      stringr::str_replace_all("mean","me") %>% 
-      toupper() %>% 
-      factor(
-        ordered = T
-        , levels = c("FSCORE","RECALL","PRECISION", "ME","RMSE","RRMSE","MAPE")
-        , labels = c("F-score","Recall","Precision", "ME","RMSE","RRMSE","MAPE")
-      )
-    , pile_metric = metric %>% 
-      stringr::str_remove("(_rmse|_rrmse|_mean|_mape)$") %>% 
-      stringr::str_extract("(paraboloid_volume|volume|area|height|diameter)") %>% 
-      dplyr::coalesce("detection") %>% 
-      stringr::str_c(
-        dplyr::case_when(
-          stringr::str_detect(metric,"(field|image)") ~ paste0(" (", stringr::str_extract(metric,"(field|image)"), ")")
-          , T ~ ""
-        )
-      ) %>% 
-      stringr::str_replace("area", "area m<sup>2</sup>") %>% 
-      stringr::str_replace("volume", "volume m<sup>3</sup>") %>% 
-      stringr::str_replace("diameter", "diameter m") %>% 
-      stringr::str_replace("height", "height m") %>% 
-      stringr::str_to_sentence()
-    , sorter = ifelse(pile_metric=="Detection",0,1)
-  ) %>% 
-  dplyr::arrange(sorter, pile_metric, eval_metric) %>% 
-  dplyr::select(pile_metric,eval_metric,value) %>% 
   kableExtra::kbl(
-    caption = "pile detection and form quantification accuracy metrics"
+    caption = "Demonstration area candidate segments by method<br>final candidate segments fully filtered for size and geometric expectations"
     , col.names = c(
-      ".", ""
-      , "value"
+      "method"
+      , "orig. candidate<br>segments", "final<br>segments", "% candidates<br>removed"
+      , "orig. candidate<br>area (m<sup>2</sup>)", "final<br>area (m<sup>2</sup>)", "% area<br>removed"
     )
     , escape = F
   ) %>% 
-  kableExtra::kable_styling(font_size = 12) %>% 
-  kableExtra::collapse_rows(columns = 1, valign = "top")
+  kableExtra::kable_styling()
+
+
 ```
 
-remember, these metrics are just for a test case of the method we just outlined. we're going to formalize this detection method and then explore different parameterizations of the method to determine a range of expected accuracies based on the input data and settings.
+wow that is a lot of filtering
 
 ## Watershed Pile Detection Function{#slash_pile_detect_watershed}
 
