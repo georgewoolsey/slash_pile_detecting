@@ -84,10 +84,11 @@ knitr::write_bib(c(
   , "patchwork"
   , "ggnewscale"
   , "terra"
-  , "stars"
+  , "lwgeom"
   , "sf"
   , "brms"
   , "tidybayes"
-  , "parallel"
+  , "rgl"
+  , "cloud2trees"
 ), 'packages.bib')
 ```

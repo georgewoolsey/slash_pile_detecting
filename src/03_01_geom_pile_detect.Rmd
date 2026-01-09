@@ -3509,8 +3509,6 @@ p4_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>%
 (p1_temp + p2_temp) / (p3_temp + p4_temp)
 ```
 
-the volume per area ratio (`volume_per_area`) quantifies the "effective" height or depth of that volume relative to the area it occupies; this ratio may not be very useful for anything other than scaling estimates to relate a three-dimensional quantity (volume) to a two-dimensional quantity (area)
-
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 gc()

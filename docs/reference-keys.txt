@@ -2,10 +2,11 @@ tab:unnamed-chunk-10
 tab:unnamed-chunk-17
 tab:unnamed-chunk-18
 tab:unnamed-chunk-149
-tab:unnamed-chunk-151
-tab:unnamed-chunk-153
-tab:unnamed-chunk-172
-tab:unnamed-chunk-192
+tab:unnamed-chunk-152
+tab:unnamed-chunk-155
+tab:unnamed-chunk-174
+tab:unnamed-chunk-194
+tab:unnamed-chunk-232
 introduction
 objective
 data_desc
@@ -45,6 +46,7 @@ overview-of-methods
 watershed-segmentation-demonstration
 dbscan-segmentation-demonstration
 comparison-of-candidate-segments
+segmentation-function
 candidate-shape-refinement-and-area-filtering
 watershed-segmentation
 dbscan-segmentation
@@ -58,3 +60,12 @@ shape-irregularity-circularity
 watershed-segmentation-2
 dbscan-segmentation-2
 circularity-filter-function
+quick-methods-comparison-1
+structural-metrics-from-chm
+structural-rasters
+demonstration-candidate-segment-metrics
+final-shape-refinement
+watershed-segmentation-3
+dbscan-segmentation-3
+quick-methods-comparison-2
+slash_pile_detect_watershed
