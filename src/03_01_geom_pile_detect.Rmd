@@ -232,14 +232,6 @@ We developed dynamic logic to automatically bridge the gap between the expectati
 let's define a function to get these parameters based on the user-defined size thresholds and the input data description
 
 ```{r}
-target_radius_m <- sqrt(min_area_m2 / pi)
-effective_radius_m <- target_radius_m * 0.5
-ext_val <- max(1, round(effective_radius_m / rast_res_m))
-spacing <- 1 / sqrt(pts_per_m2)
-connectivity_eps <- 1.5 * spacing
-max_allowable_eps <- effective_radius_m * 0.5
-eps_val <- min(connectivity_eps, max_allowable_eps)
-  
 # function to get segmentation parameters
 get_segmentation_params <- function(
   min_ht_m
@@ -3226,9 +3218,9 @@ slash_pile_detect <- function(
        identical(as.numeric(min_circularity_ratio), numeric(0)) || 
        !is.numeric(tryCatch(as.numeric(min_circularity_ratio), error = function(e) NA))) ||
       as.numeric(min_convexity_ratio)<0 ||
-      as.numeric(min_convexity_ratio)>0 ||
+      as.numeric(min_convexity_ratio)>1 ||
       as.numeric(min_circularity_ratio)<0 ||
-      as.numeric(min_circularity_ratio)>0
+      as.numeric(min_circularity_ratio)>1
     ){
       # Code to execute if any condition is met (e.g., print an error message)
       stop("Error: One or more of `min_convexity_ratio`,`min_circularity_ratio` are not valid numbers between 0 and 1.")
@@ -3415,20 +3407,20 @@ slash_pile_detect <- function(
 }
 ```
 
-remove all other parameters that might interfere with this function
+remove all other parameters and objects that might have the same name as in this function since we used the framework outlined above to define this (fantastic?) beast of a function
 
 ```{r, results=F}
 remove(
-  min_ht_m
-  , max_ht_m
-  , min_area_m2
-  , max_area_m2
+  min_ht_m, max_ht_m
+  , min_area_m2, max_area_m2
   , min_convexity_ratio
   , min_circularity_ratio
   , get_segmentation_params_ans
+  , dbscan_segs_poly, watershed_segs_poly
   , dbscan_segs, watershed_segs
   , dbscan_segs_poly_chull, dbscan_segs_poly_mbc
   , watershed_segs_poly_chull, watershed_segs_poly_mbc
+  , aoi_chm_rast_slice
 )
 gc()
 ```
@@ -3436,56 +3428,78 @@ gc()
 let's test this real quick on our example area
 
 ```{r}
-# terra::plot(example_aoi_chm, axes = F, legend = F)
-# terra::plot(
-#   example_aoi %>% sf::st_transform(sf::st_crs(example_aoi_chm)) %>% terra::vect()
-#   , add = T, border = "black", col = NA, lwd = 1.2
-# )
 slash_pile_detect_watershed_ans_temp <- slash_pile_detect(
   chm_rast = aoi_chm_rast
-  , min_ht_m = 0.5
+  , seg_method = "watershed"
+  , min_ht_m = 1.5
   , max_ht_m = 4.5
-  , min_area_m2 = 2
+  , min_area_m2 = 1.5^2
   , max_area_m2 = 50
-  , convexity_pct = 0.8
-  , circle_fit_iou_pct = 0.5
+  , min_convexity_ratio = 0.7
+  , min_circularity_ratio = 0.5
 )
+```
+
+the `slash_pile_detect()` function returns: 
+
+1) `segs_sf`: the segments that passed all size and geometric expectations for target slash piles
+2) `seg_mthd_params`: the dynamic parameters used in the Watershed or DBSCAN segmentation method
+2) `slice_chm_rast`: the height-filtered CHM slice used to segment candidate slash piles
+
+```{r}
 # what did we get?
 slash_pile_detect_watershed_ans_temp %>% dplyr::glimpse()
 ```
 
-how does it look overlaid on the CHM?
+let's check out the height-filtered CHM "slice"
 
 ```{r}
-terra::plot(example_aoi_chm, col = viridis::plasma(100), axes = F)
-terra::plot(slash_pile_detect_watershed_ans_temp %>% terra::vect(),add = T, border = "brown", col = NA, lwd = 3)
+slash_pile_detect_watershed_ans_temp$slice_chm_rast %>% 
+  terra::plot(axes = F, col = viridis::plasma(100), main = "filtered CHM (m)")
+```
+
+let's overlay plot the final candidate segments (brown) and the actual piles (blue) on the raw, un-filtered CHM
+
+```{r}
+aoi_chm_rast %>% 
+  terra::plot(axes = F, col = viridis::plasma(100), main = "CHM (m) and demonstration piles")
+terra::plot(
+  aoi_slash_piles_polys %>% 
+    sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
+    terra::vect()
+  , add = T, border = "blue", col = NA, lwd = 2
+)
+terra::plot(
+  slash_pile_detect_watershed_ans_temp$segs_sf %>% terra::vect()
+  , add = T, border = "brown", col = NA, lwd = 2.5
+)
 ```
 
 how do the form quantification measurements look?
 
 ```{r}
-p1_temp <- slash_pile_detect_watershed_ans_temp %>% 
+p1_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>% 
   ggplot2::ggplot() +
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = area_m2)) +
   ggplot2::scale_fill_distiller(palette = "Blues", direction = 1) +
   ggplot2::labs(x="",y="") +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "top", axis.text = ggplot2::element_blank())
-p2_temp <- slash_pile_detect_watershed_ans_temp %>% 
+p2_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>% 
   ggplot2::ggplot() +
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = volume_m3)) +
-  ggplot2::scale_fill_distiller(palette = "BuGn", direction = 1) +
+  ggplot2::scale_fill_distiller(palette = "Purples", direction = 1) +
   ggplot2::labs(x="",y="") +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "top", axis.text = ggplot2::element_blank())
-p3_temp <- slash_pile_detect_watershed_ans_temp %>% 
+p3_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>% 
   ggplot2::ggplot() +
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = max_height_m)) +
-  ggplot2::scale_fill_distiller(palette = "YlOrBr", direction = 1) +
+  ggplot2::scale_fill_distiller(palette = "Greens", direction = 1) +
   ggplot2::labs(x="",y="") +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "top", axis.text = ggplot2::element_blank())
-p4_temp <- slash_pile_detect_watershed_ans_temp %>% 
+p4_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>% 
   ggplot2::ggplot() +
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = diameter_m)) +
   ggplot2::scale_fill_distiller(palette = "PuRd", direction = 1) +
@@ -3502,17 +3516,3 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
-remove(list = ls()[grep("_temp",ls())])
-remove(
-  max_ht_m, min_area_m2, max_area_m2, watershed_ans
-  , watershed_ans_poly, watershed_ans_poly_chull
-  , pct_chull_overlap, watershed_keep_overlaps_chull_pred_id
-  , watershed_ans_poly_circle_fit, watershed_circle_fit_iou
-  , pct_iou_circle_fit, watershed_keep_circle_fit_pred_id
-  , ht_df, area_df, area_rast, ground_truth_prediction_match_ans
-  , plt_ortho_example, predicted_watershed_piles_sf, smooth_chm_rast
-  , vol_df, vol_rast, min_ht_m, smooth_watershed_ans
-)
-gc()
-```
