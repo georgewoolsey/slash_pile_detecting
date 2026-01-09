@@ -1,4 +1,4 @@
-# Geometry-based Slash Pile Detection{#raster_watershed}
+# Geometry-based Slash Pile Detection{#geom_detect}
 
 In this section, we will demonstrate the geometry-based slash pile detection method which relies upon user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data. Since this is only a demonstration of the method, we will work with only a sample area from one of the study sites which we know includes slash piles. Full evaluation of the methodology will be performed later in the analysis.
 
@@ -12,9 +12,9 @@ Geometric, rules-based object detection methods offer advantages over model-base
 
 To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation or DBSCAN (Density-Based Spatial Clustering of Applications with Noise). Both of these methods are common in segmenting individual trees and coarse woody debris from CHM data.
 
-## Demonstration Area
+## Demonstration Area{#d_area}
 
-we'll focus on a 2,000 square meter example area
+we'll focus on a 4,500 square meter example area
 
 ```{r, include = F, eval = F}
 mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
@@ -3165,7 +3165,7 @@ The rule-based method for slash pile detection using CHM raster data we reviewed
 * *Circularity Filtering*: A circularity filter is applied to measure a shape's dispersion by dividing the candidate polygon area by the area of its minimum bounding circle. This second-stage shape irregularity filter targets the round bases typical of manual construction by penalizing elongated or non-circular shapes that do not adequately fill their circumcircle.
 * *Final Shape Refinement & Overlap Removal*: Lastly, segments are smoothed using their convex hull to remove the "blocky" raster edges (like they were made in Minecraft). Overlapping convex hull shapes are then removed to prevent false positives from clustered small trees or shrubs, ensuring singular pile detections.
 
-Let's package all of the steps we demonstrated when [formulating the methodology](#raster_watershed) into a single function which can possibly be integrated into the `cloud2trees` package.
+Let's package all of the steps we demonstrated when [formulating the methodology](#geom_detect) into a single function which can possibly be integrated into the `cloud2trees` package.
 
 The parameters are defined as follows:
 

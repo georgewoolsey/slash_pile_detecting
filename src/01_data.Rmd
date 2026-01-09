@@ -24,7 +24,6 @@ library(latex2exp)
 library(mapview) # interactive html maps
 library(kableExtra) # tables
 library(patchwork) # combine plots
-library(corrplot) # correlation plots
 library(ggnewscale) # new scale
 library(grDevices) # default graphics
 

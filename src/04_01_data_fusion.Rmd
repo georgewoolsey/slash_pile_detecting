@@ -1,12 +1,16 @@
 # Data Fusion{#data_fusion}
 
-We'll now test and approach that uses both aerial point cloud data (for structural information) and RGB imagery (for spectral information) which is a data fusion approach. First, we'll identify initial candidate slash piles based on their structural form using our raster-based [watershed segmentation approach](#slash_pile_detect_watershed). Then, we'll use the RGB imagery to filter these candidates spectrally: relevant RGB vegetation indices such as Green Red Vegetation Index (GRVI), Red Green Ratio Index (RGRI), Visible Band-Difference Vegetation Index (VDVI), Red Green Ratio Index (RGRI), Red Green Blue Vegetation Index (RGBVI), and Excess Green (ExG) are calculated for each candidate segment, and thresholds are applied to remove those exhibiting high greenness. Index thresholds tested include those found to perform well in distinguishing green vegetation in previous research ([Motohka et al. 2010](https://doi.org/10.3390/rs2102369); [Wang et al. 2025](https://doi.org/10.3390/plants14111677); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)). Filtering candidate segments using spectral data will enhance our method's ability to distinguish non-photosynthetic slash piles from living vegetation (e.g., small trees or shrubs) that might share similar structural profiles. 
+We'll demonstrate our approach that uses both aerial point cloud-generated CHM data (for structural information) and RGB imagery (for spectral information) which is a data fusion approach. In the prior section, we demonstrated our geometric, rules-based [slash pile detection approach](#geom_detect). Our data fusion approach identify initial candidate slash piles based on their structural form using this geometric, rules-based method and then integrates the RGB imagery to filter these candidates spectrally. This data fusion methodology leverages the complementary strengths of both data types, using 3D geometry (or "2.5D" as CHM is sometimes referred to) for initial object segmentation and spectral data to refine detections by using thresholds defined to identify green biomass and rock and soil features for exclusion.
+
+we'll continue using the same demonstration area for this walkthrough as introduced in the [prior section](#d_area)
+
+## RGB Indices
+
+Relevant RGB vegetation indices such as Green Red Vegetation Index (GRVI), Red Green Ratio Index (RGRI), Visible Band-Difference Vegetation Index (VDVI), Red Green Ratio Index (RGRI), Red Green Blue Vegetation Index (RGBVI), and Excess Green (ExG) are calculated for each candidate segment, and thresholds are applied to remove those exhibiting high greenness. Index thresholds tested include those found to perform well in distinguishing green vegetation in previous research ([Motohka et al. 2010](https://doi.org/10.3390/rs2102369); [Wang et al. 2025](https://doi.org/10.3390/plants14111677); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)). Filtering candidate segments using spectral data will enhance our method's ability to distinguish non-photosynthetic slash piles from living vegetation (e.g., small trees or shrubs) that might share similar structural profiles. 
 
 While RGB vegetation indices are good for separating green biomass, differentiating between various shades of brown, black, and white of non-vegetated surfaces like slash piles, rocks, and bare soil can be more challenging. Many common rock-forming minerals are "spectrally featureless" in the visible range, often appearing pale grey to white ([Harris et al. 2010](http://dx.doi.org/10.5589/m10-072)). As such, we will attempt to filter out very dark (black) or very light (white) boulders from the reddish-brown tones common of wood in slash piles using RGB indices that focus on overall brightness and color purity ([Kior et al. 2024](https://doi.org/10.3390/plants13091262)). The Brightness Index (BI) can help us exclude extremely dark (black; low BI) or bright (white; high BI) objects. Setting a minimum threshold for saturation (i.e. color purity) can remove achromatic features (like grey, black, or white objects that have very low saturation values close to 0) to help us isolate more chromatic (brown) slash piles.
 
-This data fusion methodology leverages the complementary strengths of both data types, using 3D geometry for initial object segmentation and 2D spectral data to refine detections by excluding green biomass and potential rock and soil features that appear very dark or very light, leading to more accurate slash pile identification.
-
-## RGB Indices
+We'll test the spectral indices listed in the table below that rely only on RGB data. We'll use sample data to determine the correlation between the test indices so that we keep only indices that provide unique descriptions of the data.
 
 For these formulas, $R$, $G$, and $B$ represent the raw pixel values for the Red, Green, and Blue bands, respectively. For indices that use normalized values, $r$, $g$, and $b$ are defined as:
 
@@ -14,40 +18,17 @@ $r = \frac{R}{R+G+B}$
 $g = \frac{G}{R+G+B}$
 $b = \frac{B}{R+G+B}$
 
-**Green Red Vegetation Index (GRVI)**
-
-$$GRVI = \frac{G - R}{G + R}$$
-
-**Red Green Ratio Index (RGRI)**
-
-$$RGRI = \frac{R}{G}$$
-
-**Visible Band-Difference Vegetation Index (VDVI)**
-
-$$VDVI = \frac{2G - R - B}{2G + R + B}$$
-
-**Red Green Blue Vegetation Index (RGBVI)**
-
-$$RGBVI = \frac{G^2 - (B \cdot R)}{G^2 + (B \cdot R)}$$
-
-**Excess Green (ExG)**
-
-$$ExG = 2g - r - b = \frac{2G - R - B}{R+G+B}$$
-
-**Excessive Red (ExR)**
-$$ExR = 1.4r - g = \frac{1.4R - G}{R+G+B}$$
-
-**Excess Green-Excess Red (ExGR)**
-
-$$ExGR = 3g - 2.4r - b = \frac{3G - 2.4R - B}{R+G+B}$$
-
-**Brightness Index (BI)**
-
-$$BI = \sqrt{\frac{R^2+G^2+B^2}{3}}$$
-
-**Saturation**
-
-$$Saturation = \frac{\max(R,G,B) - \min(R,G,B)}{\max(R,G,B)}$$
+| Name | Acronym | Description | Recommended Formula | Potential Range |
+| :--- | :--- | :--- | :--- | :--- |
+| Green-Red Vegetation Index | GRVI | Detects vegetation greenness using a normalized difference. | $\frac{G - R}{G + R}$ | -1 to 1 |
+| Red-Green Ratio Index | RGRI | Compares red to green intensity to estimate plant pigment changes. | $\frac{R}{G}$ | 0 to $\infty$ |
+| Visible-band Difference Vegetation Index | VDVI | Index for extracting vegetation from complex backgrounds. | $\frac{2G - R - B}{2G + R + B}$ | -1 to 1 |
+| Red-Green-Blue Vegetation Index | RGBVI | Uses squared greenness to enhance contrast between plants and soil. | $\frac{G^2 - (R \cdot B)}{G^2 + (R \cdot B)}$ | -1 to 1 |
+| Excess Green Index | ExG | Standardized index to highlight vigorous vegetation growth. | $2g - r - b$ | -2 to 2 |
+| Excess Red Index | ExR | Highlights soil and non-vegetated surfaces; often used for masking. | $1.4r - g$ | -1 to 1.4 |
+| Excess Green-minus-Red Index | ExGR | Linear index for discriminating plants from shadow/soil. | $3g - 2.4r - b$ | -3.4 to 3 |
+| Brightness Index | BI | Measures light intensity (albedo), scaled to 0-1 by dividing by max(R,G,B). | $\frac{\sqrt{(R^2 + G^2 + B^2) / 3}}{\max(R, G, B)}$ | 0 to 1 |
+| Saturation Index | SI | Measures color purity; distance of the hue from a gray-scale value. | $\frac{\max(R, G, B) - \min(R, G, B)}{\max(R, G, B)}$ | 0 to 1 |
 
 ### Spectral Index Functions
 
@@ -236,8 +217,8 @@ spectral_index_saturation <- function(rast, red_band_idx, green_band_idx, blue_b
   G <- bands$G
   B <- bands$B
 
-  max_rgb <- max(R, G, B)
-  min_rgb <- min(R, G, B)
+  max_rgb <- max(R, G, B, na.rm = T)
+  min_rgb <- min(R, G, B, na.rm = T)
   sat <- (max_rgb - min_rgb) / max_rgb
   names(sat) <- "sat"
   return(sat)
@@ -278,7 +259,7 @@ let's test this `calculate_all_rgb_indices()` function with our orthomosaic
 
 ```{r, results='hide', message=FALSE, fig.show='asis'}
 # calculate_all_rgb_indices
-all_rgb_indices_rast <- calculate_all_rgb_indices(ortho_rast,red_band_idx = 1, green_band_idx = 2, blue_band_idx = 3)
+all_rgb_indices_rast <- calculate_all_rgb_indices(aoi_rgb_rast,red_band_idx = 1, green_band_idx = 2, blue_band_idx = 3)
 ```
 
 what did we get?
@@ -299,6 +280,7 @@ terra::plot(
   , mar = c(0.5,0.5,2,0.5)
   , axes = FALSE
   , legend = F
+  , col = grDevices::gray.colors(n=111)
 )
 ```
 
@@ -323,8 +305,6 @@ here is a plot of the different spectral indices (high values are brighter, low 
 
 ```{r, fig.height=9.2}
 all_rgb_indices_rast %>% 
-  terra::crop(example_aoi %>% sf::st_buffer(7.3) %>% terra::vect()) %>% 
-  terra::mask(example_aoi %>% sf::st_buffer(7.3) %>% terra::vect()) %>% 
   terra::plot(
     nc = 3
     , col = grDevices::gray.colors(111, start = 0, end = 1)
@@ -332,19 +312,11 @@ all_rgb_indices_rast %>%
     , axes = FALSE
     , legend = F
     , fun = function(){
-      lines(terra::vect(example_aoi), col="black", lwd=2)
+      lines(terra::vect(aoi_boundary), col="black", lwd=2)
       # add a second vector outline (blue)
       lines(
-        slash_piles_polys %>% 
-          dplyr::inner_join(
-            slash_piles_polys %>% 
-              sf::st_transform(sf::st_crs(example_aoi)) %>% 
-              sf::st_intersection(example_aoi) %>% 
-              sf::st_drop_geometry() %>% 
-              dplyr::select(pile_id)
-            , by = "pile_id"
-          ) %>% 
-          sf::st_transform(sf::st_crs(example_aoi)) %>% 
+        aoi_slash_piles_polys %>% 
+          sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
           terra::vect()
         , col = "blue", lwd = 1.3)
     }
@@ -980,7 +952,7 @@ polygon_spectral_filtering <- function(
 
 ## Data Fusion Example
 
-we previously worked through an example where we identified candidate slash piles based on their structural form using our raster-based [watershed segmentation approach](#slash_pile_detect_watershed). let's go back to that example and see how the spectral filtering method we defined above impacts the results.
+we previously worked through an example where we identified candidate slash piles based on their structural form using our raster-based [watershed segmentation approach](#geom_detect). let's go back to that example and see how the spectral filtering method we defined above impacts the results.
 
 first, load those example predictions
 
