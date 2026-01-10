@@ -301,7 +301,7 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-here is a plot of the different spectral indices (high values are brighter, low values are darker) on our example area we were working with in the last section with the ground truth piles in blue
+here is a plot of the different spectral indices (high values are brighter, low values are darker) on our example area we were working with in the last section with the demonstration piles in blue
 
 ```{r, fig.height=9.2}
 all_rgb_indices_rast %>% 
@@ -378,16 +378,15 @@ extract_rast_values <- function(sf_data, rast, fun_agg = mean) {
 
   return(sf_data_with_indices)
 }
-# extract_rast_values(slash_piles_polys, rast = ortho_rast) %>% dplyr::glimpse()
 ```
 
-## Ground Truth Pile Spectral Summary
+## Demonstration Pile Spectral Summary
 
-let's calculate the various spectral indices on our ground truth slash pile polygons by getting the median value within the bounds of the pile
+let's calculate the various spectral indices on our demonstration slash pile polygons by getting the median value within the bounds of the pile
 
 ```{r}
 # extract_rast_values
-rgb_indices_df <- extract_rast_values(slash_piles_polys, rast = all_rgb_indices_rast, fun_agg = median)
+rgb_indices_df <- extract_rast_values(aoi_slash_piles_polys, rast = all_rgb_indices_rast, fun_agg = median)
 rgb_indices_df %>% dplyr::glimpse()
 # quick summary
 rgb_indices_df %>% 
@@ -470,7 +469,7 @@ that's interesting. let's see how those values compare with the thresholds ident
 * GRVI: setting a threshold to remove candidate slash piles with GRVI>0.0 should *work moderately well*
   - We may need to raise this threshold to remove candidate slash piles with GRVI>0.05, for example
 * ExGR: setting a threshold to remove candidate slash piles with ExGR>0.0 should *work well*
-* BI: setting a threshold to remove candidate slash piles that are extremely dark (BI<0.10) or bright (BI>0.90) should *work well*
+* BI: setting a threshold to remove candidate slash piles that are extremely dark (BI<0.05) or bright (BI>0.95) should *work well*
 * Saturation: setting a threshold to remove candidate slash piles that have low saturation values (SAT<0.03) should *work well*
 
 Based on these thresholds identified in the literature and our objective to remove very highly correlated indices, we'll proceed with the following five indices to refine the structurally detected candidate slash piles:
@@ -483,18 +482,10 @@ Based on these thresholds identified in the literature and our objective to remo
 
 here is a plot of the median value of the different spectral indices (high values are brighter, low values are darker) within the bounds of the pile on our example area we were working with in the last section
 
-```{r, fig.height=9.2}
+```{r,eval=F, fig.height=9.2}
 polys_temp <-
   rgb_indices_df %>% 
-  dplyr::inner_join(
-    slash_piles_polys %>% 
-      sf::st_transform(sf::st_crs(example_aoi)) %>% 
-      sf::st_intersection(example_aoi) %>% 
-      sf::st_drop_geometry() %>% 
-      dplyr::select(pile_id)
-    , by = "pile_id"
-  ) %>% 
-  sf::st_transform(sf::st_crs(example_aoi)) %>% 
+  sf::st_transform(sf::st_crs(aoi_boundary)) %>% 
   dplyr::select(pile_id, tidyselect::starts_with("rast_agg_")) %>% 
   tidyr::pivot_longer(cols = tidyselect::starts_with("rast_agg_")) %>% 
   dplyr::mutate(name = stringr::str_remove(name,"rast_agg_"))
@@ -506,8 +497,8 @@ polys_temp <-
   #   ggplot2::theme(legend.position = "top")
 # rast clip
 rast_temp <- all_rgb_indices_rast %>% 
-  terra::crop(example_aoi %>% sf::st_buffer(7.3) %>% terra::vect()) %>% 
-  terra::mask(example_aoi %>% sf::st_buffer(7.3) %>% terra::vect()) 
+  terra::crop(aoi_boundary %>% sf::st_buffer(7.3) %>% terra::vect()) %>% 
+  terra::mask(aoi_boundary %>% sf::st_buffer(7.3) %>% terra::vect()) 
 
 # plot list
 plt_list_temp <- 
@@ -524,7 +515,7 @@ plt_list_temp <-
         , alpha = 0.9
       ) +
       ggplot2::geom_sf(
-        data = example_aoi
+        data = aoi_boundary
         , color = "black", fill = NA, lwd = 0.8
       ) +
       ggplot2::geom_sf(
@@ -578,7 +569,7 @@ patchwork::wrap_plots(
 )
 ```
 
-```{r, include=FALSE, eval=TRUE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave("../data/rast_agg.jpeg", height = 9.2, width = 10.5)
 ```
 
@@ -600,7 +591,7 @@ rgb_indices_threshold_voting <- function(
   , th_rgri = c((0.7+0.001),Inf) # increase each by 0.001 since we'll be checking lower<=x<=upper
   , th_vdvi = c(-Inf,(0.03+0.001)) # increase each by 0.001 since we'll be checking lower<=x<=upper
   , th_exgr = c(-Inf,0)
-  , th_bi = c(0.1,0.9)
+  , th_bi = c(0.05,0.95)
   , th_sat = c(0.03,Inf)
 ){
 
@@ -707,9 +698,9 @@ rgb_indices_df %>%
   summary()
 ```
 
-notice the "Mean" value in the summary above is the proportion of ground truth piles that successfully met the spectral index threshold criteria (i.e. piles to be "kept"). it looks like the SAT threshold was most unaligned with these ground truth piles, something we anticipated by looking at the distributions above compared the threshold value recommended in the literature for detecting green vegetation.
+notice the "Mean" value in the summary above is the proportion of demonstration piles that successfully met the spectral index threshold criteria (i.e. piles to be "kept"). it looks like the SAT threshold was most unaligned with these demonstration piles, something we anticipated by looking at the distributions above compared the threshold value recommended in the literature for detecting green vegetation.
 
-let's look at the proportional distribution of ground truth piles meeting the threshold by individual spectral index
+let's look at the proportional distribution of demonstration piles meeting the threshold by individual spectral index
 
 ```{r, fig.height=8}
 rgb_indices_df %>% 
@@ -755,7 +746,7 @@ rgb_indices_df %>%
   )
 ```
 
-and let's look at the distribution of ground truth piles based on the number of individual spectral index thresholds met. we'll use this count as our voting system.
+and let's look at the distribution of demonstration piles based on the number of individual spectral index thresholds met. we'll use this count as our voting system.
 
 ```{r}
 dplyr::tibble(value=0:5) %>% 
@@ -789,7 +780,7 @@ dplyr::tibble(value=0:5) %>%
   ) +
   ggplot2::labs(
     y = "", x = "spectral index threshold votes", color = "", fill = ""
-    , subtitle = "distribution of ground truth piles meeting spectral index thresholds"
+    , subtitle = "distribution of demonstration piles meeting spectral index thresholds"
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(
@@ -800,61 +791,6 @@ dplyr::tibble(value=0:5) %>%
 ```
 
 we can use this spectral index voting system to filter candidate slash piles with a user-defined parameter which defines the sensitivity of filtering based on the spectral information. For example, a value of "5" would heavily weight the spectral information in determining which piles to keep while a value of "1" would put less weight on the spectral data.
-
-let's see what some of those piles with the fewest votes look like on the imagery
-
-```{r, fig.height=8}
-# filter for the plots with the fewest votes
-dta_temp <- rgb_indices_df %>% 
-  dplyr::filter(inrange_th_votes<=4) %>% 
-  dplyr::slice_sample(n=12) %>% 
-  sf::st_transform(terra::crs(ortho_rast))
-# dta_temp %>% sf::st_drop_geometry() %>% dplyr::select(tidyselect::starts_with("rast_agg")) %>% summary()
-# plot on ortho
-plts_temp <-
-  1:nrow(dta_temp) %>%
-  purrr::map(function(x){
-    dta <- dta_temp %>% dplyr::slice(x)
-    dta <- dta %>% 
-      dplyr::bind_cols(
-        dta %>% 
-          sf::st_drop_geometry() %>% 
-          dplyr::select(tidyselect::starts_with("inrange_th_")) %>% 
-          tidyr::pivot_longer(cols = dplyr::everything()) %>% 
-          dplyr::mutate(name = stringr::str_remove_all(name,"inrange_th_") %>% stringr::str_to_upper()) %>% 
-          dplyr::filter(name!="VOTES" & value == 0) %>% 
-          dplyr::select(-value) %>% 
-          tidyr::pivot_wider(values_from = name) %>% 
-          dplyr::rowwise() %>% 
-          dplyr::mutate(
-            lab = paste(
-                dplyr::c_across(dplyr::everything())
-                , collapse = ", "
-              )
-          ) %>% 
-          dplyr::select(lab)
-      )
-    ortho_plt_fn(my_ortho_rast = ortho_rast, stand =dta) +
-      ggplot2::geom_sf(data = dta, fill = NA, color = "white", lwd = 0.6) +
-      ggplot2::labs(subtitle = paste0("Outside Threshold:\n",dta$lab)) + 
-      ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 9))  
-  })
-# combine
-patchwork::wrap_plots(
-  plts_temp
-  , ncol = 4
-)
-```
-
-```{r, include=FALSE, eval=TRUE}
-ggplot2::ggsave("../data/pile_tiles_spect_index_filtered.jpeg", height = 8, width = 9)
-```
-
-all of those piles would have been voted out based on ~~SAT or~~ BI since they are either in shadows or the dead wood appears very bright/white (perhaps we need to adjust those thresholds?). let's see a summary of those spectral index values for these piles with the fewest votes
-
-```{r}
-dta_temp %>% sf::st_drop_geometry() %>% dplyr::select(rast_agg_bi, rast_agg_sat) %>% summary()
-```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
@@ -881,7 +817,7 @@ polygon_spectral_filtering <- function(
   th_rgri <- c((0.7+0.001),Inf) # increase each by 0.001 since we'll be checking lower<=x<=upper
   th_vdvi <- c(-Inf,(0.03+0.001)) # increase each by 0.001 since we'll be checking lower<=x<=upper
   th_exgr = c(-Inf,0)
-  th_bi <- c(0.1,0.9)
+  th_bi <- c(0.05,0.95)
   th_sat <- c(0.03,Inf)
   
   # checks
@@ -957,6 +893,7 @@ we previously worked through an example where we identified candidate slash pile
 first, load those example predictions
 
 ```{r}
+xxx
 # structurally predicted
 predicted_watershed_piles_sf <- sf::st_read("../data/predicted_watershed_piles_sf.gpkg", quiet = T)
 # ortho plt
@@ -964,22 +901,22 @@ predicted_watershed_piles_sf <- sf::st_read("../data/predicted_watershed_piles_s
 buff_temp <- 7.3
 plt_ortho_example <- 
   ortho_plt_fn(
-    my_ortho_rast = ortho_rast, stand = example_aoi
+    my_ortho_rast = ortho_rast, stand = aoi_boundary
     , buffer = buff_temp
   )
 ```
 
-here is a reminder of the structurally-detected segments (brown) compared with the ground truth piles (blue) in the example area we have been looking at
+here is a reminder of the structurally-detected segments (brown) compared with the demonstration piles (blue) in the example area we have been looking at
 
 ```{r}
 plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = slash_piles_polys %>% 
       dplyr::inner_join(
         slash_piles_polys %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id)
       ) %>% 
@@ -991,7 +928,7 @@ plt_ortho_example +
       dplyr::inner_join(
         predicted_watershed_piles_sf %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1047,13 +984,13 @@ let's check out the results of the spectral filtering for our example area
 ```{r}
 p_temp <- 
   plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = slash_piles_polys %>% 
       dplyr::inner_join(
         slash_piles_polys %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id)
       ) %>% 
@@ -1065,7 +1002,7 @@ p_temp <-
       dplyr::inner_join(
         predicted_watershed_piles_sf %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1078,7 +1015,7 @@ p_temp <-
       dplyr::inner_join(
         predicted_watershed_piles_sf %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1105,13 +1042,13 @@ p_temp <- p_temp + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb13b.jpg", height = 8, width = 8)
 # fill na
 p_temp <- plt_ortho_example +
-  ggplot2::geom_sf(data = example_aoi, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = slash_piles_polys %>% 
       dplyr::inner_join(
         slash_piles_polys %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id)
       ) %>% 
@@ -1123,7 +1060,7 @@ p_temp <- plt_ortho_example +
       dplyr::inner_join(
         predicted_watershed_piles_sf %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1136,7 +1073,7 @@ p_temp <- plt_ortho_example +
       dplyr::inner_join(
         predicted_watershed_piles_sf %>% 
         sf::st_transform(terra::crs(ortho_rast)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1167,8 +1104,8 @@ ground_truth_prediction_match_ans <- ground_truth_prediction_match(
   ground_truth = slash_piles_polys %>% 
       dplyr::inner_join(
         slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(example_aoi)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_transform(sf::st_crs(aoi_boundary)) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id)
       ) %>% 
@@ -1178,8 +1115,8 @@ ground_truth_prediction_match_ans <- ground_truth_prediction_match(
   , predictions = final_predicted_slash_piles %>% 
       dplyr::inner_join(
         final_predicted_slash_piles %>% 
-        sf::st_transform(terra::crs(example_aoi)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_transform(terra::crs(aoi_boundary)) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       )
@@ -1191,14 +1128,14 @@ ground_truth_prediction_match_ans <- ground_truth_prediction_match(
 p_temp <- 
   plt_ortho_example +
   # ggplot2::ggplot() +
-  ggplot2::geom_sf(data = example_aoi %>% sf::st_transform(sf::st_crs(ortho_rast)), fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(data = aoi_boundary %>% sf::st_transform(sf::st_crs(ortho_rast)), fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = 
       slash_piles_polys %>% 
       dplyr::inner_join(
         slash_piles_polys %>% 
-        sf::st_transform(sf::st_crs(example_aoi)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_transform(sf::st_crs(aoi_boundary)) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pile_id)
       ) %>% 
@@ -1216,8 +1153,8 @@ p_temp <-
     final_predicted_slash_piles %>% 
       dplyr::inner_join(
         final_predicted_slash_piles %>% 
-        sf::st_transform(terra::crs(example_aoi)) %>% 
-        sf::st_intersection(example_aoi) %>% 
+        sf::st_transform(terra::crs(aoi_boundary)) %>% 
+        sf::st_intersection(aoi_boundary) %>% 
         sf::st_drop_geometry() %>% 
         dplyr::select(pred_id)
       ) %>% 
@@ -1247,13 +1184,13 @@ p_temp <- p_temp + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_rgb14b.jpg", height = 8, width = 8)
 ```
 
-unfortunately, we didn't remove as many false positive predictions as we would have liked for this example area but we did slightly improve our precision (by a count of one)...we'll have to see how we did for the full ground truth set
+unfortunately, we didn't remove as many false positive predictions as we would have liked for this example area but we did slightly improve our precision (by a count of one)...we'll have to see how we did for the full demonstration set
 
 ### Instance Matching
 
-let's see how we did with the full data fusion predictions compared to the ground truth data using the instance matching process we outlined in this [earlier section](#iou_match)
+let's see how we did with the full data fusion predictions compared to the demonstration data using the instance matching process we outlined in this [earlier section](#iou_match)
 
-we'll look at only predicted and ground truth piles that intersect with the unit boundary for our instance matching
+we'll look at only predicted and demonstration piles that intersect with the unit boundary for our instance matching
 
 ```{r}
 ground_truth_prediction_match_ans <- ground_truth_prediction_match(

@@ -14,47 +14,209 @@ To attempt to identify slash piles from the CHM/DSM, we can use watershed segmen
 
 ## Demonstration Area{#d_area}
 
-we'll focus on a 4,500 square meter example area
+we'll focus on an example area that is outside of the study unit boundary but was captured in our UAS data acquisition of the area. This demonstration area also included slash piles which were annotated in the same manner as previously described but did not have height and diameter measurements taken in the field.
 
 ```{r, include = F, eval = F}
 mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
   mapview::mapview(psinf_slash_piles_polys)
+
+#### read RGB data keep only RGB
+rast_temp <- terra::rast(
+    file.path(
+      "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
+      , "P4Pro_06_17_2021_half_half_optimal_transparent_mosaic_group1.tif"
+    )
+  ) %>% 
+  terra::subset(c(1,2,3))
+# rename bands
+names(rast_temp) <- c("red","green","blue")
+
+terra::plotRGB(rast_temp, stretch = "lin")
+# add piles
+terra::plot(
+  psinf_slash_piles_polys %>% 
+    dplyr::filter(!is_in_stand) %>% 
+    sf::st_transform(terra::crs(rast_temp)) %>% 
+    terra::vect()
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
+
+
+# plot(new_aoi_temp)
+
+terra::plotRGB(rast_temp, stretch = "lin")
+# add piles
+terra::plot(
+  psinf_slash_piles_polys %>% 
+    dplyr::filter(!is_in_stand) %>% 
+    sf::st_transform(terra::crs(rast_temp)) %>% 
+    terra::vect()
+  , add = T, border = "blue", col = NA, lwd = 1.2
+)
+# add aoi
+terra::plot(
+  new_aoi_temp %>% 
+    sf::st_transform(terra::crs(rast_temp)) %>% 
+    terra::vect()
+  , add = T, border = "red", col = NA, lwd = 3
+)
+  
+
 ```
 
 ```{r}
 # boundary
 aoi_boundary <- 
   psinf_slash_piles_polys %>% 
-  # dplyr::filter(pile_id == 195) %>% # machine
-  # dplyr::filter(pile_id == 74) %>% # hand
-  dplyr::filter(pile_id == 71) %>% # hand
-  # arnf_slash_piles_polys %>% 
-  # dplyr::filter(pile_id == 14) %>%
-  sf::st_centroid() %>% 
-  sf::st_buffer(
-    # sqrt(9600/4) ## numerator = desired plot size in m2
-    sqrt(4500/4) ## numerator = desired plot size in m2
-    , endCapStyle = "SQUARE"
-  ) %>%
+  dplyr::filter(
+    !is_in_stand
+    & pile_id %in% c(53,52,63,20,17,11,6)
+  ) %>% 
+  sf::st_union() %>% 
+  sf::st_bbox() %>% 
+  sf::st_as_sfc() %>% 
+  sf::st_buffer(1.3, joinStyle = "MITRE") %>% 
+  sf::st_as_sf() %>% 
   dplyr::mutate(dummy=1)
-# rgb
-aoi_rgb_rast <- psinf_rgb_rast %>% 
-  terra::crop(
-    aoi_boundary %>% 
-      sf::st_buffer(3*2) %>% 
-      sf::st_transform(terra::crs(psinf_rgb_rast)) %>% 
-      terra::vect()
-    , mask = T
-  )
-# chm
-aoi_chm_rast <- psinf_chm_rast %>% 
-  terra::crop(
-    aoi_boundary %>% 
-      sf::st_buffer(3) %>% 
-      sf::st_transform(terra::crs(psinf_chm_rast)) %>% 
-      terra::vect()
-    , mask = T
-  )
+
+  # psinf_slash_piles_polys %>% 
+  # # dplyr::filter(pile_id == 195) %>% # machine
+  # # dplyr::filter(pile_id == 74) %>% # hand
+  # dplyr::filter(pile_id == 71) %>% # hand
+  # # arnf_slash_piles_polys %>% 
+  # # dplyr::filter(pile_id == 14) %>%
+  # sf::st_centroid() %>% 
+  # sf::st_buffer(
+  #   # sqrt(9600/4) ## numerator = desired plot size in m2
+  #   sqrt(4500/4) ## numerator = desired plot size in m2
+  #   , endCapStyle = "SQUARE"
+  # ) %>%
+  # dplyr::mutate(dummy=1)
+```
+
+we cropped this section from our original RGB processing, so we'll get it now
+
+```{r, results = 'hide'}
+dir_temp <- "../data/PFDP_Data/"
+rgb_fnm_temp <- file.path(dir_temp,"aoi_rgb_rast.tif") # what should the compiled rgb be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(rgb_fnm_temp)){
+  #### read RGB data keep only RGB
+    aoi_rgb_rast <- terra::rast(
+        file.path(
+          "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
+          , "P4Pro_06_17_2021_half_half_optimal_transparent_mosaic_group1.tif"
+        )
+      ) %>% 
+      terra::subset(c(1,2,3))
+    # rename bands
+    names(aoi_rgb_rast) <- c("red","green","blue")
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  crop_rgb_rast_temp <- aoi_rgb_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(4) %>% 
+        sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+        terra::vect()
+      , mask = T
+      , filename =  tempfile(fileext = ".tif")
+      , overwrite = TRUE
+    )
+  
+  ## apply the change_res_fn for our analysis we don't need such finery
+  # this takes too long...
+  aoi_rgb_rast <- change_res_fn(crop_rgb_rast_temp, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+  aoi_rgb_rast <- aoi_rgb_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+}else{
+  aoi_rgb_rast <- terra::rast(rgb_fnm_temp)
+  aoi_rgb_rast <- aoi_rgb_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+}
+# terra::res(aoi_rgb_rast)
+# terra::plotRGB(aoi_rgb_rast, stretch = "lin")
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+we cropped this section from our original CHM processing, so we'll get it now
+
+```{r, results = 'hide'}
+dir_temp <- "../data/PFDP_Data/"
+chm_fnm_temp <- file.path(dir_temp,"aoi_chm_rast.tif") # what should the compiled chm be called?
+if(!dir.exists(dir_temp)){dir.create(dir_temp, showWarnings = F)}
+if(!file.exists(chm_fnm_temp)){
+  #### read CHM
+    aoi_chm_rast <- terra::rast(
+        file.path(
+          dir_temp
+          , "point_cloud_processing_delivery_chm0.1m"
+          , "chm_0.1m.tif"
+        )
+      ) %>% 
+      terra::subset(1)
+  # Crop the raster to the rectangular extent of the polygon
+  # Specify a filename to ensure the result is written to disk
+  aoi_chm_rast <- aoi_chm_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_union() %>% 
+        sf::st_buffer(4) %>% 
+        sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
+        terra::vect()
+      , mask = T
+      , filename = chm_fnm_temp
+      , overwrite = TRUE
+    )
+  
+  aoi_chm_rast <- aoi_chm_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+}else{
+  aoi_chm_rast <- terra::rast(chm_fnm_temp)
+  aoi_chm_rast <- aoi_chm_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+}
+# terra::res(aoi_chm_rast)
+# terra::plot(aoi_chm_rast)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+get the piles that intersect with our AOI boundary
+
+```{r}
 # piles
 aoi_slash_piles_polys <- psinf_slash_piles_polys %>% 
   dplyr::inner_join(
@@ -64,6 +226,7 @@ aoi_slash_piles_polys <- psinf_slash_piles_polys %>%
       dplyr::select(pile_id)
     , by = "pile_id"
   )
+# aoi_slash_piles_polys %>% sf::st_drop_geometry() %>% dplyr::count(is_in_stand)
 # ggplot base
 aoi_plt_ortho <- ortho_plt_fn(rgb_rast = aoi_rgb_rast, stand = aoi_boundary, buffer = 3)
 # aoi_plt_ortho
@@ -93,7 +256,8 @@ plt_aoi_chm(aoi_chm_rast)
 
 ```{r, include=FALSE,eval=TRUE}
 ggplot2::ggsave(filename = "../data/workflow_ex_01_chm.jpg", height = 8, width = 8)
-p_temp <- plt_aoi_chm(aoi_chm_rast) +
+p_temp <-
+  plt_aoi_chm(aoi_chm_rast) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
     , fill = NA, color = "blue", lwd = 0.6
@@ -132,6 +296,29 @@ ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb.jpg", height = 8, width =
 ```
 
 would you have done better if you had both the CHM and RGB data?
+
+```{r, include=F, eval=FALSE}
+terra::plotRGB(aoi_rgb_rast, stretch = "lin")
+# terra::plot(
+#   aoi_chm_rast
+#   , col = viridis::plasma(n = 100)
+#   , add = T, alpha = 0.2
+# )
+# add stand boundary
+terra::plot(
+  aoi_boundary %>% 
+    sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+    terra::vect()
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add stand boundary
+terra::plot(
+  aoi_slash_piles_polys %>% 
+    sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+    terra::vect()
+  , add = T, border = "blue", col = NA, lwd = 1.8
+)
+```
 
 ```{r,eval=F}
 plt_aoi_chm_rgb <- function(chm) {
@@ -2723,7 +2910,7 @@ p_fn_temp <- function(dta,fill_col,col_nm=latex2exp::TeX("area $\\textrm{m}^2$")
   ggplot2::geom_sf_text(
     # mapping=ggplot2::aes(label=scales::comma({{fill_col}}, accuracy=0.1))
     mapping=ggplot2::aes(label=scales::comma(.data[[fill_col]], accuracy=0.1))
-    , vjust = 1, hjust = -1.3, size = 2.5
+    , vjust = 1, hjust = -0.9, size = 2.5
   ) + 
   ggplot2::scale_fill_distiller(palette = pal, name = col_nm, direction = 1) +
   ggplot2::theme_void() +
@@ -3432,7 +3619,7 @@ slash_pile_detect_watershed_ans_temp <- slash_pile_detect(
   chm_rast = aoi_chm_rast
   , seg_method = "watershed"
   , min_ht_m = 1.5
-  , max_ht_m = 4.5
+  , max_ht_m = 5
   , min_area_m2 = 1.5^2
   , max_area_m2 = 50
   , min_convexity_ratio = 0.7

@@ -837,7 +837,7 @@ gc()
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(my_chm_res_m, my_rgb_res_m, plt_rast_combine, plt_rast_fn, change_res_fn)
+remove(plt_rast_combine, plt_rast_fn)
 gc()
 ```
 
