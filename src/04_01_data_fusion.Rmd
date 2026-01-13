@@ -6,11 +6,29 @@ we'll continue using the same demonstration area for this walkthrough as introdu
 
 ## RGB Indices
 
-Relevant RGB vegetation indices such as Green Red Vegetation Index (GRVI), Red Green Ratio Index (RGRI), Visible Band-Difference Vegetation Index (VDVI), Red Green Ratio Index (RGRI), Red Green Blue Vegetation Index (RGBVI), and Excess Green (ExG) are calculated for each candidate segment, and thresholds are applied to remove those exhibiting high greenness. Index thresholds tested include those found to perform well in distinguishing green vegetation in previous research ([Motohka et al. 2010](https://doi.org/10.3390/rs2102369); [Wang et al. 2025](https://doi.org/10.3390/plants14111677); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)). Filtering candidate segments using spectral data will enhance our method's ability to distinguish non-photosynthetic slash piles from living vegetation (e.g., small trees or shrubs) that might share similar structural profiles. 
+>In the HSI (Hue, Saturation, Intensity) model (Judd, 1940), Saturation and Intensity describe the grade of purity of the colour and the light intensity, respectively, while Hue describes the colour itself in the form of an angle between 0 degress and 360 degress, where 0 degress means red, 60 degress means yellow, 120 degress means green and 180 degress means cyan. Derived from Hue, the Green Area (GA) index is defined as the percentage of green pixels in the image (Hue range from 60 degrees to 180 degrees). Two alternative models to HSI (CIELab and CIELuv) are defined according to the International Commission of Illumination (http://www.cie.co.at). In the CIELab model, the a* component represents the green to red range, . The b* component defines the blue to yellow range, where more positive values are closer to a pure yellow, and more negative ones are closer to pure blue.
 
-While RGB vegetation indices are good for separating green biomass, differentiating between various shades of brown, black, and white of non-vegetated surfaces like slash piles, rocks, and bare soil can be more challenging. Many common rock-forming minerals are "spectrally featureless" in the visible range, often appearing pale grey to white ([Harris et al. 2010](http://dx.doi.org/10.5589/m10-072)). As such, we will attempt to filter out very dark (black) or very light (white) boulders from the reddish-brown tones common of wood in slash piles using RGB indices that focus on overall brightness and color purity ([Kior et al. 2024](https://doi.org/10.3390/plants13091262)). The Brightness Index (BI) can help us exclude extremely dark (black; low BI) or bright (white; high BI) objects. Setting a minimum threshold for saturation (i.e. color purity) can remove achromatic features (like grey, black, or white objects that have very low saturation values close to 0) to help us isolate more chromatic (brown) slash piles.
+We limited our data fusion approach to methods that could be implemented using RGB data only since most common UAS systems do not include additional spectral information (e.g. NIR) beyond these visible wavelenghts. Many RGB-based indices correlate strongly with indices derived from multispectral data especially measurements related to leaf area ([Santini et al. 2019](https://doi.org/10.1111/aab.12484)). We calculate spectral indices that utilize only RGB information including: Green Red Vegetation Index (GRVI) which is also referred to as the Normalized Green-Red Difference Index (NGRDI), Red Green Ratio Index (RGRI), Visible Band-Difference Vegetation Index (VDVI), Excess Green-minus-Red Index (ExGR) and a\* are calculated for each candidate segment, and thresholds are applied to remove those exhibiting high greenness. The threshold method of separation between plants and background using RGB data is a common approach ([Kior et al. 2024](https://doi.org/10.3390/plants13091262)). The CIELAB color model is a standard, perceptually uniform color model which encompasses all human vision and can be used as an alternative to the RGB space in the analysis of color images for distinguising vegetation ([Cheng et al. 2001](https://doi.org/10.1016/S0031-3203(00)00149-7); [Kior et al. 2024](https://doi.org/10.3390/plants13091262)). The CIELAB (L\*a\*b\*) model is based on human vision, using L\* for lightness (0-100), a\* for green-red (towards red if a\* > 0, towards green if a\* < 0), and b\* for blue-yellow (towards yellow if b\* > 0, towards blue if b\* < 0). Studies have used the a\* component to perform vegetation segmentation and health ([Rigon et al. 2016](https://doi.org/10.1007/s11099-016-0214-x); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)) and in the discrimination of wood products ([Moya et al. 2012](https://doi.org/10.3390/molecules17043639); [Amaral Reis et al. 2023](https://doi.org/10.1007/s00107-023-01953-4)). 
 
-We'll test the spectral indices listed in the table below that rely only on RGB data. We'll use sample data to determine the correlation between the test indices so that we keep only indices that provide unique descriptions of the data.
+A common challenge with visible RGB spectral index-based methods is that the image brightness can influence calculations. The HSV color model (Hue, Saturation and Value) resolves challenges associated with image brightness by isolating the color distribution (i.e. the "hue" component) as a single object that is invariant to brightness with brightness (i.e. the "value" component) also isolated. In general the hue values of green vegetation vary from 50 to 150 ([Yang et al. 2015](https://doi.org/10.1016/j.inpa.2015.07.003)). 
+
+Index thresholds tested include those found to perform well in distinguishing green vegetation in previous research ([Meyer & Neto 2008](https://doi.org/10.1016/j.compag.2008.03.009); [Motohka et al. 2010](https://doi.org/10.3390/rs2102369); [Wang et al. 2025](https://doi.org/10.3390/plants14111677); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201); [Johansen et al. 2019](https://doi.org/10.3389/fpls.2019.00370); [Goodbody et al. 2017](https://doi.org/10.1080/01431161.2017.1402387)). Filtering candidate segments using spectral data will enhance our method's ability to distinguish non-photosynthetic slash piles from living vegetation (e.g., small trees or shrubs) that might share similar structural profiles. 
+
+While RGB vegetation indices are good for separating green biomass, differentiating between various shades of brown, black, and white of non-vegetated surfaces like slash piles, rocks, and bare soil can be more challenging. Many common rock-forming minerals are "spectrally featureless" in the visible range, often appearing pale grey to white ([Harris et al. 2010](http://dx.doi.org/10.5589/m10-072)). These achromatic features are difficult to distinguish from dead wood which can appear spectrally similar especially woody debris that has been sunbleached (xxx). As such, we focus the spectral refinement of candidate slash piles on indices that separate living vegetation from dead vegetation or background soil and rocks; acknowledging that our spectral filtering method will retain large boulders or rock outcroppings that appear structurally similar to slash piles based on the geometric and size expectations determined in the structural candidate segmentation step.
+
+We'll test the spectral indices listed in the table below that rely only on RGB data and have threshold values identified in the literature to distinguish green vegetation from dead/senescent vegetation and background soil or rock. For the thresholds meant to identify green vegetation we'll use the inverted threshold to keep candidate slash piles.
+
+Here are the thresholds represented in the literature:
+
+
+| Index | Likely Crop       | Likely Tree       | Likely Shrub | Likely Wood    | Source                                                                                   |
+|-----------|-----------------------|-----------------------|------------------|--------------------|---------------------------------------------------------------------------------------------|
+| GRVI      | x > -0.6 – 0.0       | x > -0.4 – 0.0       | x > 0.0         |                    | Motohka et al. 2010; Goodbody et al. 2017; Johansen et al. 2019                            |
+| RGRI      | x < 0.63             | x < 0.70             | x < 0.52         |                    | Wang et al. 2025                                                                            |
+| VDVI      | x > 0.06             | x > 0.04             | x > 0.03         |                    | Wang et al. 2025                                                                            |
+| ExGR      | x > 0.0              | x > 0.0              | x > 0.0          |                    | Meyer & Neto 2008; Riehle et al. 2020                                                       |
+| a*        | x < -5 – 0           |                       |                  | x > 2 – 10         | Moya et al. 2012; Rigon et al. 2016; Riehle et al. 2020; Amaral Reis et al. 2023           |
+
 
 For these formulas, $R$, $G$, and $B$ represent the raw pixel values for the Red, Green, and Blue bands, respectively. For indices that use normalized values, $r$, $g$, and $b$ are defined as:
 
@@ -23,12 +41,9 @@ $b = \frac{B}{R+G+B}$
 | Green-Red Vegetation Index | GRVI | Detects vegetation greenness using a normalized difference. | $\frac{G - R}{G + R}$ | -1 to 1 |
 | Red-Green Ratio Index | RGRI | Compares red to green intensity to estimate plant pigment changes. | $\frac{R}{G}$ | 0 to $\infty$ |
 | Visible-band Difference Vegetation Index | VDVI | Index for extracting vegetation from complex backgrounds. | $\frac{2G - R - B}{2G + R + B}$ | -1 to 1 |
-| Red-Green-Blue Vegetation Index | RGBVI | Uses squared greenness to enhance contrast between plants and soil. | $\frac{G^2 - (R \cdot B)}{G^2 + (R \cdot B)}$ | -1 to 1 |
-| Excess Green Index | ExG | Standardized index to highlight vigorous vegetation growth. | $2g - r - b$ | -2 to 2 |
-| Excess Red Index | ExR | Highlights soil and non-vegetated surfaces; often used for masking. | $1.4r - g$ | -1 to 1.4 |
 | Excess Green-minus-Red Index | ExGR | Linear index for discriminating plants from shadow/soil. | $3g - 2.4r - b$ | -3.4 to 3 |
-| Brightness Index | BI | Measures light intensity (albedo), scaled to 0-1 by dividing by max(R,G,B). | $\frac{\sqrt{(R^2 + G^2 + B^2) / 3}}{\max(R, G, B)}$ | 0 to 1 |
-| Saturation Index | SI | Measures color purity; distance of the hue from a gray-scale value. | $\frac{\max(R, G, B) - \min(R, G, B)}{\max(R, G, B)}$ | 0 to 1 |
+
+| Red-Green-Blue Vegetation Index | RGBVI | Uses squared greenness to enhance contrast between plants and soil. | $\frac{G^2 - (R \cdot B)}{G^2 + (R \cdot B)}$ | -1 to 1 |
 
 ### Spectral Index Functions
 
@@ -72,6 +87,52 @@ check_raster_bands <- function(rast, red_band_idx, green_band_idx, blue_band_idx
   return(list(R = R, G = G, B = B))
 }
 # check_raster_bands(ortho_rast, red_band_idx=1, green_band_idx=3, blue_band_idx = 999999)
+
+# convert RGB to HSV color space
+spectral_rgb_to_hsv <- function(rast, red_band_idx, green_band_idx, blue_band_idx) {
+  # check
+  bands <- check_raster_bands(rast, red_band_idx, green_band_idx, blue_band_idx)
+  R <- bands$R
+  G <- bands$G
+  B <- bands$B
+  
+  # convert to RGB
+  rgb_rast <- terra::RGB(x = c(R,G,B), value = 1:3)
+  
+  # ?terra::colorize
+  # convert to HSV (returns layers: h, s, v)
+  hsv_rast <- terra::colorize(rgb_rast, to = "hsv")
+
+  # names
+  names(hsv_rast) <- c("hue", "saturation", "brightness")
+
+  return(hsv_rast)
+}
+
+# convert RGB to CIELab color space
+# ?grDevices::convertColor
+spectral_rgb_to_lab <- function(rast, red_band_idx, green_band_idx, blue_band_idx, max_dn = 255) {
+  # check
+  bands <- check_raster_bands(rast, red_band_idx, green_band_idx, blue_band_idx)
+  R <- bands$R
+  G <- bands$G
+  B <- bands$B
+  rgb_rast <- c(R,G,B)
+  
+  # values as a matrix (vectorized) normalized to max 255 val
+  vals <- terra::values(rgb_rast) / max_dn
+  
+  # conversion on the matrix
+  lab_vals <- grDevices::convertColor(vals, from = "sRGB", to = "Lab")
+
+  # new SpatRaster using original str and replace values
+  lab_rast <- terra::rast(rgb_rast, nlyrs = 3)
+  terra::values(lab_rast) <- lab_vals
+
+  names(lab_rast) <- c("L", "a", "b")
+
+  return(lab_rast)
+}
 
 # calculate green red vegetation index (GRVI)
 # (G - R) / (G + R)
@@ -235,9 +296,22 @@ calculate_all_rgb_indices <- function(raster_obj, red_band_idx, green_band_idx, 
   exg_layer <- spectral_index_exg(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
   exr_layer <- spectral_index_exr(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
   exgr_layer <- spectral_index_exgr(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
-  bi_layer <- spectral_index_bi(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
-  sat_layer <- spectral_index_saturation(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
-
+  # bi_layer <- spectral_index_bi(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
+  # sat_layer <- spectral_index_saturation(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
+  
+  # color spaces: HSV
+  hsv_rast <- spectral_rgb_to_hsv(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
+  names(hsv_rast) <- paste0("hsv_", names(hsv_rast), recycle0 = T)
+  hsv_hue <- hsv_rast$hsv_hue
+  hsv_saturation <- hsv_rast$hsv_saturation
+  hsv_brightness <- hsv_rast$hsv_brightness
+  # color spaces: CEILab
+  Lab_rast <- spectral_rgb_to_lab(raster_obj, red_band_idx, green_band_idx, blue_band_idx)
+  names(Lab_rast) <- paste0("Lab_", names(Lab_rast), recycle0 = T)
+  Lab_L <- Lab_rast$Lab_L
+  Lab_a <- Lab_rast$Lab_a
+  Lab_b <- Lab_rast$Lab_b
+  
   # stack all calculated indices into a single spatraster
   all_indices <- c(
     grvi_layer
@@ -247,8 +321,14 @@ calculate_all_rgb_indices <- function(raster_obj, red_band_idx, green_band_idx, 
     , exg_layer
     , exr_layer
     , exgr_layer
-    , bi_layer
-    , sat_layer
+    # , bi_layer
+    # , sat_layer
+    , hsv_hue
+    , hsv_saturation
+    , hsv_brightness
+    , Lab_L
+    , Lab_a
+    , Lab_b
   )
 
   return(all_indices)
@@ -267,6 +347,22 @@ what did we get?
 ```{r}
 # huh?
 all_rgb_indices_rast %>% names()
+```
+
+we'll limit to the indices we have thresholds for
+
+```{r}
+all_rgb_indices_rast <- 
+  all_rgb_indices_rast %>% 
+  terra::subset(
+    c(
+      "grvi"
+      , "rgri"
+      , "vdvi"
+      , "exgr"
+      , "Lab_a"         
+    )
+  )
 ```
 
 let's plot all of those indices for the entire extent of our orthomoasic
@@ -294,7 +390,14 @@ all_rgb_indices_rast %>%
   )
 ```
 
-many of these spectral indices are highly (even perfectly) correlated, meaning they provide redundant information. to streamline our method and ensure we utilize unique spectral insights for distinguishing slash piles from the surrounding terrain and other objects, we will select only one index from each correlated group. GRVI, RGRI, and ExR are highly correlated, as are VDVI, RGBVI, and ExG. we'll choose one from each of these sets.
+many of these spectral indices are highly (even perfectly) correlated, meaning they provide redundant information. however, the index thresholds were determined independently for the most highly correlated values so we retain them for our voting system filtering methodology since the combination of the index with the unique index provides unique identification functionality.
+
+summary stats of these indices over our example area
+
+```{r}
+all_rgb_indices_rast %>% 
+  terra::summary(size = min(11111, terra::ncell(all_rgb_indices_rast)*.01))
+```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
@@ -303,7 +406,7 @@ gc()
 
 here is a plot of the different spectral indices (high values are brighter, low values are darker) on our example area we were working with in the last section with the demonstration piles in blue
 
-```{r, fig.height=9.2}
+```{r,eval=F, fig.height=9.2}
 all_rgb_indices_rast %>% 
   terra::plot(
     nc = 3
@@ -397,7 +500,7 @@ rgb_indices_df %>%
 
 let's plot it
 
-```{r}
+```{r,eval=F}
 # pivot
 agg_df_temp <- rgb_indices_df %>% 
   sf::st_drop_geometry() %>% 
