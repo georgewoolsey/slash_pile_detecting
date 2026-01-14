@@ -67,7 +67,7 @@ gc()
 all_agg_ground_truth_match_ans_fp <- file.path("../data/","all_agg_ground_truth_match_ans.gpkg")
 
 # run RGB plotting
-# rgb_plotting_switch <- "```{r,eval=F"
+# rgb_plotting_switch <- "```{r,eval=T"
 ```
 
 ## Study Units Vector Data
@@ -276,7 +276,7 @@ my_ggmap_basemap <- function(sf_data, zoom_level = 14, buffer_box = 2600, my_crs
 
 plot the fancy basemap with the points
 
-```{r,eval=F, fig.height=9, fig.width=7.5}
+```{r,eval=T, fig.height=9, fig.width=7.5}
 # get the basemap with our my_ggmap_basemap()
 plt_basemap <- my_ggmap_basemap(
   sf_data = all_stand_boundary %>% dplyr::group_by(site) %>% sf::st_point_on_surface()
@@ -315,7 +315,7 @@ plt2_temp <-
 plt2_temp
 ```
 
-```{r,eval=F, include=FALSE}
+```{r,eval=T, include=FALSE}
 ggplot2::ggsave(
   "../data/all_study_site_map.jpg"
   , dpi = "print"
@@ -1638,11 +1638,11 @@ samp_plt_fn_temp <- function(piles, ortho) {
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=F, results=F, warning=FALSE, message=FALSE}
+```{r,eval=T, results=F, warning=FALSE, message=FALSE}
 psinf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = psinf_slash_piles_polys, ortho = psinf_rgb_rast)
 ```
 
-```{r,eval=F}
+```{r,eval=T}
 psinf_samp_plt_fn_temp
 ```
 
@@ -1664,11 +1664,11 @@ ggplot2::ggsave("../data/pile_tiles_rgb.jpeg", height = 10.5, width = 8)
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=F, results=F, warning=FALSE, message=FALSE}
+```{r,eval=T, results=F, warning=FALSE, message=FALSE}
 pj_samp_plt_fn_temp <- samp_plt_fn_temp(piles = pj_slash_piles_polys, ortho = pj_rgb_rast)
 ```
 
-```{r,eval=F}
+```{r,eval=T}
 pj_samp_plt_fn_temp
 ```
 
@@ -1676,11 +1676,11 @@ pj_samp_plt_fn_temp
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=F, results=F, warning=FALSE, message=FALSE}
+```{r,eval=T, results=F, warning=FALSE, message=FALSE}
 bhef_samp_plt_fn_temp <- samp_plt_fn_temp(piles = bhef_slash_piles_polys, ortho = bhef_rgb_rast)
 ```
 
-```{r,eval=F}
+```{r,eval=T}
 bhef_samp_plt_fn_temp
 ```
 
@@ -1688,17 +1688,17 @@ bhef_samp_plt_fn_temp
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=F, results=F, warning=FALSE, message=FALSE}
+```{r,eval=T, results=F, warning=FALSE, message=FALSE}
 arnf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = arnf_slash_piles_polys, ortho = arnf_rgb_rast)
 ```
 
-```{r,eval=F}
+```{r,eval=T}
 arnf_samp_plt_fn_temp
 ```
 
 ### All
 
-```{r,eval=F, fig.height=9.5, fig.width=5}
+```{r,eval=T, fig.height=9.5, fig.width=5}
 patchwork::wrap_plots(
   patchwork::wrap_elements( 
     psinf_samp_plt_fn_temp + 

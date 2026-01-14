@@ -255,7 +255,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=T, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -440,7 +440,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=T, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -589,7 +589,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=T, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -727,7 +727,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=T, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
