@@ -8,7 +8,7 @@ Here is a section from the draft manuscript:
 
 >These geometry-based approaches are supported by the demonstrated successes of object segmentation frameworks for both CWD and individual trees, which consistently provide high detection and quantification accuracy by utilizing rules to define expected target object morphology. Beyond their technical performance, the geometry-based methods utilizing a set of rules offer some key advantages. The inherent traceability of these methods ensures that reporting for regulatory oversight is more transparent and easier to describe compared to the "black box" nature of many model-based approaches. Geometry-based frameworks also do not rely on training datasets and can directly align with the explicit pile construction parameters which are generally known by land managers through silvicultural prescriptions. To address the current lack of automated methods for simultaneously detecting and quantifying slash piles from aerial remote sensing data, our objective in this work is to present a geometry-based approach that uses rules and user-defined thresholds applied to geometric features (such as area, shape, and height) to identify and quantify slash piles from UAS-DAP point cloud data.
 
-Geometric, rules-based object detection methods offer advantages over model-based approaches, primarily because they eliminate the need for extensive training data which might be limited in it's transferrability to unseen conditions. Models are often considered "black boxes" but rules-based methods rely on the inherent physical properties of the target objects themselves. This transparency allows for a high degree of interpretability as every segmentation result can be traced back to specific geometric constraints. Furthermore, this approach aligns perfectly with the expertise of land managers, as the input parameters like minimum height and area thresholds are the physical metrics commonly used in forest inventories and silvicultural prescriptions. By using these intuitive thresholds, the method becomes accessible to managers who possess a good understanding of the landscape they manage.
+Geometric, rules-based object detection methods offer advantages over model-based approaches, primarily because they eliminate the need for extensive training data which might be limited in it's transferability to unseen conditions. Models are often considered "black boxes" but rules-based methods rely on the inherent physical properties of the target objects themselves. This transparency allows for a high degree of interpretability as every segmentation result can be traced back to specific geometric constraints. Furthermore, this approach aligns perfectly with the expertise of land managers, as the input parameters like minimum height and area thresholds are the physical metrics commonly used in forest inventories and silvicultural prescriptions. By using these intuitive thresholds, the method becomes accessible to managers who possess a good understanding of the landscape they manage.
 
 To attempt to identify slash piles from the CHM/DSM, we can use watershed segmentation or DBSCAN (Density-Based Spatial Clustering of Applications with Noise). Both of these methods are common in segmenting individual trees and coarse woody debris from CHM data.
 
@@ -3339,7 +3339,7 @@ dplyr::tibble(
 
 wow that is a lot of filtering, but it looks like the result for this demonstration area is decently accurate (we'll perform full validation of the method later). That is, there are no false positive predictions (commission errors) and few false negative predictions (omission errors)
 
-## Pile Detection Function{#slash_pile_detect_watershed}
+## Pile Detection Function{#slash_pile_detect_fn}
 
 The rule-based method for slash pile detection using CHM raster data we reviewed above generally follows this outline:
 
@@ -3645,7 +3645,7 @@ slash_pile_detect_watershed_ans_temp$slice_chm_rast %>%
   terra::plot(axes = F, col = viridis::plasma(100), main = "filtered CHM (m)")
 ```
 
-let's overlay plot the final candidate segments (brown) and the actual piles (blue) on the raw, un-filtered CHM
+let's overlay the final candidate segments (brown) and the actual piles (blue) on the raw, un-filtered CHM
 
 ```{r}
 aoi_chm_rast %>% 
