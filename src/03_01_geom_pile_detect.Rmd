@@ -270,7 +270,7 @@ ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_012_chm_noleg.jpg
 
 here is the RGB of the example area. can you pick out the slash piles?
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho + 
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8)
 ```
@@ -281,7 +281,7 @@ ggplot2::ggsave(filename = "../data/workflow_ex_02_rgb.jpg", height = 8, width =
 
 we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -291,7 +291,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb.jpg", height = 8, width = 8)
 ```
 
@@ -320,7 +320,7 @@ terra::plot(
 )
 ```
 
-```{r,eval=T}
+```{r,eval=F}
 plt_aoi_chm_rgb <- function(chm) {
  aoi_plt_ortho +
     ggnewscale::new_scale_fill() +
@@ -343,7 +343,7 @@ plt_aoi_chm_rgb(aoi_chm_rast) +
   )
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_03_rgb_chm.jpg", height = 8, width = 8)
 ```
 
@@ -708,7 +708,7 @@ watershed_segs %>%
 
 plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -728,7 +728,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -979,7 +979,7 @@ dbscan_segs %>%
 
 plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -999,7 +999,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1598,7 +1598,7 @@ dplyr::tibble(
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1612,7 +1612,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1645,7 +1645,7 @@ gc()
 
 plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1659,7 +1659,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -1783,7 +1783,7 @@ p2_temp <- ggplot2::ggplot() +
 patchwork::wrap_plots(list(p1_temp,p2_temp))
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
@@ -2034,7 +2034,7 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -2048,7 +2048,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -2079,7 +2079,7 @@ gc()
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -2093,7 +2093,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -2241,7 +2241,7 @@ p2_temp <- ggplot2::ggplot() +
 patchwork::wrap_plots(list(p1_temp,p2_temp))
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ### !!!!!!!!!!!!!!!!!!!!!! plots for potential use in publication...not shown in analysis site
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
@@ -2490,7 +2490,7 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -2504,7 +2504,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -2535,7 +2535,7 @@ gc()
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -2549,7 +2549,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -3174,7 +3174,7 @@ dbscan_segs_poly <-
 
 plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -3188,7 +3188,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
@@ -3221,7 +3221,7 @@ gc()
 
 plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
 
-```{r,eval=T}
+```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -3235,7 +3235,7 @@ aoi_plt_ortho +
   ggplot2::theme(legend.position = "none")
 ```
 
-```{r,eval=T, include=FALSE}
+```{r,eval=F, include=FALSE}
 ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
