@@ -38,7 +38,7 @@ terra::plot(
     dplyr::filter(!is_in_stand) %>% 
     sf::st_transform(terra::crs(rast_temp)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.2
 )
 
 
@@ -51,7 +51,7 @@ terra::plot(
     dplyr::filter(!is_in_stand) %>% 
     sf::st_transform(terra::crs(rast_temp)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.2
 )
 # add aoi
 terra::plot(
@@ -260,7 +260,7 @@ p_temp <-
   plt_aoi_chm(aoi_chm_rast) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   )
 ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_011_chm_piles.jpg", height = 8, width = 8)
 p_temp <- plt_aoi_chm(aoi_chm_rast) +
@@ -279,14 +279,14 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_02_rgb.jpg", height = 8, width = 8)
 ```
 
-we'll add on the ground truth piles in blue on the RGB. how many did you find? be honest.
+we'll add on the ground truth piles in cyan on the RGB. how many did you find? be honest.
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -316,7 +316,7 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.8
+  , add = T, border = "cyan", col = NA, lwd = 1.8
 )
 ```
 
@@ -339,7 +339,7 @@ plt_aoi_chm_rgb <- function(chm) {
 plt_aoi_chm_rgb(aoi_chm_rast) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   )
 ```
 
@@ -369,7 +369,7 @@ plot the lower slice, notice how the CHM height scale has changed
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   )
 ```
 
@@ -706,14 +706,14 @@ watershed_segs %>%
   )
 ```
 
-plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs %>% 
@@ -723,7 +723,7 @@ aoi_plt_ortho +
       sf::st_simplify() %>% 
       sf::st_make_valid() %>% 
       dplyr::filter(sf::st_is_valid(.))
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -732,13 +732,13 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs %>% 
@@ -748,7 +748,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
       sf::st_simplify() %>% 
       sf::st_make_valid() %>% 
       dplyr::filter(sf::st_is_valid(.))
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -850,7 +850,7 @@ dbscan_ans_poly %>%
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = as.factor(pred_id)), color = NA) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   )
 
 
@@ -977,14 +977,14 @@ dbscan_segs %>%
   )
 ```
 
-plot the watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs %>% 
@@ -994,7 +994,7 @@ aoi_plt_ortho +
       sf::st_simplify() %>% 
       sf::st_make_valid() %>% 
       dplyr::filter(sf::st_is_valid(.))
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -1003,13 +1003,13 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_05_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs %>% 
@@ -1019,7 +1019,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
       sf::st_simplify() %>% 
       sf::st_make_valid() %>% 
       dplyr::filter(sf::st_is_valid(.))
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -1596,18 +1596,18 @@ dplyr::tibble(
 
 ### Watershed Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -1616,17 +1616,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -1643,18 +1643,18 @@ gc()
 
 ### DBSCAN Segmentation
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -1663,17 +1663,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_06_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -1755,7 +1755,7 @@ p1_temp <- ggplot2::ggplot() +
     data = watershed_segs_poly, mapping=ggplot2::aes(color="raw polygons")
     , fill = NA, lwd = 1
   ) + 
-  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::scale_color_manual(values = c("orangered", "magenta"),name="") +
   ggplot2::labs(subtitle = "watershed") +
   ggplot2::theme_void() +
   ggplot2::theme(
@@ -1772,7 +1772,7 @@ p2_temp <- ggplot2::ggplot() +
     data = dbscan_segs_poly, mapping=ggplot2::aes(color="raw polygons")
     , fill = NA, lwd = 1
   ) + 
-  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::scale_color_manual(values = c("orangered", "magenta"),name="") +
   ggplot2::labs(subtitle = "dbscan") +
   ggplot2::theme_void() +
   ggplot2::theme(
@@ -1789,7 +1789,7 @@ aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly_chull
@@ -1797,18 +1797,18 @@ aoi_plt_ortho +
   ) + 
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 
 ggplot2::ggsave(filename = "../data/workflow_ex_07_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 
-# plot the filtered watershed candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+# plot the filtered watershed candidate segments (magenta) and convex hull of the segments (orange) and the actual piles (cyan) on the CHM
 
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly_chull
@@ -1816,7 +1816,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
   ) + 
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ggplot2::ggsave(filename = "../data/workflow_ex_07_chm_watershed_cnddts.jpg", height = 8, width = 8)
 
@@ -1825,7 +1825,7 @@ aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly_chull
@@ -1833,18 +1833,18 @@ aoi_plt_ortho +
   ) + 
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 
 ggplot2::ggsave(filename = "../data/workflow_ex_07_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 
-# plot the filtered dbscan candidate segments (brown) and convex hull of the segments (orange) and the actual piles (blue) on the CHM
+# plot the filtered dbscan candidate segments (magenta) and convex hull of the segments (orange) and the actual piles (cyan) on the CHM
 
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly_chull
@@ -1852,7 +1852,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
   ) + 
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ggplot2::ggsave(filename = "../data/workflow_ex_07_chm_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
@@ -2032,18 +2032,18 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 #### Watershed Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -2052,17 +2052,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -2077,18 +2077,18 @@ gc()
 
 #### DBSCAN Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -2097,17 +2097,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0701_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -2213,7 +2213,7 @@ p1_temp <- ggplot2::ggplot() +
     data = watershed_segs_poly, mapping=ggplot2::aes(color="raw polygons")
     , fill = NA, lwd = 1
   ) + 
-  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::scale_color_manual(values = c("orangered", "magenta"),name="") +
   ggplot2::labs(subtitle = "watershed") +
   ggplot2::theme_void() +
   ggplot2::theme(
@@ -2230,7 +2230,7 @@ p2_temp <- ggplot2::ggplot() +
     data = dbscan_segs_poly, mapping=ggplot2::aes(color="raw polygons")
     , fill = NA, lwd = 1
   ) + 
-  ggplot2::scale_color_manual(values = c("orangered", "brown"),name="") +
+  ggplot2::scale_color_manual(values = c("orangered", "magenta"),name="") +
   ggplot2::labs(subtitle = "dbscan") +
   ggplot2::theme_void() +
   ggplot2::theme(
@@ -2247,7 +2247,7 @@ aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly_mbc
@@ -2255,18 +2255,18 @@ aoi_plt_ortho +
   ) + 
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 
 ggplot2::ggsave(filename = "../data/workflow_ex_08_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 
-# plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+# plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly_mbc
@@ -2274,7 +2274,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
   ) + 
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ggplot2::ggsave(filename = "../data/workflow_ex_08_chm_watershed_cnddts.jpg", height = 8, width = 8)
 
@@ -2283,7 +2283,7 @@ aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly_mbc
@@ -2291,18 +2291,18 @@ aoi_plt_ortho +
   ) + 
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 
 ggplot2::ggsave(filename = "../data/workflow_ex_08_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 
-# plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+# plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly_mbc
@@ -2310,7 +2310,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
   ) + 
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ggplot2::ggsave(filename = "../data/workflow_ex_08_chm_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
@@ -2488,18 +2488,18 @@ dbscan_segs_poly <- dbscan_segs_poly %>%
 
 #### Watershed Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -2508,17 +2508,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_watershed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -2533,18 +2533,18 @@ gc()
 
 #### DBSCAN Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -2553,17 +2553,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_0801_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -2855,7 +2855,7 @@ get_structural_metrics(sf_data = watershed_segs_poly, chm_rast = aoi_chm_rast_sl
 #   aoi_slash_piles_polys %>% 
 #     sf::st_transform(terra::crs(aoi_chm_rast_slice)) %>% 
 #     terra::vect()
-#   , add = T, border = "blue", col = NA, lwd = 1.2
+#   , add = T, border = "cyan", col = NA, lwd = 1.2
 # )
 ```
 
@@ -2922,7 +2922,7 @@ p_fn_temp <- function(dta,fill_col,col_nm=latex2exp::TeX("area $\\textrm{m}^2$")
   )
 }
 # lists
-pal_temp <- c("Blues","Purples","Greens")
+pal_temp <- c("cyans","Purples","Greens")
 nm_temp <- c(
   latex2exp::TeX("area $\\textrm{m}^2$")
   , latex2exp::TeX("volume $\\textrm{m}^3$")
@@ -3172,18 +3172,18 @@ dbscan_segs_poly <-
 
 ### Watershed Segmentation
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -3192,17 +3192,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_wshed_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered watershed candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered watershed candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = watershed_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -3219,18 +3219,18 @@ gc()
 
 ### DBSCAN Segmentation
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the RGB
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r,eval=F}
 aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   ) +
   ggplot2::theme(legend.position = "none")
 ```
@@ -3239,17 +3239,17 @@ aoi_plt_ortho +
 ggplot2::ggsave(filename = "../data/workflow_ex_09_rgb_dbscan_cnddts.jpg", height = 8, width = 8)
 ```
 
-plot the filtered dbscan candidate segments (brown) and the actual piles (blue) on the CHM
+plot the filtered dbscan candidate segments (magenta) and the actual piles (cyan) on the CHM
 
 ```{r}
 plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
-    , fill = NA, color = "blue", lwd = 0.6
+    , fill = NA, color = "cyan", lwd = 0.6
   ) +
   ggplot2::geom_sf(
     data = dbscan_segs_poly
-    , fill = NA, color = "brown", lwd = 0.8
+    , fill = NA, color = "magenta", lwd = 0.8
   )
 ```
 
@@ -3645,7 +3645,7 @@ slash_pile_detect_watershed_ans_temp$slice_chm_rast %>%
   terra::plot(axes = F, col = viridis::plasma(100), main = "filtered CHM (m)")
 ```
 
-let's overlay the final candidate segments (brown) and the actual piles (blue) on the raw, un-filtered CHM
+let's overlay the final candidate segments (magenta) and the actual piles (cyan) on the raw, un-filtered CHM
 
 ```{r}
 aoi_chm_rast %>% 
@@ -3654,11 +3654,11 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 2
+  , add = T, border = "cyan", col = NA, lwd = 2
 )
 terra::plot(
   slash_pile_detect_watershed_ans_temp$segs_sf %>% terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 2.5
+  , add = T, border = "magenta", col = NA, lwd = 2.5
 )
 ```
 
@@ -3668,7 +3668,7 @@ how do the form quantification measurements look?
 p1_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>% 
   ggplot2::ggplot() +
   ggplot2::geom_sf(mapping = ggplot2::aes(fill = area_m2)) +
-  ggplot2::scale_fill_distiller(palette = "Blues", direction = 1) +
+  ggplot2::scale_fill_distiller(palette = "cyans", direction = 1) +
   ggplot2::labs(x="",y="") +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "top", axis.text = ggplot2::element_blank())

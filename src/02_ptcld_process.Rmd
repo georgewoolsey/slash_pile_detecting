@@ -146,7 +146,7 @@ plt_rast_fn <- function(
     # ggplot
     comp_temp <- ggplot2::ggplot() +
       ggplot2::geom_tile(data = comp_st, ggplot2::aes(x=x,y=y,fill=f)) +
-      ggplot2::geom_sf(data = d_temp, fill = NA, color = "blue", lwd = 0.4) +
+      ggplot2::geom_sf(data = d_temp, fill = NA, color = "cyan", lwd = 0.4) +
       ggplot2::scale_x_continuous(expand = c(0, 0)) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       ggplot2::labs(
@@ -216,7 +216,7 @@ plt_rast_combine <- function(
         , buffer = buffer
         , add_stand = F
       ) + 
-      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "blue", lwd = 0.3)
+      ggplot2::geom_sf(data = ans1$d, fill = NA, color = "cyan", lwd = 0.3)
   # combine
     r <- patchwork::wrap_plots(list(rgb_temp,ans1$plt,ans2$plt), nrow = 1)
     return(r)

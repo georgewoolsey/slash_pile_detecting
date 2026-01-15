@@ -187,7 +187,7 @@ ggplot2::ggplot() +
   ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 
   ggplot2::geom_sf(data = aoi_slash_piles_polys, mapping = ggplot2::aes(color = "ground truth"), fill = NA) + 
   ggplot2::geom_sf(data = predictions_temp, mapping = ggplot2::aes(color = "fake predictions"), fill = NA) +
-  ggplot2::scale_color_manual(values=c("brown","blue")) +
+  ggplot2::scale_color_manual(values=c("magenta","cyan")) +
   ggplot2::labs(color="") +
   ggplot2::theme_void()
 ```
@@ -346,6 +346,13 @@ ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
 here is the distribution of IoU for the TP matches
 
 ```{r}
+# palette
+pal_match_grp = c(
+  "omission"=viridis::cividis(3)[1]
+  , "commission"= viridis::cividis(3)[2]
+  , "true positive"=viridis::cividis(3)[3]
+)
+# plot
 ground_truth_prediction_match_ans %>% 
   dplyr::filter(match_grp=="true positive") %>% 
   ggplot2::ggplot(mapping = ggplot2::aes(x = iou, color = match_grp, fill = match_grp)) +
@@ -367,11 +374,6 @@ ground_truth_prediction_match_ans %>%
 let's look at the results spatially noting that just because a prediction overlaps with a ground truth pile does not mean that it meets the IoU threshold for determining a positive match. in these cases where the IoU was insufficient, a commission (FP) will overlap with an omission (FN).
 
 ```{r}
-pal_match_grp = c(
-  "omission"=viridis::cividis(3)[1]
-  , "commission"= viridis::cividis(3)[2]
-  , "true positive"=viridis::cividis(3)[3]
-)
 # plot it
 ggplot2::ggplot() +
   ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 

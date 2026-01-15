@@ -8,9 +8,9 @@ we'll continue using the same demonstration area for this walkthrough as introdu
 
 Our data fusion approach uses methods feasible with RGB data since most common UAS systems lack additional multispectral sensors. Despite the absence of multispectral data (e.g. near-infrared), many RGB-based indices correlate strongly with multispectral measurements, particularly those related to leaf area ([Santini et al. 2019](https://doi.org/10.1111/aab.12484)). We employ six specific spectral threshold tests: the Green Red Vegetation Index (GRVI), Red Green Ratio Index (RGRI), Visible Band-Difference Vegetation Index (VDVI), and Excess Green-minus-Red Index (ExGR), alongside components from the CIELAB and HSV color models. These indices were selected based on their established ability in existing research to effectively distinguish living vegetation from dead material or background features, while the application of thresholds to indices is a common approach for spectral segmentation ([Kior et al. 2024](https://doi.org/10.3390/plants13091262)). The RGB index thresholds implemented include those found to perform well in distinguishing green vegetation in previous research ([Meyer & Neto 2008](https://doi.org/10.1016/j.compag.2008.03.009); [Motohka et al. 2010](https://doi.org/10.3390/rs2102369); [Wang et al. 2025](https://doi.org/10.3390/plants14111677); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201); [Johansen et al. 2019](https://doi.org/10.3389/fpls.2019.00370); [Goodbody et al. 2017](https://doi.org/10.1080/01431161.2017.1402387)). By inverting these established vegetation thresholds, our approach isolates non-photosynthetic slash piles from surrounding green biomass.
 
-To enhance segmentation accuracy, the CIELAB and HSV models are used because they offer significant advantages over the standard RGB model, which can be sensitive to external variables ([Cheng et al. 2001](https://doi.org/10.1016/S0031-3203(00)00149-7); [Kior et al. 2024](https://doi.org/10.3390/plants13091262)). These models offer advantages over the RGB model by providing stability across different lighting conditions, varying sensors and flight plans, which focuses the color analysis. The CIELAB (L\*a\*b\*) model provides a perceptually uniform color space based on human vision, using L\* for lightness (0-100), a\* for green-red (towards red if a\* > 0, towards green if a\* < 0), and b\* for blue-yellow (towards yellow if b\* > 0, towards blue if b\* < 0). Studies have used the a\* component to perform vegetation segmentation and health ([Rigon et al. 2016](https://doi.org/10.1007/s11099-016-0214-x); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)) and in the discrimination of wood products ([Moya et al. 2012](https://doi.org/10.3390/molecules17043639); [Amaral Reis et al. 2023](https://doi.org/10.1007/s00107-023-01953-4)). The HSV (Hue, Saturation and Value) model isolates the hue component to provide a color representation that is invariant to lighting variations and effectively separates the color from its saturation and brightness (i.e. the "value" component). In general the hue values of green vegetation vary from 50 to 150 degrees using a value range of 0-360 degrees ([Yang et al. 2015](https://doi.org/10.1016/j.inpa.2015.07.003); [Luo et al. 2024](https://doi.org/10.1088/1742-6596/2833/1/012012)).
+To enhance segmentation accuracy, the CIELAB and HSV models are used because they offer advantages over the RGB color model which can be sensitive to external variables like lighting ([Cheng et al. 2001](https://doi.org/10.1016/S0031-3203(00)00149-7); [Kior et al. 2024](https://doi.org/10.3390/plants13091262)). These models provide stability across different lighting conditions, sensors, and flight plans by isolating color from light intensity. The CIELAB (L\*a\*b\*) model provides a perceptually uniform color space based on human vision, using L\* for lightness (0-100), a\* for green-red (towards red if a\* > 0, towards green if a\* < 0), and b\* for blue-yellow (towards yellow if b\* > 0, towards blue if b\* < 0). Studies have used the a\* component to perform vegetation segmentation and health evaluation ([Rigon et al. 2016](https://doi.org/10.1007/s11099-016-0214-x); [Riehle et al. 2020](https://doi.org/10.1016/j.compag.2019.105201)) as well as in the discrimination of wood products ([Moya et al. 2012](https://doi.org/10.3390/molecules17043639); [Amaral Reis et al. 2023](https://doi.org/10.1007/s00107-023-01953-4)). The HSV (Hue, Saturation and Value) model isolates the hue (i.e. color) component to provide a color representation that is invariant to saturation and brightness (i.e. the "value" component). In general, the hue values of green vegetation vary from 50 to 150 degrees using a value range of 0-360 degrees ([Yang et al. 2015](https://doi.org/10.1016/j.inpa.2015.07.003); [Luo et al. 2024](https://doi.org/10.1088/1742-6596/2833/1/012012)).
 
-We'll integrate the spectral indices listed in the table below that rely only on RGB data and have threshold values identified in the literature to distinguish green vegetation from dead/senescent vegetation and background soil or rock. For the thresholds meant to identify green vegetation we'll use the inverted threshold to keep candidate slash piles.
+We'll integrate the spectral indices listed in the table below that rely only on RGB data and have threshold values identified in the literature to distinguish green vegetation from dead/senescent vegetation and background soil or rock. For the thresholds meant to identify green vegetation we'll use the inverted threshold to retain candidate slash piles.
 
 Here are the thresholds represented in the literature:
 
@@ -36,11 +36,11 @@ $b = \frac{B}{R+G+B}$
 | Visible-band Difference Index     | VDVI        | Index for extracting vegetation from complex backgrounds                                             | $\frac{2G - R - B}{2G + R + B}$                   | -1 to 1                        |
 | Excess Green-minus-Red            | ExGR        | Linear index for discriminating plants from soil/background                                          | $3g - 2.4r - b$                                   | -3.4 to 3                      |
 | CIELab a\* (Green-Red)            | a\*          | Perceptually uniform green-to-red axis                                                              | `grDevices::convertColor(..., to="Lab")`          | -128 to 127                    |
-| HSV Hue                            | Hue         | The dominant "color type" angle on the color wheel that ensures consistent values regardless of illumination | `terra::colorize(x, to="hsv")`                    | 0 to 1 (or 0–360 degrees)      |
+| HSV Hue                            | Hue         | The dominant "color type" angle on the color wheel that ensures consistent values regardless of illumination | `terra::colorize(..., to="hsv")`                    | 0 to 1 (or 0–360 degrees)      |
 
-Rather than relying on a single spectral metric, our method employs a "voting" system where all six indices contribute to candidate evaluation. Integrating six distinct index-threshold pairs determined independently by different researchers across diverse sensors and vegetation types is more stable than relying on any single index or study because our ensemble approach minimizes the potential error or limitations inherent in a single identified threshold. This ensemble approach provides a framework that allows users to weight the spectral data by requiring anywhere from 0 to 6 thresholds to be met for a candidate pile to be retained. Setting the requirement to zero relies exclusively on the structural detection, while higher values place progressively more weight on spectral confirmation.
+Rather than relying on a single spectral metric, our method employs a "voting" system where all six indices contribute to candidate evaluation. Integrating six distinct index-threshold pairs determined independently by different researchers across diverse sensors and vegetation types is more stable than relying on any single index or study a an ensemble approach minimizes the potential error or limitations inherent in a single identified threshold. This ensemble approach provides a framework that allows users to weight the spectral data by requiring anywhere from 0 to 6 thresholds to be met for a candidate pile to be retained. Setting the requirement to zero relies exclusively on the structural detection, while higher values place progressively more weight on spectral confirmation.
 
-A known limitation of our data fusion approach is the spectral similarity between dead wood and geologic features like rocks or boulders. Many common rock-forming minerals are "spectrally featureless" in the visible range with reflectance values remaining relatively constant across the range of visible wavelengths ([Harris et al. 2010](http://dx.doi.org/10.5589/m10-072)). These geologic features are difficult to distinguish from dead wood which can appear spectrally similar to background soil and rocks ([Zielewska-Büttner et al. 2020](https://doi.org/10.3390/f11080801)). Because our indices are specifically tuned to distinguish vegetation, our framework may struggle in rocky environments where boulders are both structurally and spectrally similar to slash piles. 
+A known limitation of our data fusion approach is the spectral similarity between dead wood and geologic features like rocks or boulders. Many common rock-forming minerals are "spectrally featureless" in the visible range with reflectance values remaining relatively constant across the range of visible wavelengths ([Harris et al. 2010](http://dx.doi.org/10.5589/m10-072)). These geologic features are difficult to distinguish from dead wood which can appear spectrally similar to background soil and rocks ([Zielewska-Büttner et al. 2020](https://doi.org/10.3390/f11080801)). Because our indices are specifically tuned to distinguish vegetation, our framework may struggle in rocky environments where boulders or rock outcroppings are both structurally and spectrally similar to slash piles.
 
 It is important to highlight that the spectral data in our data fusion approach functions strictly as a final filter or quality check. It does not generate new piles or alter the shape and location of structurally detected candidates. This leads to a distinct performance trade-off when integrating spectral data. While applying these spectral filters can improve precision by correctly removing false positives (e.g. shrubs, lower branches of trees), it also carries the risk of lowering recall if a true slash pile possesses an unexpected spectral signature.
 
@@ -415,7 +415,7 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.2
 )
 terra::plotRGB(aoi_rgb_rast)
 terra::ifel(x_temp<26, 0, 1) %>% terra::plot(col = c("sienna","gray"), axes=F, legend=F, mar = c(0,0,0,0))
@@ -423,7 +423,7 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.2
 )
 
 terra::plot(x_temp, axes=F, legend=T, mar = c(0,0,0,0))
@@ -443,7 +443,7 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.2
 )
 terra::plotRGB(aoi_rgb_rast)
 ```
@@ -465,17 +465,17 @@ all_rgb_indices_rast %>%
     , legend = F
     , fun = function(){
       lines(terra::vect(aoi_boundary), col="black", lwd=2)
-      # add a second vector outline (blue)
+      # add a second vector outline (cyan)
       lines(
         aoi_slash_piles_polys %>% 
           sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
           terra::vect()
-        , col = "blue", lwd = 1.3)
+        , col = "cyan", lwd = 1.3)
     }
   )
 ```
 
-for a refresher, here is the demonstration RGB image with the image annotated piles (blue)
+for a refresher, here is the demonstration RGB image with the image annotated piles (cyan)
 
 ```{r}
 terra::plotRGB(aoi_rgb_rast)
@@ -489,7 +489,7 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 1.3
+  , add = T, border = "cyan", col = NA, lwd = 1.3
 )
 ```
 
@@ -671,7 +671,7 @@ plt_list_temp <-
       ggplot2::geom_sf(
         data = polys_temp %>% dplyr::filter(name == x)
         # , mapping = ggplot2::aes(fill=value)
-        , color = "blue", lwd = 0.6
+        , color = "cyan", lwd = 0.6
       ) +
       ggrepel::geom_text_repel(
         data = polys_temp %>% 
@@ -692,7 +692,7 @@ plt_list_temp <-
         )
         , nudge_x = 0.5 # initial horizontal nudge
         , nudge_y = -0.2 # initial vertical nudge
-        , size = 2.2, color = "blue"
+        , size = 2.2, color = "cyan"
         , force = 1
         , box.padding = 0.3 # Increase padding to push labels further away
         # , point.padding = 0.7 # Ensure distance from the original point
@@ -901,8 +901,8 @@ rgb_indices_threshold_voting <- function(
       , "inrange_th_rgri"
       , "inrange_th_vdvi"
       , "inrange_th_exgr"
-      , "inrange_th_a"
-      , "inrange_th_hue"
+      , "inrange_th_Lab_a"
+      , "inrange_th_hsv_hue"
     )))
   
   # check threshold
@@ -916,9 +916,9 @@ rgb_indices_threshold_voting <- function(
     filter_by_thresholds_fn(target_col = "rast_agg_exgr", th_list = th_exgr) %>% 
     dplyr::rename(inrange_th_exgr=is_inrange) %>% 
     filter_by_thresholds_fn(target_col = "rast_agg_Lab_a", th_list = th_a) %>% 
-    dplyr::rename(inrange_th_a=is_inrange) %>% 
+    dplyr::rename(inrange_th_Lab_a=is_inrange) %>% 
     filter_by_thresholds_fn(target_col = "rast_agg_hsv_hue", th_list = th_hue) %>% 
-    dplyr::rename(inrange_th_hue=is_inrange) %>% 
+    dplyr::rename(inrange_th_hsv_hue=is_inrange) %>% 
     dplyr::rowwise() %>%
     dplyr::mutate(
       inrange_th_votes = sum(
@@ -1129,6 +1129,8 @@ polygon_spectral_filtering <- function(
         , "hsv_hue"
       )
     )
+  # !!!!!!!!!!!!! convert hsv_hue to 0-360 range !!!!!!!!!!!!!
+  some_rgb_indices_rast$hsv_hue <- some_rgb_indices_rast$hsv_hue*360
   ##################################################
   # extract_rast_values
   ##################################################
@@ -1186,7 +1188,7 @@ slash_pile_detect_dbscan_ans_temp <- slash_pile_detect(
   chm_rast = aoi_chm_rast
   , seg_method = "dbscan"
   , min_ht_m = 1
-  , max_ht_m = 5
+  , max_ht_m = 6
   , min_area_m2 = 1.5
   , max_area_m2 = 50
   , min_convexity_ratio = 0.4
@@ -1194,7 +1196,7 @@ slash_pile_detect_dbscan_ans_temp <- slash_pile_detect(
 )
 ```
 
-let's overlay the structural candidate segments (brown) and the actual piles (blue) on the raw, un-filtered CHM
+let's overlay the structural candidate segments (magenta) and the actual piles (cyan) on the raw, un-filtered CHM
 
 ```{r}
 aoi_chm_rast %>%
@@ -1210,15 +1212,15 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 2
+  , add = T, border = "cyan", col = NA, lwd = 2
 )
 terra::plot(
   slash_pile_detect_dbscan_ans_temp$segs_sf %>% terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 2.5
+  , add = T, border = "magenta", col = NA, lwd = 2.5
 )
 ```
 
-now overlay the structural candidate segments (brown) and the actual piles (blue) on the RGB
+now overlay the structural candidate segments (magenta) and the actual piles (cyan) on the RGB
 
 ```{r}
 aoi_rgb_rast %>% 
@@ -1233,17 +1235,17 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 2
+  , add = T, border = "cyan", col = NA, lwd = 2
 )
 terra::plot(
   slash_pile_detect_dbscan_ans_temp$segs_sf %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 2.5
+  , add = T, border = "magenta", col = NA, lwd = 2.5
 )
 ```
 
-notice there are lower portions of trees that are proposed as candidate segments given our less strict size and geometric filters
+notice there are lower portions of trees or small trees that are proposed as candidate segments given our less strict size and geometric filters
 
 Remember, our data fusion method uses the spectral data strictly as a final **filter** or quality check on the structurally-detected candidate piles, meaning it **neither adds new piles nor alters the shape or location** of the candidates. As a result, if the structural detection step missed a pile (false negative or omission), the spectral data won't go back and fix it. The only changes we can expect by including spectral data in our data fusion approach is a trade-off: we can either improve our precision by successfully removing detections that aren't actually piles (commissions or false positives), or we run the risk of mistakenly filtering out real piles (true positives) if their spectral signature happens to look unusual, which would unfortunately lower our recall. 
 
@@ -1268,6 +1270,7 @@ what did we get?
 ```{r}
 # huh?
 slash_pile_detect_spec_filt_temp %>% dplyr::glimpse()
+# slash_pile_detect_spec_filt_temp$segs_sf$rast_agg_hsv_hue %>% summary()
 ```
 
 how many piles would be removed if we set a `spectral_weight` of **"5"** which requires five of the six spectral thresholds to be met for a candidate pile to be retained
@@ -1286,7 +1289,7 @@ scales::percent(
 )
 ```
 
-let's highlight the spectrally filtered segments (orange) with the candidate segments that were retained by the spectral filtering (brown) and the actual piles (blue) on the raw, un-filtered CHM
+let's highlight the spectrally filtered segments (orange) with the candidate segments that were retained by the spectral filtering (magenta) and the actual piles (cyan) on the raw, un-filtered CHM
 
 ```{r}
 aoi_chm_rast %>%
@@ -1302,13 +1305,13 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_chm_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 2
+  , add = T, border = "cyan", col = NA, lwd = 2
 )
 terra::plot(
   slash_pile_detect_spec_filt_temp$segs_sf %>% 
     dplyr::filter(inrange_th_votes>=5) %>% 
     terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 2.5
+  , add = T, border = "magenta", col = NA, lwd = 2.5
 )
 terra::plot(
   slash_pile_detect_spec_filt_temp$segs_sf %>% 
@@ -1318,7 +1321,7 @@ terra::plot(
 )
 ```
 
-now let's highlight the spectrally filtered segments (orange) with the candidate segments that were retained by the spectral filtering (brown) and the actual piles (blue) on the RGB
+now let's highlight the spectrally filtered segments (orange) with the candidate segments that were retained by the spectral filtering (magenta) and the actual piles (cyan) on the RGB
 
 ```{r}
 aoi_rgb_rast %>% 
@@ -1333,14 +1336,14 @@ terra::plot(
   aoi_slash_piles_polys %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "blue", col = NA, lwd = 2
+  , add = T, border = "cyan", col = NA, lwd = 2
 )
 terra::plot(
   slash_pile_detect_spec_filt_temp$segs_sf %>% 
     dplyr::filter(inrange_th_votes>=5) %>% 
     sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
     terra::vect()
-  , add = T, border = "brown", col = NA, lwd = 2.5
+  , add = T, border = "magenta", col = NA, lwd = 2.5
 )
 terra::plot(
   slash_pile_detect_spec_filt_temp$segs_sf %>% 
@@ -1352,6 +1355,73 @@ terra::plot(
 ```
 
 in this demonsration area, the spectral filtering of our data fusion approach successfully filtered the structurally detected candidate piles that were clearly lower parts of trees (clearly green in the RGB). however, the spectral filtering failed to remove some false positive predictions that were shadowed in the RGB imagery. a positive result, though, was that the spectral filtering stage did not remove any true positive predictions.
+
+let's see the spectral index values of the candidates which were identified for removal
+
+```{r}
+slash_pile_detect_spec_filt_temp$segs_sf %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(rand = runif(n=nrow(slash_pile_detect_spec_filt_temp$segs_sf))) %>% 
+  dplyr::arrange(rand) %>% 
+  dplyr::mutate(
+    is_removed = inrange_th_votes<5
+    , sorter = dplyr::row_number()
+  ) %>% 
+  dplyr::select(
+    pred_id, is_removed, sorter
+    , tidyselect::starts_with("rast_agg_")
+    , tidyselect::starts_with("inrange_th_")
+  ) %>% 
+  dplyr::select(-tidyselect::ends_with("_votes")) %>% 
+  tidyr::pivot_longer(
+    cols = c(
+      tidyselect::starts_with("rast_agg_")
+      , tidyselect::starts_with("inrange_th_")
+    )
+  ) %>% 
+  dplyr::mutate(
+    i = name %>% 
+      stringr::str_remove("^rast_agg_") %>% 
+      stringr::str_remove("^inrange_th_")
+    , v = stringr::str_extract(name, "^(rast_agg_|inrange_th_)")
+  ) %>% 
+  dplyr::select(-name) %>% 
+  tidyr::pivot_wider(names_from = v, values_from = value) %>% 
+  dplyr::mutate(inrange_th_ = as.logical(inrange_th_)) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = rast_agg_, y = sorter
+      , shape = is_removed
+      , color = inrange_th_
+    )
+  ) +
+  ggplot2::geom_point(size = 4) +
+  ggplot2::facet_wrap(facets = dplyr::vars(i), scales = "free_x") +
+  ggplot2::scale_color_viridis_d(option = "turbo", begin = 0.2, direction = -1) +
+  ggplot2::scale_shape_manual(values = c(19,17)) +
+  ggplot2::scale_y_continuous(NULL,breaks=1:nrow(slash_pile_detect_spec_filt_temp$segs_sf)) +
+  ggplot2::labs(
+    x = ""
+    , shape = "ultimately\nspectrally filtered?"
+    , color = "meets\nindex threshold?"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "top"
+    , axis.ticks.y = ggplot2::element_blank()
+    , axis.text.y = ggplot2::element_blank()
+    , panel.grid.major.y = ggplot2::element_line(color = "gray97", linewidth = 0.05)
+    , panel.grid.minor.y = ggplot2::element_line(color = "gray97", linewidth = 0.05)
+    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(override.aes = list(size = 5)),
+    shape = ggplot2::guide_legend(override.aes = list(size = 5))
+  )
+```
+
+the strength of our ensemble spectral index filtering approach is clear with this demonstration data as only one index perfectly aligned with the overall vote for removing candidate piles
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
