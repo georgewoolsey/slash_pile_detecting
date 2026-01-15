@@ -34,7 +34,7 @@ Increasing active forest management activities generate non-commercial residues 
 
 The objective of this study is to present a training-free, rules-based methodology for identifying slash piles from UAS data. The presented approach aims to enable high transferability by using user-defined geometric and size thresholds to identify pile candidates from aerial point cloud data, which can then be refined through a data fusion process incorporating spectral (i.e. RGB) data when available.
 
-## Data{#data_desc}
+## Data and Site Descriptions{#data_desc}
 
 We have remote sensing data acquired from a UAS platform and accompanying ground truth data for four different study sites. For all study sites we have:
 
@@ -55,6 +55,38 @@ The following table provides an overview of the four sites utilized in this stud
 | **TRFO-BLM Pinyon-Juniper Site** | Hand Piles | Image-annotated footprints based on field collected point locations | Located on BLM land in CO, US. Arid environment with dry vegetation including standing dead pinyon-juniper. Piles are smaller, simpler, and hand-stacked. | Freefly Astro with Sony ILX-LR1 (35mm lens). Altitude 243.84 m (terrain following), 85% forward and 80% side overlap. |
 | **BHEF Ponderosa Pine Site** | Machine Piles | Image-annotated footprints | Located in the Black Hills Experimental Forest (BHEF) in SD, US. Piles are massive, mechanically built, and irregularly shaped (e.g. not necessarily circular). Tree regeneration is expected. | DJI Phantom 4 Pro with 20 MP RGB sensor (8.8 mm lens). Altitude 80 m, 90% forward and 85% side overlap, 4 m/s speed. |
 | **ARNF Ponderosa Pine Site** | Machine Piles | Image-annotated footprints | Located in the Arapahoe and Roosevelt National Forest (ARNF) in CO, US. Ponderosa pine forest with a climate similar to PSINF. Machine piles are massive but more circular and regular. Less regeneration is expected. | Switchblade-Elite (Vision Aerial) with 24.2 MP RGB sensor (16 mm lens). Altitude xx m, 90% forward and 85% side overlap, 4 m/s speed. |
+
+### Silvicultural Prescriptions
+
+Below, we summarize the silvicultural prescriptions from the study sites with a specific focus on highlighting information on slash pile construction while also providing information on management objectives. 
+
+#### PSINF Mixed Conifer Site
+
+Information is from the silvicultural prescriptions for the "Carroll Lakes Project" (unit 4) administered by the Pikes Peak Ranger District. 
+
+The PSINF site is classified as Ponderosa pine (*Pinus ponderosa*) and dry-mesic mixed conifer, where a "free thin" prescription was implemented across an 8.9 ha (22-acre) treatment unit using a combination of mechanical equipment and hand-thinning. The pre-treatment overstory consisted of Engelmann spruce (*Picea engelmannii*), blue spruce (*Picea pungens*), Ponderosa pine, and Douglas-fir (*Pseudotsuga menziesii*), alongside a quaking aspen (*Populus tremuloides*) component. Management objectives focused on transitioning the forest from mid-closed to more open and complex structural stages by promoting a heterogeneous, "groupy" spatial arrangement. These efforts prioritized the retention of large or old-growth trees and the expansion of aspen to create a landscape capable of supporting natural wildfire and insect disturbance regimes within their historical ranges. 
+
+For the harvesting process, larger trees were whole-tree yarded and skidded to landings for processing with residual waste mechanically piled, while smaller material was hand-piled throughout the site. Additionally, the prescription required the retention of 50 linear feet per acre of downed coarse woody debris (at least 12 inches in diameter) independent of the piled material.
+
+#### TRFO-BLM Pinyon-Juniper Site
+
+Located on Bureau of Land Management (BLM) land in the Colorado Southwest District managed by the Tres Rios Field Office (TRFO-BLM) the treatment was part of a "Pinyon-Juniper Adaptive Silviculture Project" with a uniform thinning treatment prescription. In this heavy intensity uniform thinning treatment unit, the prescription was designed to reduce fuel loads by maintaining significant spacing between residual tree crowns. The prescription prioritizes the retention of healthy, productive, and large-diameter pinyon pine (Pinus edulis) and Rocky Mountain juniper (Juniperus scopulorum) trees. This thinning strategy aims for a residual forest structure characterized by open interspaces with uniform gaps between trees that minimize vertical and horizontal fuel continuity.
+
+Fortunately for the present research, we have the exact, detailed wording of the slash pile construction prescription:
+
+>No less than 90% of all cut trees, live limbs and slash shall be piled. Piles are to be constructed to facilitate burning by the government at a later date. Minimum pile size is 5x5x5 feet. The contractor shall construct piles that are sufficiently compacted to allow for a high percentage of consumption from burning, this may require multiple cutting of stems, compacting the pile with equipment or other approved techniques. Piles should be constructed with branches and smaller diameter fuels piled on bottom and larger limbs/bole wood piled on top. Piles should be spaced appropriately away from leave trees to avoid damage from burning. Anticipate flame lengths twice the piled fuel height when placing piles i.e (5 ft tall pile will have 10 ft flame lengths so pile should be placed at least 10 ft away from the nearest reserve trees). Piles will be constructed in a way to prevent toppling. Piles may be placed on stumps. Oak and other brush cut will need to be added to the piles. Piles shall not be constructed in swales, streams, springs, or within 15 feet any recreational trail within the units. Piles shall not be placed on or near any cadastral survey markers. Piles may not be built under any electrical transmission line or utility line. Piles shall be free of soil.
+
+Site managers also provided anecdotal feedback about the on-the-ground prescription implementation, noting that the piles were "larger than expected" and "messy," and were constructed too close to residual trees. The prescription specified a minimum pile size of 1.5 meters (5 feet) long, wide, and tall, but provided no explicit maximum size. This absence of a maximum size makes the anecdotal feedback particularly relevant for setting up our pile detection methodology. The close proximity of piles to trees, which resulted in tree mortality on other units when piles were burned, may also complicate our detection methodology, as the structural and spectral signatures of the piles and trees may merge in both the CHM and RGB raster data.
+
+#### BHEF Ponderosa Pine Site
+
+The study at the Black Hills Experimental Forest included a series of ponderosa pine (*Pinus ponderosa*) mechanical treatments designed to transition stands from uniform densities to a heterogeneous mosaic of individuals, clumps, and openings. The silvicultural objectives prioritize both horizontal and vertical complexity, using varying tree-marking strategies to recreate historical stand structures and spatial distributions. Five distinct marking approaches were implemented to promote a "groupy" forest structure, ranging from fixed cut-to-leave ratios to a specialized Individuals, Clumps, and Openings (ICO) prescription. Following the marking process, the units were mechanically thinned using whole-tree removal with trees skidded to designated landing areas for processing and all residual material mechanically piled at the landings.
+
+#### ARNF Ponderosa Pine Site
+
+Information is from the silvicultural prescriptions for the "Cherokee Park Project" (units 18, 19) administered by the Canyon Lakes Ranger District. 
+
+The ARNF site is classified as predominantly a Ponderosa pine (*Pinus ponderosa*) and Douglas-fir (*Pseudotsuga menziesii*) forest. Treatment objectives are to restore ecosystems to a state representative of natural disturbance regimes while reducing crown fire risk. The silvicultural prescription, characterized as group selection with retention and variable matrix thinning, aims to create a heterogeneous, multi-aged stand structure defined by irregular openings and clusters of interlocking tree crowns. Mechanical thinning was focused on removing smaller diameter classes and competing Douglas-fir to prioritize the retention of the largest, healthiest, and oldest Ponderosa pine across the treatment area. The desired residual structure is horizontally and vertically diverse where untreated patches and variable tree densities create a complex arrangement of individual trees, clumps, and clearings. During mechanical harvest, trees were whole-tree yarded and skidded to landings for processing with residual waste mechanically piled for future prescribed burning.
 
 ## Analysis Plan
 
