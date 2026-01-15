@@ -1355,11 +1355,5 @@ in this demonsration area, the spectral filtering of our data fusion approach su
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(list = ls()[stringr::str_starts(ls(), "aoi_")])
-remove(
-  rgb_indices_df, predicted_watershed_piles_sf, plt_ortho_example
-  , all_rgb_indices_rast, final_predicted_slash_piles
-  , ground_truth_prediction_match_ans
-)
 gc()
 ```

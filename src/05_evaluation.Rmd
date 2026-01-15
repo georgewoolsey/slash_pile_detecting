@@ -1,10 +1,10 @@
-# Method Evaluation
+# Method Evaluation{#meth_eval}
 
-This section is entirely devoted to detailing the methods and defining analysis functions for instance matching and the calculation of overall prediction performance assessment metrics. Field-measured slash piles will be used as the ground truth data to perform a confusion matrix-based validation accuracy assessment of the methods.
+This section is entirely devoted to detailing the methods and defining analysis functions for instance matching and the calculation of overall prediction performance assessment metrics. Image-annotated slash pile footprints, which are [available across all study sites](#data_desc), will be used as the ground truth data to perform a confusion matrix-based validation accuracy assessment of the methods.
 
-[Instance matching](#iou_match) compares predictions to the ground truth data to establish True Positives (TP), False Positives (FP, commissions), and False Negatives (FN, omissions). Aggregation of the instance matching results allows us to calculate overall performance assessment metrics to determine overall detection accuracy and, in the case of our slash pile analysis, form quantification accuracy.
+[Instance matching](#iou_match) compares predicted pile segments to the ground truth data to establish True Positives (TP), False Positives (FP, commissions), and False Negatives (FN, omissions). Aggregation of the instance matching results allows us to calculate performance assessment metrics to determine overall detection accuracy and form quantification accuracy.
 
-* [detection accuracy metrics](#detect_metrics_form): such as Recall, Precision, and F-score, are calculated directly by aggregating these raw TP, FP, and FN counts and quantifies the method's ability to find the piles
+* [detection accuracy metrics](#detect_metrics_form): including Recall, Precision, and F-score, are calculated directly by aggregating these raw TP, FP, and FN counts and quantifies the method's ability to find the piles
 * [quantification accuracy metrics](#quant_metrics_form): such as RMSE, MAPE, and Mean Error of pile form measurements (e.g. height, diameter) are calculated by aggregating the differences between the estimated pile attributes and the ground truth values for instances classified as True Positives. These metrics tell us about the method's ability to accurately quantify the form of the piles it successfully identified
 
 ## Instance Matching{#iou_match}
@@ -142,11 +142,13 @@ ground_truth_single_match <- function(
 }
 ```
 
-let's generate some fake predictions to test
+we'll continue using the same [demonstration area](#d_area) which is outside of the study area at PSINF for this walkthrough
 
-```{r, warning=FALSE}
+we'll generate some fake predictions over the demonstration area so that we purposefully get a good mix of FP, TP, and FN "predictions"
+
+```{r}
 predictions_temp <- 
-  slash_piles_polys %>% 
+  aoi_slash_piles_polys %>% 
     dplyr::slice_sample(prop = 0.7) %>%
     sf::st_centroid() %>% 
     dplyr::mutate(rand=as.integer(runif(n=dplyr::n(), min = 1, max = 3))) %>% 
@@ -158,15 +160,15 @@ predictions_temp <-
     sf::st_set_geometry("geometry") %>% 
     dplyr::bind_rows(
       sf::st_sample(
-        slash_piles_polys %>% 
-          sf::st_bbox() %>% 
-          sf::st_as_sfc() %>% 
-          sf::st_as_sf()
+        sf::st_difference(
+          aoi_boundary
+          , sf::st_union(aoi_slash_piles_polys)
+        )
         , size = 33
         , type = "random"
       ) %>%
       sf::st_as_sf() %>% 
-      dplyr::mutate(rand=as.integer(runif(n=dplyr::n(), min = 1, max = 6))) %>% 
+      dplyr::mutate(rand=as.integer(runif(n=dplyr::n(), min = 1, max = 3))) %>% 
       dplyr::select(rand) %>% 
       sf::st_set_geometry("geometry") %>% 
       dplyr::mutate(
@@ -182,7 +184,8 @@ check out the fake predictions compared to the ground truth pile footprints
 
 ```{r}
 ggplot2::ggplot() + 
-  ggplot2::geom_sf(data = slash_piles_polys, mapping = ggplot2::aes(color = "ground truth"), fill = NA) + 
+  ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 
+  ggplot2::geom_sf(data = aoi_slash_piles_polys, mapping = ggplot2::aes(color = "ground truth"), fill = NA) + 
   ggplot2::geom_sf(data = predictions_temp, mapping = ggplot2::aes(color = "fake predictions"), fill = NA) +
   ggplot2::scale_color_manual(values=c("brown","blue")) +
   ggplot2::labs(color="") +
@@ -193,7 +196,7 @@ test for a single ground truth instance
 
 ```{r, warning=FALSE}
 ground_truth_single_match(
-  gt_inst = slash_piles_polys %>% dplyr::filter(pile_id==purrr::discard(predictions_temp$pile_id, is.na)[1])
+  gt_inst = aoi_slash_piles_polys %>% dplyr::filter(pile_id==purrr::discard(predictions_temp$pile_id, is.na)[1])
   , gt_id = "pile_id"
   , predictions = predictions_temp
   , pred_id = "pred_id"
@@ -310,16 +313,16 @@ ground_truth_prediction_match <- function(
 }
 ```
 
-let's see how we did given the full list of fake predictions and ground truth data
+let's see how we did given the full list of fake predictions and ground truth data using an IoU proportion of 30%
 
 ```{r}
 ground_truth_prediction_match_ans <- ground_truth_prediction_match(
-  ground_truth = slash_piles_polys %>% 
+  ground_truth = aoi_slash_piles_polys %>% 
     dplyr::arrange(desc(field_diameter_m)) # this is so the algorithm starts with the largest
   , gt_id = "pile_id"
   , predictions = predictions_temp
   , pred_id = "pred_id"
-  , min_iou_pct = 0.1
+  , min_iou_pct = 0.3
 )
 # huh?
 ground_truth_prediction_match_ans %>% dplyr::glimpse()
@@ -334,19 +337,47 @@ ground_truth_prediction_match_ans %>%
   dplyr::mutate(pct = (n/sum(n)) %>% scales::percent(accuracy=0.1))
 ```
 
-let's look at that spatially
+let's quickly look at the IoU values on the true positives
+
+```{r}
+ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
+```
+
+here is the distribution of IoU for the TP matches
+
+```{r}
+ground_truth_prediction_match_ans %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(x = iou, color = match_grp, fill = match_grp)) +
+  ggplot2::geom_density(mapping = ggplot2::aes(y=ggplot2::after_stat(scaled)), alpha = 0.8) +
+  ggplot2::scale_color_manual(values=pal_match_grp) +
+  ggplot2::scale_fill_manual(values=pal_match_grp) +
+  ggplot2::scale_y_continuous(NULL,breaks=NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    color="",fill="",x="IoU of correct precitions"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(size = 9, face = "bold", color = "black")
+  )
+```
+
+let's look at the results spatially noting that just because a prediction overlaps with a ground truth pile does not mean that it meets the IoU threshold for determining a positive match. in these cases where the IoU was insufficient, a commission (FP) will overlap with an omission (FN).
 
 ```{r}
 pal_match_grp = c(
   "omission"=viridis::cividis(3)[1]
-  , "commission"= "black" #viridis::cividis(3)[2]
+  , "commission"= viridis::cividis(3)[2]
   , "true positive"=viridis::cividis(3)[3]
 )
 # plot it
 ggplot2::ggplot() +
+  ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 
   ggplot2::geom_sf(
     data = 
-      slash_piles_polys %>% 
+      aoi_slash_piles_polys %>% 
         dplyr::left_join(
           ground_truth_prediction_match_ans %>% 
             dplyr::select(pile_id,match_grp)
@@ -374,12 +405,6 @@ ggplot2::ggplot() +
     fill = ggplot2::guide_legend(override.aes = list(color = c(NA,NA,pal_match_grp["commission"])))
     , color = "none"
   )
-```
-
-let's quickly look at the IoU values on the true positives
-
-```{r}
-ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
 ```
 
 ## Detection Accuracy Metrics{#detect_metrics_form}
@@ -434,7 +459,7 @@ confusion_matrix_scores_fn <- function(df) {
 }
 ```
 
-test it
+test it using our fake predictions
 
 ```{r}
 ground_truth_prediction_match_ans %>% 
@@ -458,9 +483,11 @@ ground_truth_prediction_match_ans %>%
 
 ## Quantification Accuracy Metrics{#quant_metrics_form}
 
-Quantification accuracy metrics such as RMSE, MAPE, and Mean Error of pile form measurements (e.g. height, diameter) are calculated by aggregating the differences between the estimated pile attributes and the ground truth values for instances classified as True Positives. These metrics tell us about the method's ability to accurately quantify the form of the piles it successfully identified
+Quantification accuracy metrics such as RMSE, MAPE, and Mean Error of pile form measurements (e.g. height, diameter) are calculated by aggregating the differences between the estimated pile attributes and the ground truth values for instances classified as True Positives. These metrics tell us about the method's ability to accurately quantify the form of the piles it successfully identified.
 
-to prepare our results for analysis, we will develop a function that aggregates the single-pile-level data into a single record for each parameter combination. this function will calculate detection performance metrics such as F-score, precision, and recall (using the `confusion_matrix_scores_fn()` we defined above), as well as quantification accuracy metrics including Root Mean Squared Error (RMSE), Mean Error (ME), and Mean Absolute Percentage Error (MAPE) to assess the accuracy of our pile form measurements. this could be a valuable function for any future analysis comparing predictions to ground truth data.
+We only have field-collected slash pile height and diameter measurements from a single study site, the PSINF Mixed Conifer Site. Data from this one study site will be used to test the slash pile quantification accuracies acheived by the proposed methodology, while data from all study sites will be used to validate the slash pile detection methodology.  
+
+to prepare our results for analysis, we will develop a function that aggregates the pile-level data into a single record for each metric-error measurement combination. this function will calculate detection performance metrics such as F-score, precision, and recall (using the `confusion_matrix_scores_fn()` we defined above), as well as quantification accuracy metrics including Root Mean Squared Error (RMSE), Mean Error (ME), and Mean Absolute Percentage Error (MAPE) to assess the accuracy of our pile form measurements. this could be a valuable function for any future analysis comparing predictions to ground truth data.
 
 here are the quantification accuracy metric formulas:
 
@@ -629,14 +656,14 @@ dplyr::glimpse()
 
 now, let's look at the `agg_ground_truth_match()` output using our fake pile prediction instance match example made by our `ground_truth_prediction_match()` function as input. 
 
-Before `agg_ground_truth_match()`, we'll add area of the fake predicted piles and area of the ground truth piles to ensure we get RMSE, MAPE, and ME quantification accuracy metrics in the result
+Before `agg_ground_truth_match()`, we'll add area of the fake predicted piles and area of the ground truth piles (based on image-annotated boundaries) to ensure we get RMSE, MAPE, and ME quantification accuracy metrics in the result
 
 ```{r}
 # first, we'll add pile area from the respective spatial data
 ground_truth_prediction_match_ans <- ground_truth_prediction_match_ans %>% 
   # join on gt area data
   dplyr::left_join(
-    slash_piles_polys %>% 
+    aoi_slash_piles_polys %>% 
       dplyr::select(pile_id) %>% 
       dplyr::mutate(gt_area_m2 = sf::st_area(.) %>% as.numeric()) %>% 
       sf::st_drop_geometry()
@@ -684,7 +711,7 @@ ground_truth_prediction_match_ans %>%
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(ground_truth_prediction_match_ans)
-remove(plt_list_rgb, plt_rgb_ortho, grvi_rast, spectral_index_fn)
+remove(ground_truth_prediction_match_ans, slash_pile_detect_fake_ans)
+remove(list = ls()[stringr::str_starts(ls(), "aoi_")])
 gc()
 ```
