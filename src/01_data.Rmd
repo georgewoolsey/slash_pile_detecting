@@ -156,6 +156,13 @@ all_stand_boundary <-
   dplyr::mutate(
     site_area_m2 = sf::st_area(geometry) %>% as.numeric()
     , site_area_ha = site_area_m2/10000
+    , site_data_lab = dplyr::case_match(
+      site
+      , "PSINF Mixed Conifer Site" ~ "psinf"
+      , "TRFO-BLM Pinyon-Juniper Site" ~ "pj"
+      , "BHEF Ponderosa Pine Site" ~ "bhef"
+      , "ARNF Ponderosa Pine Site" ~ "arnf"
+    )
   )
   # sf::st_centroid() %>% 
   # sf::st_sf() %>% 

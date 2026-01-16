@@ -28,12 +28,13 @@ The silvicultural prescription for the TRFO-BLM site includes exact pile constru
 
 ### BHEF Ponderosa Pine Site
 
-While the silvicultural prescription for the BHEF site defines no specific pile construction parameters, the treatment resulted exclusively in mechanical piles located at landings without additional hand piles. Onsite observations indicated that these piles are uniformly massive and often exceed the size of smaller vegetation or boulders. We established detection thresholds by using familiar anchors to contextualize scale, such as the dimensions of our work truck. Ground-based cell phone images and an aerial UAS photo capturing the truck parked next to one of the largest piles confirmed that some piles reached the scale of a moderately sized American single-family home. We used these truck- and house-sized estimates to set high minimum area and height thresholds to isolate the piles from other features. Because these large dimensions may structurally resemble the residual tree groups, spectral information will likely improve the detection accuracy of our method by filtering out false positive predictions from the structural detection.
+While the silvicultural prescription for the BHEF site defines no specific pile construction parameters, the treatment resulted exclusively in mechanical piles located at landings without additional hand piles. Onsite observations indicated that these piles are uniformly massive and lack a standardized shape. For example, some piles were circular and piled high vertically while others were shorter with elongated oval footprints. We established detection thresholds by using familiar anchors to contextualize scale, such as the dimensions of our work truck. Ground-based cell phone images and an aerial UAS photo capturing the truck parked next to one of the largest piles confirmed that some piles reached the scale of a small-sized, one story American single-family home. We used these truck- and house-sized estimates to set high minimum area and height thresholds to isolate the piles from other features. Because these large dimensions may structurally resemble the residual tree groups, spectral information will likely improve the detection accuracy of our method by filtering out false positive predictions from the structural detection.
 
 ### ARNF Ponderosa Pine Site
 
-While the silvicultural prescription for the ARNF site defines no specific pile construction parameters, it specifies that all residual waste was mechanically piled at landings for future prescribed burning. Onsite observations indicate that these mechanical piles are uniformly massive and generally circular, with some landings containing clusters of two to five individual piles. To calibrate our detection methodology for these large-scale features, we used cell phone photos taken from the ground during site walkthroughs to compare the piles against a lifted Dodge Ram 2500 Mega Cab turbo diesel. By using this vehicle as a known physical anchor, we estimated that the piles were often at least 2-3 the truck’s height of approximately 2.4 m (8 ft), with footprints significantly exceeding the 16.7 to 26.7 square meters of a standard parking space. These dimensional estimates allow us to set relatively large minimum area and height thresholds for our detection methodology to ensure the exclusion of smaller detected objects like trees or boulders since no small hand piles were expected.
+While the silvicultural prescription for the ARNF site defines no specific pile construction parameters, it specifies that all residual waste was mechanically piled at landings for future prescribed burning. Onsite observations indicated that these mechanical piles are uniformly massive and generally circular. The piles were also compact and vertical in structure with limited horizontal sprawl, a construction form that will likely increase consumption efficiency during prescribed burning. Some landings contained clusters of two to five individual piles. To calibrate our detection methodology for these large-scale features, we used cell phone photos taken from the ground during site walkthroughs to compare the piles against a lifted Dodge Ram 2500 Mega Cab turbo diesel. By using this vehicle as a known physical anchor, we estimated that the piles were often at least 2-3 the truck’s height of approximately 2.4 m (8 ft), with footprints significantly exceeding the 16.7 to 26.7 square meters of a standard parking space. These dimensional estimates allow us to set relatively large minimum area and height thresholds for our detection methodology to ensure the exclusion of smaller detected objects like trees or boulders since no small hand piles were expected.
 
+### Paremeter Settings
 
 | Parameter | PSINF Mixed Conifer Site | TRFO-BLM Pinyon-Juniper Site | BHEF Ponderosa Pine Site | ARNF Ponderosa Pine Site |
 | :--- | :--- | :--- | :--- | :--- |
@@ -67,7 +68,10 @@ generate a `kableExtra` table
 ```{r}
 all_stand_boundary %>% 
   sf::st_drop_geometry() %>% 
-  dplyr::select(-tidyselect::starts_with("site_area")) %>% 
+  dplyr::select(-c(
+    tidyselect::starts_with("site_area")
+    , site_data_lab
+  )) %>% 
   tidyr::pivot_longer(cols=-site) %>% 
   tidyr::pivot_wider(names_from = site, values_from = value) %>% 
   dplyr::rename(parameter = name) %>% 
@@ -79,10 +83,132 @@ all_stand_boundary %>%
   kableExtra::kable_styling()
 ```
 
+let's organize our site boundary, ground truth, CHM, and RGB data into lists so we can programmatically iterate through all sites more efficiently
 
-### Detection
+```{r, results=F, warning=F}
+##########################################
+# stand_boundary
+##########################################
+  # suffix
+  suffix_temp <- "_stand_boundary"
+  # convert to list of objects and remove the suffix from the name in the list
+  stand_boundary <-
+    all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    base::mget(inherits = T) %>%
+    purrr::set_names(~ str_remove(.x, suffix_temp))
+  # names(stand_boundary)
+  # dplyr::glimpse(stand_boundary)
+  # remove
+  all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    purrr::map(\(x) remove(list = x,inherits = T))
+##########################################
+# slash_piles_polys
+##########################################
+  # suffix
+  suffix_temp <- "_slash_piles_polys"
+  # convert to list of objects and remove the suffix from the name in the list
+  slash_piles_polys <-
+    all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    base::mget(inherits = T) %>%
+    purrr::set_names(~ str_remove(.x, suffix_temp))
+  # names(slash_piles_polys)
+  # dplyr::glimpse(slash_piles_polys)
+  # remove
+  all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    purrr::map(\(x) remove(list = x,inherits = T))
+##########################################
+# chm_rast
+##########################################
+  # suffix
+  suffix_temp <- "_chm_rast"
+  # convert to list of objects and remove the suffix from the name in the list
+  chm_rast <-
+    all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    base::mget(inherits = T) %>%
+    purrr::set_names(~ str_remove(.x, suffix_temp))
+  # names(chm_rast)
+  # dplyr::glimpse(chm_rast)
+  # remove
+  all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    purrr::map(\(x) remove(list = x,inherits = T))
+##########################################
+# rgb_rast
+##########################################
+  # suffix
+  suffix_temp <- "_rgb_rast"
+  # convert to list of objects and remove the suffix from the name in the list
+  rgb_rast <-
+    all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    base::mget(inherits = T) %>%
+    purrr::set_names(~ str_remove(.x, suffix_temp))
+  # names(rgb_rast)
+  # dplyr::glimpse(rgb_rast)
+  # remove
+  all_stand_boundary$site_data_lab %>%
+    paste0(suffix_temp) %>%
+    purrr::map(\(x) remove(list = x,inherits = T))
+```
 
-remember the optimal parameter settings we identified assuming we have spectral data for a data fusion approach? we'll use those settings for the structural parameters and set the `spectral_weight` parameter to the lower end of it's 95% HDI to be less restrictive with the spectral filtering (e.g. if HDI includes '4' and '5', use '4') while maintaining high anticipated accuracy because these HDI's include the full range of optimal settings based on our balanced accuracy. 
+
+## CHM-based Detection
+
+Our geometric, rules-based methodology uses input CHM data and user-defined thresholds for size (height and area) and 2D pile footprint shape regularity (convexity and circularity). We [defined a function](#slash_pile_detect_fn) to make the detection from the CHM easy given the parameters we reviewed above: `slash_pile_detect()`
+
+```{r,include=FALSE,eval=FALSE}
+x <- all_stand_boundary$site_data_lab[1]
+terra::plot(chm_rast[[x]])
+terra::plotRGB(rgb_rast[[x]])
+terra::plot(stand_boundary[[x]] %>% sf::st_transform(terra::crs(rgb_rast[[x]])) %>% terra::vect(), add = T, border = "black", col = NA)
+terra::plot(slash_piles_polys[[x]] %>% sf::st_transform(terra::crs(rgb_rast[[x]])) %>% terra::vect(), add = T, border = "cyan", col = NA, lwd = 1.2)
+remove(x)
+gc()
+```
+
+We'll get the predictions using both the DBSCAN and Watershed segmentation approaches. Review the xxx for a refresher of these methods.
+
+```{r, results=F, warning=FALSE}
+# map over slash_pile_detect for dbscan
+dbscan_structural_preds <- 
+  all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    \(x)
+    slash_pile_detect(
+      chm_rast = chm_rast[[x]]
+      , seg_method = "dbscan"
+      , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_ht_m)
+      , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_ht_m)
+      , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_area_m2)
+      , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_area_m2)
+      , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_convexity_ratio)
+      , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_circularity_ratio)
+    ) %>% 
+    purrr::pluck("segs_sf")
+    , .progress = T
+  )
+```
+
+
+```{r, results=F, warning=FALSE}
+slash_pile_detect_watershed_ans_temp$segs_sf
+slash_pile_detect_watershed_ans_temp <- slash_pile_detect(
+  chm_rast = aoi_chm_rast
+  , seg_method = "watershed"
+  , min_ht_m = 1.5
+  , max_ht_m = 5
+  , min_area_m2 = 1.5^2
+  , max_area_m2 = 50
+  , min_convexity_ratio = 0.7
+  , min_circularity_ratio = 0.5
+)
+```
+
 
 ```{r}
 all_stand_boundary$site

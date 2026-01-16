@@ -1353,7 +1353,7 @@ get_segmentation_candidates <- function(
   # slice CHM
   ########################
   # lower CHM slice
-  slice_chm_rast <- terra::clamp(aoi_chm_rast, upper = max_ht_m, lower = 0, values = F)
+  slice_chm_rast <- terra::clamp(chm_rast, upper = max_ht_m, lower = 0, values = F)
   # na check
   if(
     as.numeric(terra::global(slice_chm_rast, fun = "isNA")) == terra::ncell(slice_chm_rast) 
