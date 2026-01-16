@@ -397,7 +397,7 @@ to summarize, the size-based thresholds of our geometric, rules-based approach f
 * `min_area_m2` : numeric. The smallest 2D area (in square meters) a detected pile must cover to be considered valid.
 * `max_area_m2` : numeric. The largest 2D area (in square meters) a detected pile can cover to be considered valid.
 
-### Overview of Methods
+### Overview of Methods{#seg_methods}
 
 The two primary segmentation methods we'll test are watershed segmentation and DBSCAN. Watershed segmentation, which we'll implement with `lidR::watershed()`, is a raster-based technique that treats a CHM as a topographic surface where height values are inverted to create basins. The algorithm identifies local maxima as "seeds" and expands them until they reach a boundary or "watershed" line. This method requires a tolerance parameter (`tol`) which defines "the minimum height of the object...between its highest point (seed) and the point where it contacts another object...If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest. Tolerance should be chosen according to the range of x." An extent parameter (`ext`) is used to define the search window for object seeds.
 
@@ -2922,7 +2922,7 @@ p_fn_temp <- function(dta,fill_col,col_nm=latex2exp::TeX("area $\\textrm{m}^2$")
   )
 }
 # lists
-pal_temp <- c("cyans","Purples","Greens")
+pal_temp <- c("Blues","Purples","Greens")
 nm_temp <- c(
   latex2exp::TeX("area $\\textrm{m}^2$")
   , latex2exp::TeX("volume $\\textrm{m}^3$")
@@ -3700,4 +3700,141 @@ p4_temp <- slash_pile_detect_watershed_ans_temp$segs_sf %>%
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
+
+```{r, include=FALSE, eval=F}
+# Caused by error:
+# ! Cannot segment the trees from a raster stored on disk. Use segment_trees() or load the raster in memory
+
+# Load necessary libraries
+library(terra)
+library(lidR)
+library(purrr)
+library(dplyr)
+
+process_chm_segmented <- function(chm_path, tile_size = 500, buffer_size = 20) {
+  
+  # 1. Initialization and Disk-based Tiling
+  # We load the reference to the raster without pulling all data into RAM
+  chm_ref <- terra::rast(chm_path)
+  res_val <- terra::res(chm_ref)
+  crs_val <- terra::crs(chm_ref)
+  
+  # Create a directory for temporary tiles
+  tile_dir <- tempfile("tiles_")
+  dir.create(tile_dir)
+  
+  # Generate buffered tiles on disk using terra::makeTiles
+  # This avoids memory overflow for massive datasets
+  cat("Generating tiles on disk...\n")
+  tile_files <- terra::makeTiles(
+    x = chm_ref, 
+    y = tile_size, 
+    filename = file.path(tile_dir, "tile_.tif"), 
+    buffer = buffer_size,
+    overwrite = TRUE
+  )
+
+  # 2. Iterative Processing of Each Tile
+  cat("Processing tiles with lidR::watershed()...\n")
+  
+  all_polygons <- purrr::map(tile_files, function(t_path) {
+    # Load the specific buffered tile into memory
+    tile_rast <- terra::rast(t_path)
+    
+    # Define the 'core' extent (the tile without the buffer) to identify overlaps later
+    # makeTiles filenames usually contain indices, but we can derive core from extents
+    # For this logic, we define the buffer boundary manually
+    e <- terra::ext(tile_rast)
+    core_ext <- terra::ext(e$xmin + buffer_size, e$xmax - buffer_size, 
+                           e$ymin + buffer_size, e$ymax - buffer_size)
+    
+    # Run Watershed directly on the SpatRaster
+    # lidR::watershed returns a SpatRaster where values are segment IDs
+    seg_rast <- lidR::watershed(tile_rast)
+    
+    # Convert segments to polygons to calculate areas and handle "whole segments"
+    # This is essential for the "Largest Area" logic
+    seg_poly <- terra::as.polygons(seg_rast, values = TRUE, aggregate = TRUE)
+    
+    if (nrow(seg_poly) == 0) return(NULL)
+    
+    # Add metadata for resolution
+    seg_poly$tile_id <- basename(t_path)
+    seg_poly$orig_id <- seg_poly[[1]] # Keep original watershed ID
+    seg_poly$poly_area <- terra::expanse(seg_poly)
+    
+    # Determine which polygons overlap the buffer boundary
+    # We do this by checking if the polygon is NOT entirely contained within the core
+    is_within_core <- terra::relate(seg_poly, terra::as.polygons(core_ext), "within")
+    seg_poly$on_buffer <- !as.vector(is_within_core)
+    
+    return(seg_poly)
+  })
+
+  # Combine all tile polygons into one SpatVector
+  cat("Resolving edge effects and overlapping segments...\n")
+  all_polygons_vec <- terra::vect(purrr::compact(all_polygons))
+  
+  # 3. Handle Overlaps and Largest Area Logic
+  # Separate 'Interior' (safe) and 'Boundary' (conflict-prone) segments
+  interior_segs <- all_polygons_vec[!all_polygons_vec$on_buffer]
+  boundary_segs <- all_polygons_vec[all_polygons_vec$on_buffer]
+  
+  # For segments in the buffer area, we must resolve which tile's version to keep.
+  # We find polygons that overlap each other spatially.
+  # terra::intersect on itself helps identify clusters of the same tree
+  overlaps <- terra::pairs(boundary_segs, intersect = TRUE)
+  
+  # logic: For any overlapping pair, we mark the one with the smaller area for removal
+  to_remove <- c()
+  if (nrow(overlaps) > 0) {
+    for (i in 1:nrow(overlaps)) {
+      id1 <- overlaps[i, 1]
+      id2 <- overlaps[i, 2]
+      
+      area1 <- boundary_segs$poly_area[id1]
+      area2 <- boundary_segs$poly_area[id2]
+      
+      if (area1 >= area2) {
+        to_remove <- c(to_remove, id2)
+      } else {
+        to_remove <- c(to_remove, id1)
+      }
+    }
+  }
+  
+  # Filter out the smaller overlapping versions
+  if (length(to_remove) > 0) {
+    cleaned_boundary <- boundary_segs[-unique(to_remove)]
+  } else {
+    cleaned_boundary <- boundary_segs
+  }
+
+  # 4. Final Consolidation
+  # Combine the kept boundary segments with the interior segments
+  final_polys <- terra::rbind(interior_segs, cleaned_boundary)
+  
+  # Re-assign unique IDs to avoid duplicate IDs from different tiles
+  final_polys$final_tree_id <- 1:nrow(final_polys)
+  
+  # 5. Back to Raster
+  cat("Rasterizing final results...\n")
+  final_raster <- terra::rasterize(
+    x = final_polys, 
+    y = chm_ref, 
+    field = "final_tree_id", 
+    background = NA
+  )
+  
+  # Cleanup temp files
+  unlink(tile_dir, recursive = TRUE)
+  
+  return(final_raster)
+}
+
+# Example Usage:
+# result_raster <- process_chm_segmented("path/to/chm.tif")
+
+```
+
 
