@@ -1,4 +1,4 @@
-# Structural-Only Methodology Evaluation{#str_preds}
+# Methodology Evaluation{#str_preds}
 
 We are finally ready to make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data. To this point we have:
 

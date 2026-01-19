@@ -1214,6 +1214,212 @@ get_segs_dbscan <- function(
 #   terra::plot(legend = F, col = grDevices::rainbow(n=111) %>% sample() )
 
 ############################################################################
+# handle !inMemory input rasters
+# !terra::inMemory(rast) means that the raster is not loaded into RAM and is (potentially) too large to do so
+# `lidR::watershed()` "Cannot segment the trees from a raster stored on disk. Use segment_trees() or load the raster in memory"
+# make a workflow to:
+# 1) check terra::inMemory():
+#   - if already loaded, run lidR::watershed() as-is to bypass tiling step and return watershed segments
+# 2) if !inMemory, use terra::makeTiles() to make raster chunks with buffers that overlap neighboring tiles
+# 3) each tile is processed individually using lidR::watershed() with segments converted to polygons
+# 4) separate segments into "hold out" (entirely within the core, non-buffer) and "boundary" (any overlap with buffer) groups
+# 5) for boundary segments: any segments that overlap are compared with only the largest segment kept (smaller, overlapping discarded) using terra::pairs()
+# 6) final set of segments combines the hold outs with the processed boundary segments and return rasterized segments to match lidR::watershed() output
+############################################################################
+# lidR::watershed(chm = aoi_chm_rast)() %>% terra::freq() %>% dplyr::glimpse()
+get_segs_watershed <- function(
+  chm_rast
+  , tol
+  , ext
+  # in case file is not in-memory, how big should tile buffers be?
+  # set to maximum expected target object diameter
+  , buffer_m = 10
+){
+  # is file path or current terra obj?
+  if(is.character(chm_rast) && stringr::str_ends(chm_rast,"\\.tif$|\\.tiff$")) {
+    if(!file.exists(chm_rast)) {
+      stop("the provided file path does not exist.")
+    }
+    chm_rast <- terra::rast(chm_rast)
+  }else if(inherits(chm_rast, "SpatRaster")) {
+    chm_rast <- chm_rast
+  }else{
+    stop("'chm_rast' must be a .tif|.tiff file path string or a SpatRaster object.")
+  }
+
+  # memory check and direct processing
+  # if the raster is already in memory, process directly to avoid tiling
+  if(terra::inMemory(chm_rast)) {
+    # message("Raster is already in memory. Processing directly with lidR::watershed().")
+    segs_rast <- lidR::watershed(
+      chm = chm_rast
+      # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
+      , th_tree = 0.01
+      # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
+        # and the point where it contacts another object (checked for every contact pixel). 
+        # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
+        # Tolerance should be chosen according to the range of x
+      , tol = tol # max_ht_m-min_ht_m
+      # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
+        # Higher value smoothes out small objects.
+      , ext = ext # 1
+    )()
+    # match names of get_segs_dbscan()
+    names(segs_rast) <- "cluster"
+    
+    return(segs_rast)
+  }
+
+  # tiling setup
+  # message("Raster is on disk or too large. Initiating tiled processing...")
+  tile_dir <- tempfile("tiles_")
+  dir.create(tile_dir,showWarnings = F)
+  # tile size, dynamically breaks the raster into 4 regions...might not work for realllllly huge rasters
+  tile_size <- c(
+      round(terra::nrow(chm_rast)/4)
+      , round(terra::ncol(chm_rast)/4)
+    )
+  tile_radius <- ceiling( sqrt(prod(tile_size)/pi) ) # tile radius
+  # need to make sure the buffer isn't larger than the tile radius...otherwise there's no point in tiling because we're processing a similarly large area
+  buffer_size <- min(
+    round(buffer_m/terra::res(chm_rast)[1])
+    , round(tile_radius/terra::res(chm_rast)[1])
+  )
+  
+  # generate buffered tiles on disk
+  # ?terra::makeTiles
+  tile_files <- terra::makeTiles(
+    x = chm_rast
+    # specify rows and columns for tiles
+    , y = tile_size
+    , filename = file.path(tile_dir, "tile_.tif")
+    , buffer = buffer_size
+    , overwrite = T
+  )
+
+  # process of each tile
+  all_polygons_list <- purrr::map(
+    tile_files
+    , function(t_path) {
+      # Load tile
+      tile_rast <- terra::rast(t_path)
+      
+      # Run watershed algorithm
+      segs_rast <- lidR::watershed(
+        chm = chm_rast
+        # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
+        , th_tree = 0.01
+        # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
+          # and the point where it contacts another object (checked for every contact pixel). 
+          # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
+          # Tolerance should be chosen according to the range of x
+        , tol = tol # max_ht_m-min_ht_m
+        # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
+          # Higher value smoothes out small objects.
+        , ext = ext # 1
+      )()
+      # match names of get_segs_dbscan()
+      names(segs_rast) <- "cluster"
+      
+      # segments to polygons
+      # values = TRUE ensures we keep the ID, aggregate = TRUE merges same-ID pixels
+      segs_poly <- terra::as.polygons(segs_rast, values = TRUE, aggregate = TRUE)
+      
+      if(nrow(segs_poly) == 0){return(NULL)}
+      
+      # identify segments touching the buffer
+      e <- terra::ext(tile_rast)
+      core_ext <- terra::ext(
+        e$xmin + (buffer_size * terra::res(tile_rast)[1]), 
+        e$xmax - (buffer_size * terra::res(tile_rast)[1]), 
+        e$ymin + (buffer_size * terra::res(tile_rast)[2]), 
+        e$ymax - (buffer_size * terra::res(tile_rast)[2])
+      )
+      
+      # check if polygons are strictly within the core area
+      # if not: 'boundary segments'
+      # ?terra::relate
+      is_within <- terra::relate(segs_poly, terra::as.polygons(core_ext), relation = "within")
+      
+      # add flags for boundary processing
+      segs_poly$on_buffer <- !as.vector(is_within) # T = boundary segments
+      segs_poly$poly_area <- terra::expanse(segs_poly) # area of poly
+      segs_poly$tile_source <- basename(t_path) # tile id
+      # give a unique id to every polygon before merging
+      segs_poly$temp_id <- paste0(basename(t_path), "_", 1:nrow(segs_poly))
+      
+      return(segs_poly)
+    }
+  )
+
+  # boundary segments processing
+  all_vec <- terra::vect(purrr::compact(all_polygons_list))
+  interior_segs <- all_vec[!all_vec$on_buffer]
+  boundary_segs <- all_vec[all_vec$on_buffer]
+  
+  if (nrow(boundary_segs) > 0) {
+    # intersection matrix
+    adj_matrix <- terra::relate(boundary_segs, boundary_segs, relation = "intersects")
+    
+    # count how many things each segment intersects (including itself)
+    # a count of 1 means it only intersects itself (no olap)
+    intersect_counts <- rowSums(adj_matrix)
+    
+    # segments with no intersections in the buffer area
+    solo_boundary_segs <- boundary_segs[intersect_counts == 1]
+    # terra::plot(solo_boundary_segs)
+    
+    # segments that overlap with others
+    olap_segs <- boundary_segs[intersect_counts > 1]
+    # terra::plot(olap_segs)
+    done_olap_ids <- c()
+    
+    if(nrow(olap_segs) > 0){
+      # terra::relate only the olaps
+      conf_adj <- terra::relate(olap_segs, olap_segs, relation = "intersects")
+      already_processed <- rep(FALSE, nrow(olap_segs))
+      
+      for (i in 1:nrow(olap_segs)) {
+        if (already_processed[i]){next}
+        
+        # index of the overlapping group
+        cluster_idx <- which(conf_adj[i, ] == TRUE)
+        
+        # take the max area within the cluster
+        max_area_idx <- which.max(olap_segs$poly_area[cluster_idx])[1]
+        winner_id <- olap_segs$temp_id[cluster_idx][max_area_idx]
+        
+        done_olap_ids <- c(done_olap_ids, winner_id) %>% unique()
+        already_processed[cluster_idx] <- TRUE
+      }
+      
+      kept_olap_segs <- olap_segs[olap_segs$temp_id %in% done_olap_ids]
+      
+      # bind solo with processed
+      boundary_segs <- rbind(solo_boundary_segs, kept_olap_segs)
+    }else{
+      boundary_segs <- solo_boundary_segs
+    }
+  }
+
+  # put everything back together and rasterize
+  final_vec <- terra::rbind(interior_segs, boundary_segs)
+  final_vec$cluster <- 1:nrow(final_vec)
+  
+  final_raster <- terra::rasterize(
+    x = final_vec
+    , y = chm_rast
+    , field = "cluster"
+  )
+  # clean up temp tiles
+  unlink(tile_dir, recursive = TRUE)
+  # return
+  return(final_raster)
+}
+# ?lidR::watershed
+# get_segs_watershed(chm_rast = aoi_chm_rast, tol = 1, ext = 1) %>% terra::plot()
+
+############################################################################
 # intermediate function to check string method
 ############################################################################
   # check the `method` argument
@@ -1265,6 +1471,7 @@ rast_to_poly <- function(rast){
     sf::st_make_valid() %>%
     dplyr::filter(sf::st_is_valid(.))  
 }
+
 ############################################################################
 # full segmentation function
 # given an input CHM raster, target height range, and target area range. 
@@ -1381,21 +1588,14 @@ get_segmentation_candidates <- function(
   ########################
   if(check_segmentation_method_ans=="watershed"){
     # ?EBImage::watershed
-    segs_rast <- lidR::watershed(
-      chm = slice_chm_rast
-      # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
-      , th_tree = 0.01
-      # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
-        # and the point where it contacts another object (checked for every contact pixel). 
-        # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
-        # Tolerance should be chosen according to the range of x
-      , tol = seg_params_ans$watershed$tol # max_ht_m-min_ht_m
-      # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
-        # Higher value smoothes out small objects.
-      , ext = seg_params_ans$watershed$ext # 1
-    )()
-    # match names of get_segs_dbscan()
-    names(segs_rast) <- "cluster"
+    segs_rast <- get_segs_watershed(
+      chm_rast = slice_chm_rast
+      , tol = seg_params_ans$watershed$tol
+      , ext = seg_params_ans$watershed$ext
+      # in case file is not in-memory, how big should tile buffers be?
+        # set to maximum expected target object diameter
+      , buffer_m = ceiling( sqrt(max_area_m2/pi)*2 )
+    )
   }else if(check_segmentation_method_ans=="dbscan"){
     segs_rast <- get_segs_dbscan(
       chm_rast = slice_chm_rast
@@ -3389,6 +3589,10 @@ slash_pile_detect <- function(
   ## smooth_segs = T ... convex hulls of raster detected segments are returned, any that overlap are removed
   ## smooth_segs = F ... raster detected segments are returned (blocky) if they meet all prior rules
   , smooth_segs = T
+  ##############
+  # if defined...will instead write the detected segment polygons to the file given and return the name of the file
+  # ex: "my_wshed_segs.gpkg"; ex: "../data/ur_wshed_segs.gpkg"
+  , ofile = NA
 ) {
   # checks
   if(!inherits(smooth_segs, "logical") || is.na(smooth_segs)){stop("define `smooth_segs` as logical")}
@@ -3585,6 +3789,16 @@ slash_pile_detect <- function(
     # calculate diameter
     segs_sf <- st_calculate_diameter(segs_sf)
       
+  # check for write
+    if(
+      inherits(ofile,"character") 
+      && stringr::str_squish(ofile)!="" 
+      && !identical(stringr::str_squish(ofile),character(0)) 
+    ){
+      sf::st_write(segs_sf, dsn = ofile, quiet = T, append = F)
+      return(ofile)
+    }
+    
   # return
     return(list(
       segs_sf = segs_sf
@@ -3760,135 +3974,6 @@ slash_pile_detect_ans <- slash_pile_detect(
     , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_circularity_ratio)
   )
 
-# Process CHM with memory-aware tiling and edge-effect resolution
-process_chm_segmented <- function(chm_path, tile_size = 500, buffer_size = 20) {
-  
-  # 1. Argument Validation
-  if (base::is.character(chm_path)) {
-    if (!base::file.exists(chm_path)) {
-      base::stop("The provided file path does not exist.")
-    }
-    chm_ref <- terra::rast(chm_path)
-  } else if (base::inherits(chm_path, "SpatRaster")) {
-    chm_ref <- chm_path
-  } else {
-    base::stop("Input 'chm_path' must be a valid file path string or a SpatRaster object.")
-  }
-
-  # 2. Memory Check and Direct Processing
-  # If the raster is already in memory, process directly to avoid tiling overhead
-  if (terra::inMemory(chm_ref)) {
-    base::message("Raster is already in memory. Processing directly with lidR::watershed().")
-    return(lidR::watershed(chm_ref))
-  }
-
-  # 3. Disk-based Tiling Setup
-  base::message("Raster is on disk or too large. Initiating tiled processing...")
-  tile_dir <- base::tempfile("tiles_")
-  base::dir.create(tile_dir)
-  
-  # Generate buffered tiles on disk
-  tile_files <- terra::makeTiles(
-    x = chm_ref, 
-    y = tile_size, 
-    filename = base::file.path(tile_dir, "tile_.tif"), 
-    buffer = buffer_size,
-    overwrite = TRUE
-  )
-
-  # 4. Iterative Processing of Each Tile
-  all_polygons_list <- purrr::map(tile_files, function(t_path) {
-    # Load tile
-    tile_rast <- terra::rast(t_path)
-    
-    # Run watershed algorithm
-    seg_rast <- lidR::watershed(tile_rast)
-    
-    # Convert segments to polygons to preserve "whole" tree shapes
-    # values = TRUE ensures we keep the ID, aggregate = TRUE merges same-ID pixels
-    seg_poly <- terra::as.polygons(seg_rast, values = TRUE, aggregate = TRUE)
-    
-    if (base::nrow(seg_poly) == 0) return(NULL)
-    
-    # Calculate core extent to identify segments touching the buffer
-    e <- terra::ext(tile_rast)
-    core_ext <- terra::ext(
-      e$xmin + (buffer_size * terra::res(tile_rast)[1]), 
-      e$xmax - (buffer_size * terra::res(tile_rast)[1]), 
-      e$ymin + (buffer_size * terra::res(tile_rast)[2]), 
-      e$ymax - (buffer_size * terra::res(tile_rast)[2])
-    )
-    
-    # Check if polygons are strictly within the core area
-    # If not, they are 'boundary segments'
-    is_within <- terra::relate(seg_poly, terra::as.polygons(core_ext), "within")
-    
-    # Store metadata for resolution logic
-    seg_poly$on_buffer <- !base::as.vector(is_within)
-    seg_poly$poly_area <- terra::expanse(seg_poly)
-    seg_poly$tile_source <- base::basename(t_path)
-    
-    return(seg_poly)
-  })
-
-  # 5. Handle Overlaps using "Largest Area" Logic
-  base::message("Consolidating segments and resolving overlaps...")
-  
-  # Combine all tile results into one vector collection
-  all_vec <- terra::vect(purrr::compact(all_polygons_list))
-  
-  # Separate 'Hold Out' (interior) from 'Buffer' (boundary) segments
-  interior_segs <- all_vec[!all_vec$on_buffer]
-  boundary_segs <- all_vec[all_vec$on_buffer]
-  
-  if (base::nrow(boundary_segs) > 1) {
-    # Find overlapping polygons in the boundary set
-    # terra::pairs returns indices of geometries that intersect
-    overlap_idx <- terra::pairs(boundary_segs, intersect = TRUE)
-    
-    if (base::nrow(overlap_idx) > 0) {
-      to_remove <- base::c()
-      
-      for (i in 1:base::nrow(overlap_idx)) {
-        idx1 <- overlap_idx[i, 1]
-        idx2 <- overlap_idx[i, 2]
-        
-        # Compare areas: flag the smaller one for removal
-        if (boundary_segs$poly_area[idx1] >= boundary_segs$poly_area[idx2]) {
-          to_remove <- base::c(to_remove, idx2)
-        } else {
-          to_remove <- base::c(to_remove, idx1)
-        }
-      }
-      
-      # Remove duplicates and smaller partial segments
-      boundary_segs <- boundary_segs[-base::unique(to_remove)]
-    }
-  }
-
-  # 6. Final Recombination and Rasterization
-  # Re-merge the kept boundary segments with the interior segments
-  final_vec <- terra::rbind(interior_segs, boundary_segs)
-  
-  # Assign new unique IDs to the final segments
-  final_vec$final_id <- 1:base::nrow(final_vec)
-  
-  base::message("Creating final output raster...")
-  final_raster <- terra::rasterize(
-    x = final_vec, 
-    y = chm_ref, 
-    field = "final_id", 
-    background = NA
-  )
-  
-  # Cleanup
-  base::unlink(tile_dir, recursive = TRUE)
-  
-  return(final_raster)
-}
-
-# Example Usage:
-# result_raster <- process_chm_segmented("path/to/chm.tif")
 
 ```
 
