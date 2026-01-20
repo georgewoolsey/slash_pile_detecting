@@ -1214,6 +1214,8 @@ get_segs_dbscan <- function(
 #   terra::plot(legend = F, col = grDevices::rainbow(n=111) %>% sample() )
 
 ############################################################################
+############################################################################
+############################################################################
 # handle !inMemory input rasters
 # !terra::inMemory(rast) means that the raster is not loaded into RAM and is (potentially) too large to do so
 # `lidR::watershed()` "Cannot segment the trees from a raster stored on disk. Use segment_trees() or load the raster in memory"
@@ -1226,13 +1228,70 @@ get_segs_dbscan <- function(
 # 5) for boundary segments: any segments that overlap are compared with only the largest segment kept (smaller, overlapping discarded) using terra::pairs()
 # 6) final set of segments combines the hold outs with the processed boundary segments and return rasterized segments to match lidR::watershed() output
 ############################################################################
-# # check memory needed
-# nc <- terra::ncell(raster)
-# n <- 10*terra::nlyr(raster)
-# memneed <- nc * n * 8L
-# memavail <- terra::free_RAM()*1000
-# memavail <- 0.6 * memavail
-# is_mem_avail <- memneed < memavail
+############################################################################
+
+############################################################################
+# intermediate function to set tile size based on raster size and mem available
+############################################################################
+get_tile_size <- function(
+  rast
+  , memory_risk = 0.15
+  # low risk (0.01 – 0.05): creates more tiles but is unlikely to crash R
+  # med risk (0.1-0.2): reserves ~95% of free RAM for the remaining calculations
+  # high risk (0.2-0.5): fewer tiles but more likely to crash R
+  # dangerous (>0.5): very likely to crash R
+){
+  # is file path or current terra obj?
+  if(inherits(rast, "character") && stringr::str_ends(rast,"\\.tif$|\\.tiff$")) {
+    if(!file.exists(rast)) {
+      stop("the provided file path does not exist.")
+    }
+    my_rast <- terra::rast(rast)
+  }else if(inherits(rast, "SpatRaster")) {
+    my_rast <- rast
+  }else{
+    stop("'rast' must be a .tif|.tiff file path string or a SpatRaster object.")
+  }
+  
+  # terra::free_RAM() returns the amount of RAM that is available in Bytes
+  # ?terra::free_RAM
+  free_ram <- terra::free_RAM()
+  
+  # logic: (available ram * risk tolerance) / bytes per double-precision pixel (8)
+  # higher risk tolerance allows more pixels per tile, reducing total tile count
+  max_pixels <- (free_ram * memory_risk) / 8
+  
+  # calculate tile dimension
+  # sqrt to define side length in pixels
+  optimal_side <- floor(sqrt(max_pixels))
+  
+  # specify the number of rows and columns for each tile (1 or 2 numbers if the number of rows and columns is not the same)
+  # ?terra::makeTiles 'y' argument
+  # limit the tile size at the actual raster dimensions
+  optimal_side <- min(optimal_side, terra::nrow(my_rast), terra::ncol(my_rast))
+  
+  # total tile count based on rast size
+  n_tiles_cols <- ceiling(terra::ncol(my_rast) / optimal_side)
+  n_tiles_rows <- ceiling(terra::nrow(my_rast) / optimal_side)
+  
+  # message(paste0("current free ram: ", round(free_ram / 1e9, 2), " gb"))
+  # message(paste0("memory risk: ", memory_risk))
+  # message(paste0("my tile size: ", optimal_side, " pixels"))
+  
+  return(list(
+    # tile_size = number of rows and columns for each zone in terra::makeTiles 'y' argument
+    tile_size = optimal_side
+    , total_tiles = n_tiles_cols * n_tiles_rows
+  ))
+}
+# get_tile_size(bhef_chm_rast)
+# get_tile_size(bhef_chm_rast, memory_risk = 0.3)
+# get_tile_size(psinf_chm_rast, memory_risk = 0.3)
+# get_tile_size(psinf_chm_rast, memory_risk = 0.3)[["tile_size"]]
+
+############################################################################
+# lidR::watershed or tile and lidR::watershed
+############################################################################
 # lidR::watershed(chm = aoi_chm_rast)() %>% terra::freq() %>% dplyr::glimpse()
 get_segs_watershed <- function(
   chm_rast
@@ -1243,7 +1302,7 @@ get_segs_watershed <- function(
   , buffer_m = 10
 ){
   # is file path or current terra obj?
-  if(is.character(chm_rast) && stringr::str_ends(chm_rast,"\\.tif$|\\.tiff$")) {
+  if(inherits(chm_rast, "character") && stringr::str_ends(chm_rast,"\\.tif$|\\.tiff$")) {
     if(!file.exists(chm_rast)) {
       stop("the provided file path does not exist.")
     }
@@ -1257,7 +1316,7 @@ get_segs_watershed <- function(
   # memory check and direct processing
   # if the raster is already in memory, process directly to avoid tiling
   if(terra::inMemory(chm_rast)) {
-    # message("Raster is already in memory. Processing directly with lidR::watershed().")
+    message("Raster is already in memory. Processing directly with lidR::watershed().")
     segs_rast <- lidR::watershed(
       chm = chm_rast
       # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
@@ -1278,30 +1337,37 @@ get_segs_watershed <- function(
   }
 
   # tiling setup
-  # message("Raster is on disk or too large. Initiating tiled processing...")
+  message("Raster is on disk or too large. Initiating tiled processing...")
   tile_dir <- tempfile("tiles_")
   dir.create(tile_dir,showWarnings = F)
   # tile size, dynamically breaks the raster into 10 regions...might not work for realllllly huge rasters
-  tile_size <- c(
-      round(terra::nrow(chm_rast)/10)
-      , round(terra::ncol(chm_rast)/10)
-    )
-  tile_radius <- ceiling( sqrt(prod(tile_size)/pi) ) # tile radius
+  # tile_size <- c(
+  #     round(terra::nrow(chm_rast)/10)
+  #     , round(terra::ncol(chm_rast)/10)
+  #   )
+  
+  # get_tile_size()...might work for realllllly huge rasters
+  tile_size <- get_tile_size(chm_rast, memory_risk = 0.7)[["tile_size"]]
+  tile_radius_cells <- ceiling( tile_size/2 ) # tile radius
+  
   # need to make sure the buffer isn't larger than the tile radius...otherwise there's no point in tiling because we're processing a similarly large area
+  # The number of additional rows and columns added to each tile. 
+  
   buffer_size <- min(
     round(buffer_m/terra::res(chm_rast)[1])
-    , round(tile_radius/terra::res(chm_rast)[1])
+    , tile_radius_cells
   )
   
   # generate buffered tiles on disk
   # ?terra::makeTiles
   tile_files <- terra::makeTiles(
     x = chm_rast
-    # specify rows and columns for tiles
+    # specify rows and columns for tiles in pixels/cells
     , y = tile_size
     , filename = file.path(tile_dir, "tile_.tif")
     , buffer = buffer_size
     , overwrite = T
+    , na.rm = T
   )
 
   # process of each tile
@@ -1310,10 +1376,10 @@ get_segs_watershed <- function(
     , function(t_path) {
       # Load tile
       tile_rast <- terra::rast(t_path)
-      # tile_rast <- tile_rast*1 # force tile into memory
+      tile_rast <- tile_rast*1 # force tile into memory
       # Run watershed algorithm
       segs_rast <- lidR::watershed(
-        chm = chm_rast
+        chm = tile_rast
         # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
         , th_tree = 0.01
         # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
@@ -1423,8 +1489,24 @@ get_segs_watershed <- function(
   # return
   return(final_raster)
 }
-# ?lidR::watershed
-# get_segs_watershed(chm_rast = aoi_chm_rast, tol = 1, ext = 1) %>% terra::plot()
+# # ?lidR::watershed
+# terra::clamp(aoi_chm_rast, upper = max_ht_m, lower = 0, values = F) %>% 
+#   get_segs_watershed(tol = 1, ext = 1) %>% 
+#   terra::plot()
+# # ceiling( sqrt(max_area_m2/pi)*2 ) # buffer_m
+# # ceiling( sqrt(666/pi)*2 ) # buffer_m
+# # round(ceiling( sqrt(666/pi)*2 )/terra::res(bhef_chm_rast)[1])
+# # get_tile_size(bhef_chm_rast, memory_risk = 0.35)[["tile_size"]]
+# # ceiling( get_tile_size(bhef_chm_rast, memory_risk = 0.35)[["tile_size"]]/2 ) # tile radius
+# 
+# # terra::ncell(psinf_chm_rast)
+# # terra::ncell(pj_chm_rast)
+# terra::clamp(pj_chm_rast, upper = max_ht_m, lower = 0, values = F) %>% 
+#   get_segs_watershed(tol = 1, ext = 1) %>% 
+#   terra::plot()
+# #### ! testing only...this takes a long time
+# xxx_temp <- terra::clamp(bhef_chm_rast, upper = 6, lower = 0, values = F) %>% 
+#   get_segs_watershed(tol = 1, ext = 1, buffer_m = ceiling( sqrt(500/pi)*2 ))
 
 ############################################################################
 # intermediate function to check string method
