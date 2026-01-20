@@ -226,21 +226,29 @@ We'll get the predictions using both the DBSCAN and Watershed segmentation appro
             , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_area_m2)
             , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_convexity_ratio)
             , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_circularity_ratio)
-          ) %>% 
-          purrr::pluck("segs_sf")
+            , ofile = file.path(dir_temp, paste0(x,nmsfx_temp))
+          )
+          # purrr::pluck("segs_sf")
         , .progress = T
       )
-    # write
-      dbscan_structural_preds %>% 
-        purrr::imap(
-          \(x,nm)
-          sf::st_write(
-            obj = x
-            , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
-            , append = F
-            , quiet = T
-          )
-        )  
+    # # write
+    #   dbscan_structural_preds %>% 
+    #     purrr::imap(
+    #       \(x,nm)
+    #       sf::st_write(
+    #         obj = x
+    #         , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
+    #         , append = F
+    #         , quiet = T
+    #       )
+    #     )
+    
+    # read files
+    dbscan_structural_preds <- dbscan_structural_preds %>% 
+      purrr::map(
+        \(x)
+        sf::st_read(dsn = x, quiet = T)
+      )
   }else{
     # read already done
     dbscan_structural_preds <- 
@@ -298,21 +306,17 @@ We'll get the predictions using both the DBSCAN and Watershed segmentation appro
             , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_area_m2)
             , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_convexity_ratio)
             , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_circularity_ratio)
-          ) %>% 
-          purrr::pluck("segs_sf")
+            , ofile = file.path(dir_temp, paste0(x,nmsfx_temp))
+          )
+          # purrr::pluck("segs_sf")
         , .progress = T
       )
-    # write
-      watershed_structural_preds %>% 
-        purrr::imap(
-          \(x,nm)
-          sf::st_write(
-            obj = x
-            , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
-            , append = F
-            , quiet = T
-          )
-        )  
+    # read files
+    watershed_structural_preds <- watershed_structural_preds %>% 
+      purrr::map(
+        \(x)
+        sf::st_read(dsn = x, quiet = T)
+      )
   }else{
     # read already done
     watershed_structural_preds <- 

@@ -1226,6 +1226,13 @@ get_segs_dbscan <- function(
 # 5) for boundary segments: any segments that overlap are compared with only the largest segment kept (smaller, overlapping discarded) using terra::pairs()
 # 6) final set of segments combines the hold outs with the processed boundary segments and return rasterized segments to match lidR::watershed() output
 ############################################################################
+# # check memory needed
+# nc <- terra::ncell(raster)
+# n <- 10*terra::nlyr(raster)
+# memneed <- nc * n * 8L
+# memavail <- terra::free_RAM()*1000
+# memavail <- 0.6 * memavail
+# is_mem_avail <- memneed < memavail
 # lidR::watershed(chm = aoi_chm_rast)() %>% terra::freq() %>% dplyr::glimpse()
 get_segs_watershed <- function(
   chm_rast
@@ -1274,10 +1281,10 @@ get_segs_watershed <- function(
   # message("Raster is on disk or too large. Initiating tiled processing...")
   tile_dir <- tempfile("tiles_")
   dir.create(tile_dir,showWarnings = F)
-  # tile size, dynamically breaks the raster into 4 regions...might not work for realllllly huge rasters
+  # tile size, dynamically breaks the raster into 10 regions...might not work for realllllly huge rasters
   tile_size <- c(
-      round(terra::nrow(chm_rast)/4)
-      , round(terra::ncol(chm_rast)/4)
+      round(terra::nrow(chm_rast)/10)
+      , round(terra::ncol(chm_rast)/10)
     )
   tile_radius <- ceiling( sqrt(prod(tile_size)/pi) ) # tile radius
   # need to make sure the buffer isn't larger than the tile radius...otherwise there's no point in tiling because we're processing a similarly large area
@@ -1303,7 +1310,7 @@ get_segs_watershed <- function(
     , function(t_path) {
       # Load tile
       tile_rast <- terra::rast(t_path)
-      
+      # tile_rast <- tile_rast*1 # force tile into memory
       # Run watershed algorithm
       segs_rast <- lidR::watershed(
         chm = chm_rast
