@@ -294,6 +294,7 @@ We'll get the predictions using both the DBSCAN and Watershed segmentation appro
     # map over slash_pile_detect for watershed
     watershed_structural_preds <- 
       all_stand_boundary$site_data_lab %>% 
+      # .[2:4] %>% 
       purrr::set_names() %>% 
       purrr::map(
         \(x)
