@@ -507,7 +507,14 @@ Now, we'll apply spectral filtering of the structurally-detected candidate piles
 we'll use slightly different spectral weighting for each site
 
 ```{r}
-
+get_segmentation_params(
+  min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="pj") %>% dplyr::pull(min_ht_m)
+  , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="pj") %>% dplyr::pull(max_ht_m)
+  , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="pj") %>% dplyr::pull(min_area_m2)
+  , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="pj") %>% dplyr::pull(max_area_m2)
+  , rast_res_m = terra::res(chm_rast$pj)[1]
+)
+xxx
 ```
 
 

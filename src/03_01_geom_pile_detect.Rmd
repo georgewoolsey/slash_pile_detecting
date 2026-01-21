@@ -470,10 +470,10 @@ get_segmentation_params <- function(
   tol_val <- height_range * 0.5
   
   # lidR::watershed `ext`
-  # use half the radius of the minimum object to increase sensitivity
+  # use ~half~ quarter the radius of the minimum object to increase sensitivity
   # this helps prevent merging nearby objects (under-segmentation)
   target_radius_m <- sqrt(min_area_m2 / pi)
-  effective_radius_m <- target_radius_m * 0.5
+  effective_radius_m <- target_radius_m * 0.25 # 0.5
   ext_val <- max(1, round(effective_radius_m / rast_res_m))
   
   ################################################
@@ -488,7 +488,7 @@ get_segmentation_params <- function(
   connectivity_eps <- 1.5 * spacing
   # eps should not exceed 50% of the minimum object radius 
     # to avoid merging separate objects into one cluster.
-  max_allowable_eps <- effective_radius_m * 0.5
+  max_allowable_eps <- effective_radius_m * 1 # 0.5
   # cap eps by the object size constraint
   eps_val <- min(connectivity_eps, max_allowable_eps)
   
