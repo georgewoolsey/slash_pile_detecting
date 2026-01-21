@@ -20,48 +20,6 @@ we'll focus on an example area that is outside of the study unit boundary but wa
 mapview::mapview(psinf_stand_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
   mapview::mapview(psinf_slash_piles_polys)
 
-#### read RGB data keep only RGB
-rast_temp <- terra::rast(
-    file.path(
-      "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
-      , "P4Pro_06_17_2021_half_half_optimal_transparent_mosaic_group1.tif"
-    )
-  ) %>% 
-  terra::subset(c(1,2,3))
-# rename bands
-names(rast_temp) <- c("red","green","blue")
-
-terra::plotRGB(rast_temp, stretch = "lin")
-# add piles
-terra::plot(
-  psinf_slash_piles_polys %>% 
-    dplyr::filter(!is_in_stand) %>% 
-    sf::st_transform(terra::crs(rast_temp)) %>% 
-    terra::vect()
-  , add = T, border = "cyan", col = NA, lwd = 1.2
-)
-
-
-# plot(new_aoi_temp)
-
-terra::plotRGB(rast_temp, stretch = "lin")
-# add piles
-terra::plot(
-  psinf_slash_piles_polys %>% 
-    dplyr::filter(!is_in_stand) %>% 
-    sf::st_transform(terra::crs(rast_temp)) %>% 
-    terra::vect()
-  , add = T, border = "cyan", col = NA, lwd = 1.2
-)
-# add aoi
-terra::plot(
-  new_aoi_temp %>% 
-    sf::st_transform(terra::crs(rast_temp)) %>% 
-    terra::vect()
-  , add = T, border = "red", col = NA, lwd = 3
-)
-  
-
 ```
 
 ```{r}
@@ -473,7 +431,7 @@ get_segmentation_params <- function(
   # use ~half~ quarter the radius of the minimum object to increase sensitivity
   # this helps prevent merging nearby objects (under-segmentation)
   target_radius_m <- sqrt(min_area_m2 / pi)
-  effective_radius_m <- target_radius_m * 0.25 # 0.5
+  effective_radius_m <- target_radius_m * 0.25
   ext_val <- max(1, round(effective_radius_m / rast_res_m))
   
   ################################################
@@ -486,9 +444,8 @@ get_segmentation_params <- function(
   # start by scaling based on point spacing (1.5x average distance between points).
   spacing <- 1 / sqrt(pts_per_m2)
   connectivity_eps <- 1.5 * spacing
-  # eps should not exceed 50% of the minimum object radius 
-    # to avoid merging separate objects into one cluster.
-  max_allowable_eps <- effective_radius_m * 1 # 0.5
+  # eps should not exceed 50% of the minimum object radius to avoid merging separate objects into one cluster.
+  max_allowable_eps <- target_radius_m * 0.25
   # cap eps by the object size constraint
   eps_val <- min(connectivity_eps, max_allowable_eps)
   
@@ -1235,11 +1192,11 @@ get_segs_dbscan <- function(
 ############################################################################
 get_tile_size <- function(
   rast
-  , memory_risk = 0.15
-  # low risk (0.01 – 0.05): creates more tiles but is unlikely to crash R
-  # med risk (0.1-0.2): reserves ~95% of free RAM for the remaining calculations
-  # high risk (0.2-0.5): fewer tiles but more likely to crash R
-  # dangerous (>0.5): very likely to crash R
+  , memory_risk = 0.35
+  # low risk (0.01 – 0.20): creates more tiles but is unlikely to crash R
+  # med risk (0.2-0.5): reserves ~95% of free RAM for the remaining calculations
+  # high risk (0.5-0.7): fewer tiles but more likely to crash R
+  # dangerous (>0.7): very likely to crash R
 ){
   # is file path or current terra obj?
   if(inherits(rast, "character") && stringr::str_ends(rast,"\\.tif$|\\.tiff$")) {
@@ -1350,7 +1307,7 @@ get_segs_watershed <- function(
   #   )
   
   # get_tile_size()...might work for realllllly huge rasters
-  tile_size <- get_tile_size(chm_rast, memory_risk = 0.7)[["tile_size"]]
+  tile_size <- get_tile_size(chm_rast, memory_risk = 0.65)[["tile_size"]]
   tile_radius_cells <- ceiling( tile_size/2 ) # tile radius
   
   # need to make sure the buffer isn't larger than the tile radius...otherwise there's no point in tiling because we're processing a similarly large area
@@ -4066,65 +4023,196 @@ gc()
 ```
 
 ```{r, include=FALSE, eval=F}
-# Caused by error:
-# ! Cannot segment the trees from a raster stored on disk. Use segment_trees() or load the raster in memory
-class(chm_rast[["bhef"]])
-terra::inMemory(chm_rast[["bhef"]])
-cloud2trees:::split_raster_fn(chm_rast[["bhef"]])
-chm_rast[["bhef"]] %>% terra::plot()
-
-#### modified get_segmentation_candidates to only return slice raster...ran it
-xxx <- get_segmentation_candidates(
-  chm_rast[["bhef"]],method = "watershed"
-  , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_ht_m)
-  , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_ht_m)
-  , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_area_m2)
-  , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_area_m2)
-)
-
-terra::inMemory(xxx)
-cloud2trees:::split_raster_fn(xxx)
-seg_params_ans <- get_segmentation_params(
-      min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_ht_m)
-      , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_ht_m)
-      , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_area_m2)
-      , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_area_m2)
-      # , pts_per_m2 = NULL
-      , rast_res_m = terra::res(xxx)[1]
+# pred
+# read already done
+dir_temp <- "../data"
+nmsfx_temp <- "_watershed_structural_preds.gpkg"
+watershed_structural_preds <- 
+  all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    \(x)
+    sf::st_read(
+      dsn = file.path(dir_temp, paste0(x,nmsfx_temp))
+      , quiet = T
     )
-  # # huh?
-  # dplyr::glimpse(seg_params_ans)
-  ########################
-  # segmentation
-  ########################
-    # ?EBImage::watershed
-    terra::inMemory(xxx)
-    segs_rast <- lidR::watershed(
-      chm = xxx
-      # th_tree = Threshold below which a pixel cannot be a tree. Default is 2.
-      , th_tree = 0.01
-      # tol = minimum height of the object in the units of image intensity between its highest point (seed) 
-        # and the point where it contacts another object (checked for every contact pixel). 
-        # If the height is smaller than the tolerance, the object will be combined with one of its neighbors, which is the highest.
-        # Tolerance should be chosen according to the range of x
-      , tol = seg_params_ans$watershed$tol # max_ht_m-min_ht_m
-      # ext = Radius of the neighborhood in pixels for the detection of neighboring objects. 
-        # Higher value smoothes out small objects.
-      , ext = seg_params_ans$watershed$ext # 1
-    )()
-
-slash_pile_detect_ans <- slash_pile_detect(
-    chm_rast = chm_rast[["bhef"]]
-    , seg_method = "watershed"
-    , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_ht_m)
-    , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_ht_m)
-    , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_area_m2)
-    , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(max_area_m2)
-    , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_convexity_ratio)
-    , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab=="bhef") %>% dplyr::pull(min_circularity_ratio)
   )
 
+terra::plotRGB(pj_rgb_rast, stretch = "lin")
+# add piles
+terra::plot(
+  pj_slash_piles_polys %>%
+    dplyr::filter(is_in_stand) %>%
+    sf::st_transform(terra::crs(pj_rgb_rast)) %>%
+    terra::vect()
+  , add = T, border = "cyan", col = NA, lwd = 1.2
+)
+# add preds
+terra::plot(
+  watershed_structural_preds$pj %>%
+    sf::st_transform(terra::crs(pj_rgb_rast)) %>%
+    terra::vect()
+  , add = T, border = "magenta", col = NA, lwd = 1.5
+)
+  
+mapview::mapview(pj_stand_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
+  mapview::mapview(pj_slash_piles_polys)
 
+aoi_boundary <- 
+  pj_slash_piles_polys %>% 
+  dplyr::filter(
+    # pile_id %in% c(18,19,20,21) # bhef
+    # pile_id %in% c(15,14) # bhef
+    pile_id %in% c(41,146,160,63)
+  ) %>% 
+  sf::st_union() %>% 
+  sf::st_bbox() %>% 
+  sf::st_as_sfc() %>% 
+  sf::st_buffer(30, joinStyle = "MITRE") %>% 
+  sf::st_as_sf() %>% 
+  dplyr::mutate(dummy=1)
+terra::plot(
+  aoi_boundary %>% 
+    sf::st_transform(terra::crs(pj_rgb_rast)) %>% 
+    terra::vect()
+  , add = T, border = "white", col = NA, lwd = 3
+)
+
+aoi_rgb_rast <- pj_rgb_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(pj_rgb_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+
+aoi_chm_rast <- 
+  # terra::rast("../data/BHEF_202306/bhef_chm_rast_0.15m.tif") %>% 
+  pj_chm_rast %>% 
+    terra::crop(
+      aoi_boundary %>% 
+        sf::st_buffer(2) %>% 
+        sf::st_transform(terra::crs(pj_chm_rast)) %>% 
+        terra::vect()
+      , mask = T
+    )
+aoi_slash_piles_polys <- pj_slash_piles_polys %>% 
+  dplyr::inner_join(
+    pj_slash_piles_polys %>% 
+      dplyr::filter(is_in_stand) %>% 
+      sf::st_intersection(aoi_boundary) %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(pile_id)
+    , by = "pile_id"
+  )
+remove(list = ls()[grep("_temp",ls())])
+gc()
+
+plt_aoi_chm <- function(chm) {
+  chm %>% 
+    terra::as.data.frame(xy=T) %>% 
+    dplyr::rename(f=3) %>% 
+    ggplot2::ggplot() +
+    ggplot2::geom_tile(mapping = ggplot2::aes(x=x,y=y,fill=f)) +
+    ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+    ggplot2::scale_fill_viridis_c(option = "plasma") +
+    ggplot2::labs(fill = "CHM (m)") +
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::theme_void() +
+    ggplot2::theme(legend.position = "top") 
+}
+plt_aoi_chm(aoi_chm_rast)
+
+# # set the max and min expected pile height
+# max_ht_m <- 6
+# min_ht_m <- 2
+# # lower CHM slice
+# aoi_chm_rast_slice <- terra::clamp(aoi_chm_rast, upper = max_ht_m, lower = 0, values = F)
+# plt_aoi_chm(aoi_chm_rast_slice) +
+#   ggplot2::geom_sf(
+#     data = aoi_slash_piles_polys
+#     , fill = NA, color = "cyan", lwd = 0.6
+#   )
+# # set the max and min expected pile area
+# min_area_m2 <- 54
+# max_area_m2 <- 486
+# 
+# # get_segmentation_params
+# get_segmentation_params_ans <- get_segmentation_params(
+#     max_ht_m = max_ht_m
+#     , min_ht_m = min_ht_m
+#     , min_area_m2 = min_area_m2
+#     , max_area_m2 = max_area_m2
+#     # , pts_per_m2 = NULL
+#     , rast_res_m = terra::res(aoi_chm_rast_slice)[1]
+#   )
+# # huh?
+# dplyr::glimpse(get_segmentation_params_ans)
+
+slash_pile_detect_watershed_ans_temp <- slash_pile_detect(
+  chm_rast = aoi_chm_rast
+  , seg_method = "watershed"
+  # bhef
+  # , min_ht_m = 1.25
+  # , max_ht_m = 6
+  # , min_area_m2 = 54
+  # , max_area_m2 = 486
+  , min_ht_m = 0.75
+  , max_ht_m = 3
+  , min_area_m2 = 2
+  , max_area_m2 = 22.5
+  , min_convexity_ratio = 0
+  , min_circularity_ratio = 0
+  , smooth_segs = F
+)
+slash_pile_detect_watershed_ans_temp$segs_sf %>% dplyr::glimpse()
+slash_pile_detect_watershed_ans_temp$slice_chm_rast %>% terra::plot()
+st_convexity_filter(slash_pile_detect_watershed_ans_temp$segs_sf, min_convexity_ratio = 0.01) %>% 
+  dplyr::glimpse()
+
+# mapview::mapview(aoi_chm_rast)
+terra::plot(aoi_chm_rast, axes = F)
+terra::plot(slash_pile_detect_watershed_ans_temp$slice_chm_rast, axes = F)
+terra::plotRGB(aoi_rgb_rast, stretch = "lin")
+# add piles
+terra::plot(
+  aoi_slash_piles_polys %>% 
+    sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+    terra::vect()
+  , add = T, border = "cyan", col = NA, lwd = 1.2
+)
+# add preds
+terra::plot(
+  slash_pile_detect_watershed_ans_temp$segs_sf %>% 
+    sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+    terra::vect()
+  , add = T, border = "magenta", col = NA, lwd = 1.5
+)
+# terra::plot(
+#   watershed_structural_preds$pj %>% 
+#     sf::st_transform(terra::crs(pj_rgb_rast)) %>% 
+#     terra::vect()
+#   , add = T, border = "red", col = NA, lwd = 1.1
+# )
+
+sf::st_intersection(
+  aoi_slash_piles_polys %>% sf::st_transform(terra::crs(aoi_chm_rast))
+  , slash_pile_detect_watershed_ans_temp$segs_sf %>% sf::st_union()
+) %>% 
+  nrow()
+  sf::st_transform(terra::crs(aoi_rgb_rast)) %>% 
+  terra::vect() %>% 
+terra::plot(
+  , add = T, border = "red", col = NA, lwd = 1.5
+)
+
+
+mapview::mapview(aoi_boundary, color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE) +
+  mapview::mapview(aoi_slash_piles_polys, color = "cyan") +
+  mapview::mapview(st_convexity_filter(slash_pile_detect_watershed_ans_temp$segs_sf, min_convexity_ratio = 0.01), color = "magenta")
+# mapview::mapview(slash_pile_detect_watershed_ans_temp$segs_sf, color = "magenta")
 ```
 
 
