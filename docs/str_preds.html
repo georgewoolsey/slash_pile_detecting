@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Section 7 Method Predictions | Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Section 7 Method Predictions | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Section 7 Method Predictions | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="meth_eval.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data and Site Descriptions</a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="index.html"><a href="index.html#silvicultural-prescriptions"><i class="fa fa-check"></i><b>1.2.1</b> Silvicultural Prescriptions</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="data_load.html"><a href="data_load.html"><i class="fa fa-check"></i><b>2</b> Data Overview</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="data_load.html"><a href="data_load.html#study-units-vector-data"><i class="fa fa-check"></i><b>2.1</b> Study Units Vector Data</a></li>
+<li class="chapter" data-level="2.2" data-path="data_load.html"><a href="data_load.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="data_load.html"><a href="data_load.html#standardize-pile-data"><i class="fa fa-check"></i><b>2.2.1</b> Standardize Pile Data</a></li>
+<li class="chapter" data-level="2.2.2" data-path="data_load.html"><a href="data_load.html#pile-form-measurements"><i class="fa fa-check"></i><b>2.2.2</b> Pile Form Measurements</a></li>
+<li class="chapter" data-level="2.2.3" data-path="data_load.html"><a href="data_load.html#image-annotation-comparison"><i class="fa fa-check"></i><b>2.2.3</b> Image-Annotation Comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="data_load.html"><a href="data_load.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-1"><i class="fa fa-check"></i><b>2.3.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.3.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-1"><i class="fa fa-check"></i><b>2.3.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.3.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.3.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="data_load.html"><a href="data_load.html#slash-pile-rgb-imagery"><i class="fa fa-check"></i><b>2.4</b> Slash Pile RGB Imagery</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-2"><i class="fa fa-check"></i><b>2.4.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.4.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-2"><i class="fa fa-check"></i><b>2.4.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.4.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.5" data-path="data_load.html"><a href="data_load.html#all"><i class="fa fa-check"></i><b>2.4.5</b> All</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>3</b> Point Cloud Processing</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>3.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#psinf-mixed-conifer-site-3"><i class="fa fa-check"></i><b>3.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="3.1.2" data-path="ptcld_process.html"><a href="ptcld_process.html#trfo-blm-pinyon-juniper-site-3"><i class="fa fa-check"></i><b>3.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="3.1.3" data-path="ptcld_process.html"><a href="ptcld_process.html#bhef-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="3.1.4" data-path="ptcld_process.html"><a href="ptcld_process.html#arnf-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="ptcld_process.html"><a href="ptcld_process.html#clean-up"><i class="fa fa-check"></i><b>3.2</b> Clean Up</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="geom_detect.html"><a href="geom_detect.html"><i class="fa fa-check"></i><b>4</b> Geometry-based Slash Pile Detection</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="geom_detect.html"><a href="geom_detect.html#d_area"><i class="fa fa-check"></i><b>4.1</b> Demonstration Area</a></li>
+<li class="chapter" data-level="4.2" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-methods"><i class="fa fa-check"></i><b>4.2</b> Segmentation Methods</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="geom_detect.html"><a href="geom_detect.html#seg_methods"><i class="fa fa-check"></i><b>4.2.1</b> Overview of Methods</a></li>
+<li class="chapter" data-level="4.2.2" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.2</b> Watershed Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.3" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.3</b> DBSCAN Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.4" data-path="geom_detect.html"><a href="geom_detect.html#comparison-of-candidate-segments"><i class="fa fa-check"></i><b>4.2.4</b> Comparison of Candidate Segments</a></li>
+<li class="chapter" data-level="4.2.5" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-function"><i class="fa fa-check"></i><b>4.2.5</b> Segmentation Function</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="geom_detect.html"><a href="geom_detect.html#candidate-shape-refinement-and-area-filtering"><i class="fa fa-check"></i><b>4.3</b> Candidate Shape Refinement and Area filtering</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation"><i class="fa fa-check"></i><b>4.3.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.3.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation"><i class="fa fa-check"></i><b>4.3.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.3.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison"><i class="fa fa-check"></i><b>4.3.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="geom_detect.html"><a href="geom_detect.html#candidate-geometric-filtering"><i class="fa fa-check"></i><b>4.4</b> Candidate Geometric filtering</a>
+<ul>
+<li class="chapter" data-level="4.4.1" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-convexity"><i class="fa fa-check"></i><b>4.4.1</b> Shape Irregularity: Convexity</a></li>
+<li class="chapter" data-level="4.4.2" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-circularity"><i class="fa fa-check"></i><b>4.4.2</b> Shape Irregularity: Circularity</a></li>
+</ul></li>
+<li class="chapter" data-level="4.5" data-path="geom_detect.html"><a href="geom_detect.html#structural-metrics-from-chm"><i class="fa fa-check"></i><b>4.5</b> Structural Metrics from CHM</a>
+<ul>
+<li class="chapter" data-level="4.5.1" data-path="geom_detect.html"><a href="geom_detect.html#structural-rasters"><i class="fa fa-check"></i><b>4.5.1</b> Structural Rasters</a></li>
+<li class="chapter" data-level="4.5.2" data-path="geom_detect.html"><a href="geom_detect.html#demonstration-candidate-segment-metrics"><i class="fa fa-check"></i><b>4.5.2</b> Demonstration Candidate Segment Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="4.6" data-path="geom_detect.html"><a href="geom_detect.html#final-shape-refinement"><i class="fa fa-check"></i><b>4.6</b> Final Shape Refinement</a>
+<ul>
+<li class="chapter" data-level="4.6.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-3"><i class="fa fa-check"></i><b>4.6.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.6.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-3"><i class="fa fa-check"></i><b>4.6.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.6.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison-2"><i class="fa fa-check"></i><b>4.6.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.7" data-path="geom_detect.html"><a href="geom_detect.html#slash_pile_detect_fn"><i class="fa fa-check"></i><b>4.7</b> Pile Detection Function</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="data_fusion.html"><a href="data_fusion.html"><i class="fa fa-check"></i><b>5</b> Data Fusion</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="data_fusion.html"><a href="data_fusion.html#rgb-indices"><i class="fa fa-check"></i><b>5.1</b> RGB Indices</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-functions"><i class="fa fa-check"></i><b>5.1.1</b> Spectral Index Functions</a></li>
+<li class="chapter" data-level="5.1.2" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-of-polygons"><i class="fa fa-check"></i><b>5.1.2</b> Spectral Index of Polygons</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="data_fusion.html"><a href="data_fusion.html#demonstration-pile-spectral-summary"><i class="fa fa-check"></i><b>5.2</b> Demonstration Pile Spectral Summary</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="data_fusion.html"><a href="data_fusion.html#voting-system"><i class="fa fa-check"></i><b>5.2.1</b> Voting System</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="data_fusion.html"><a href="data_fusion.html#polygon_spectral_filtering"><i class="fa fa-check"></i><b>5.3</b> Candidate Polygon Spectral Filtering Function</a></li>
+<li class="chapter" data-level="5.4" data-path="data_fusion.html"><a href="data_fusion.html#data-fusion-method-demonstration"><i class="fa fa-check"></i><b>5.4</b> Data Fusion Method Demonstration</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="meth_eval.html"><a href="meth_eval.html"><i class="fa fa-check"></i><b>6</b> Method Evaluation</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="meth_eval.html"><a href="meth_eval.html#iou_match"><i class="fa fa-check"></i><b>6.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="6.2" data-path="meth_eval.html"><a href="meth_eval.html#detect_metrics_form"><i class="fa fa-check"></i><b>6.2</b> Detection Accuracy Metrics</a></li>
+<li class="chapter" data-level="6.3" data-path="meth_eval.html"><a href="meth_eval.html#quant_metrics_form"><i class="fa fa-check"></i><b>6.3</b> Quantification Accuracy Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="str_preds.html"><a href="str_preds.html"><i class="fa fa-check"></i><b>7</b> Method Predictions</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="str_preds.html"><a href="str_preds.html#size-and-geometric-parameter-settings"><i class="fa fa-check"></i><b>7.1</b> Size and Geometric Parameter Settings</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="str_preds.html"><a href="str_preds.html#psinf-mixed-conifer-site-4"><i class="fa fa-check"></i><b>7.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="7.1.2" data-path="str_preds.html"><a href="str_preds.html#trfo-blm-pinyon-juniper-site-4"><i class="fa fa-check"></i><b>7.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="7.1.3" data-path="str_preds.html"><a href="str_preds.html#bhef-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.4" data-path="str_preds.html"><a href="str_preds.html#arnf-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.5" data-path="str_preds.html"><a href="str_preds.html#study-paremeter-settings"><i class="fa fa-check"></i><b>7.1.5</b> Study Paremeter Settings</a></li>
+</ul></li>
+<li class="chapter" data-level="7.2" data-path="str_preds.html"><a href="str_preds.html#chm-based-slash-pile-candidates"><i class="fa fa-check"></i><b>7.2</b> CHM-based Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.2.1" data-path="str_preds.html"><a href="str_preds.html#dbscan-candidates"><i class="fa fa-check"></i><b>7.2.1</b> DBSCAN Candidates</a></li>
+<li class="chapter" data-level="7.2.2" data-path="str_preds.html"><a href="str_preds.html#watershed-candidates"><i class="fa fa-check"></i><b>7.2.2</b> Watershed Candidates</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="str_preds.html"><a href="str_preds.html#spectral-filter-slash-pile-candidates"><i class="fa fa-check"></i><b>7.3</b> Spectral Filter Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.3.1" data-path="str_preds.html"><a href="str_preds.html#dbscan-candidates-1"><i class="fa fa-check"></i><b>7.3.1</b> DBSCAN Candidates</a></li>
+<li class="chapter" data-level="7.3.2" data-path="str_preds.html"><a href="str_preds.html#watershed-candidates-1"><i class="fa fa-check"></i><b>7.3.2</b> Watershed Candidates</a></li>
+</ul></li>
+<li class="chapter" data-level="7.4" data-path="str_preds.html"><a href="str_preds.html#detection-accuracy"><i class="fa fa-check"></i><b>7.4</b> Detection Accuracy</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="str_preds" class="section level1 hasAnchor" number="7">
+<h1><span class="header-section-number">Section 7</span> Method Predictions<a href="str_preds.html#str_preds" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>We are finally ready to make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data. To this point we have:</p>
+<ol style="list-style-type: decimal">
+<li>Provided a data overview: <a href="index.html#data_desc">here</a> and <a href="data_load.html#data_load">here</a></li>
+<li><a href="ptcld_process.html#ptcld_process">Processed the UAS point cloud</a></li>
+<li><a href="geom_detect.html#geom_detect">Demonstrated our geometry-based slash pile detection methodology</a></li>
+<li><a href="data_fusion.html#data_fusion">Demonstrated our spectral refinement (i.e. data fusion) methodology</a></li>
+<li>and <a href="meth_eval.html#meth_eval">Reviewed how we will evaluate our method</a></li>
+</ol>
+<p>In this section, we’ll evaluate the effectiveness of the proposed geometric, rules-based methodology by assessing its performance using our data fusion approach which utilizes both structural data (i.e. CHM) and spectral RGB data across the four study sites. The integration of spectral data in our data fusion approach allows for less restrictive structural settings, while the absence of spectral filtering would necessitate stricter size and geometric thresholds to minimize false positive predictions. We only test the data fusion method here because the spectral data from imagery is foundational to UAS-DAP point cloud data. That is, aerial imagery is the raw input data used to generate the aerial point cloud data which represents structure in 3D space in UAS-DAP workflows.</p>
+<div id="size-and-geometric-parameter-settings" class="section level2 hasAnchor" number="7.1">
+<h2><span class="header-section-number">7.1</span> Size and Geometric Parameter Settings<a href="str_preds.html#size-and-geometric-parameter-settings" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Our geometric, rules-based methodology uses input CHM data and user-defined thresholds for size (height and area) and 2D pile footprint shape regularity (convexity and circularity). The expected height and area search range for slash piles should be based on the pile construction prescription and potentially adjusted based on a sample of field-measured values after treatment completion whether these are a sample of empirical measurements or rough estimates based on visual observation of pile construction outcomes post-treatment. These thresholds define the search space using the CHM data and refine candidate segments to yield final pile predictions.</p>
+<p>Here, we review the pile construction prescription (if available) and supplemental visual observational information for each study site and set the size and geometric thresholds for our structural pile detection methodology.</p>
+<p>The study site prescriptions can be reviewed <a href="index.html#data_desc">here</a></p>
+<div id="psinf-mixed-conifer-site-4" class="section level3 hasAnchor" number="7.1.1">
+<h3><span class="header-section-number">7.1.1</span> PSINF Mixed Conifer Site<a href="str_preds.html#psinf-mixed-conifer-site-4" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>While the silvicultural prescription provides no specific details regarding pile construction, the management objective to create a wildfire-resilient post-treatment structure suggests that piles were likely located in open spaces away from residual trees. This spacing might enhance the ability of our detection methodology by reducing structural interference from the canopy, regardless of the variations in pile size. Anecdotal feedback from post-treatment site walkthroughs further informs our structural parameters, indicating that hand-piles were generally well-constructed to facilitate efficient prescribed burning and approximately 1.5 m by 1.5 m (5 ft by 5 ft) in size. Mechanical piles at the landings maintained a roughly circular form but were significantly larger, with widths comparable to two or three work vehicles and a taller height than the vehicle.</p>
+</div>
+<div id="trfo-blm-pinyon-juniper-site-4" class="section level3 hasAnchor" number="7.1.2">
+<h3><span class="header-section-number">7.1.2</span> TRFO-BLM Pinyon-Juniper Site<a href="str_preds.html#trfo-blm-pinyon-juniper-site-4" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The silvicultural prescription for the TRFO-BLM site includes exact pile construction minimum dimensions of 1.5 m (5 ft) in length, width, and height, which establishes an expected minimum pile area of approximately 2.3 square meters. While these guidelines focus on compact construction to facilitate consumption during burning, the lack of an explicit maximum size requires the use of anecdotal feedback to determine upper thresholds for our detection methodology. Site managers reported that piles were often larger than expected and “messy” (indicating more irregular footprints than expected). Despite the prescribed residual forest structure being characterized by open interspaces with uniform gaps between trees, the anecdotal observation that piles were frequently constructed too close to residual trees introduces a potential challenge for automated detection. This proximity may cause the structural and spectral signatures of the piles to merge with the surrounding canopy.</p>
+</div>
+<div id="bhef-ponderosa-pine-site-4" class="section level3 hasAnchor" number="7.1.3">
+<h3><span class="header-section-number">7.1.3</span> BHEF Ponderosa Pine Site<a href="str_preds.html#bhef-ponderosa-pine-site-4" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>While the silvicultural prescription for the BHEF site defines no specific pile construction parameters, the treatment resulted exclusively in mechanical piles located at landings without additional hand piles. Onsite observations indicated that these piles are gernerally very large and lack a standardized shape or form. For example, some piles were circular and piled high vertically while others were shorter (around DBH) with elongated oval footprints. We established detection thresholds by using familiar anchors to contextualize scale, such as the dimensions of our work truck. Ground-based cell phone images and an aerial UAS photo capturing the truck parked next to one of the largest piles confirmed that some piles reached the scale of a small-sized, one story American single-family home. We used these onsite observations and truck- and house-sized estimates to set high minimum area and height thresholds to isolate the piles from other features. Because these large dimensions may structurally resemble the residual tree groups, spectral information may be key to ensuring the detection accuracy of our method by filtering out false positive predictions from the structural detection.</p>
+</div>
+<div id="arnf-ponderosa-pine-site-4" class="section level3 hasAnchor" number="7.1.4">
+<h3><span class="header-section-number">7.1.4</span> ARNF Ponderosa Pine Site<a href="str_preds.html#arnf-ponderosa-pine-site-4" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>While the silvicultural prescription for the ARNF site defines no specific pile construction parameters, it specifies that all residual waste was mechanically piled at landings for future prescribed burning. Onsite observations indicated that these mechanical piles are uniformly massive and generally circular. The piles were also compact and vertical in structure with limited horizontal sprawl, a construction form that will likely increase consumption efficiency during prescribed burning. Some landings contained clusters of two to five individual piles. To calibrate our detection methodology for these large-scale features, we used cell phone photos taken from the ground during site walkthroughs to compare the piles against a lifted Dodge Ram 2500 Mega Cab turbo diesel. By using this vehicle as a known physical anchor, we estimated that the piles were often at least 2-3 the truck’s height of approximately 2.4 m (8 ft), with footprints significantly exceeding the 16.7 to 26.7 square meters of a standard parking space. These dimensional estimates allow us to set relatively large minimum area and height thresholds for our detection methodology to ensure the exclusion of smaller detected objects like trees or boulders since no small hand piles were expected.</p>
+</div>
+<div id="study-paremeter-settings" class="section level3 hasAnchor" number="7.1.5">
+<h3><span class="header-section-number">7.1.5</span> Study Paremeter Settings<a href="str_preds.html#study-paremeter-settings" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>First, we’re going to make the resolution on the CHM raster for the machine site a bit more coarse since the target object size is larger and we shouldn’t need such fine-grain detail. Also, aggregating the raster to a coarser resolution should help to smooth out some of the noise in fine-grain CHM data which may be necessary for detecting small elevational changes necessary to detect much smaller hand piles.</p>
+<div class="sourceCode" id="cb269"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb269-1"><a href="str_preds.html#cb269-1" tabindex="-1"></a>agg_chm_res_m <span class="ot">&lt;-</span> <span class="fl">0.15</span></span>
+<span id="cb269-2"><a href="str_preds.html#cb269-2" tabindex="-1"></a><span class="co"># bhef_chm_rast</span></span>
+<span id="cb269-3"><a href="str_preds.html#cb269-3" tabindex="-1"></a>fnm_temp <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;../data/BHEF_202306/&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;bhef_chm_rast_&quot;</span>,agg_chm_res_m,<span class="st">&quot;m.tif&quot;</span>))</span>
+<span id="cb269-4"><a href="str_preds.html#cb269-4" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">file.exists</span>(fnm_temp)){</span>
+<span id="cb269-5"><a href="str_preds.html#cb269-5" tabindex="-1"></a>  rast_temp <span class="ot">&lt;-</span> bhef_chm_rast</span>
+<span id="cb269-6"><a href="str_preds.html#cb269-6" tabindex="-1"></a>  <span class="fu">remove</span>(bhef_chm_rast)</span>
+<span id="cb269-7"><a href="str_preds.html#cb269-7" tabindex="-1"></a>  <span class="fu">gc</span>()</span>
+<span id="cb269-8"><a href="str_preds.html#cb269-8" tabindex="-1"></a>  bhef_chm_rast <span class="ot">&lt;-</span> cloud2trees<span class="sc">:::</span><span class="fu">adjust_raster_resolution</span>(</span>
+<span id="cb269-9"><a href="str_preds.html#cb269-9" tabindex="-1"></a>    <span class="at">raster_object =</span> rast_temp</span>
+<span id="cb269-10"><a href="str_preds.html#cb269-10" tabindex="-1"></a>    , <span class="at">target_resolution =</span> agg_chm_res_m</span>
+<span id="cb269-11"><a href="str_preds.html#cb269-11" tabindex="-1"></a>    , <span class="at">fun =</span> max <span class="co"># max for CHM</span></span>
+<span id="cb269-12"><a href="str_preds.html#cb269-12" tabindex="-1"></a>    , <span class="at">resample_method =</span> <span class="st">&quot;bilinear&quot;</span></span>
+<span id="cb269-13"><a href="str_preds.html#cb269-13" tabindex="-1"></a>    , <span class="at">ofile =</span> fnm_temp</span>
+<span id="cb269-14"><a href="str_preds.html#cb269-14" tabindex="-1"></a>  )</span>
+<span id="cb269-15"><a href="str_preds.html#cb269-15" tabindex="-1"></a>  <span class="fu">remove</span>(fnm_temp,rast_temp)</span>
+<span id="cb269-16"><a href="str_preds.html#cb269-16" tabindex="-1"></a>  <span class="fu">gc</span>()</span>
+<span id="cb269-17"><a href="str_preds.html#cb269-17" tabindex="-1"></a>}<span class="cf">else</span>{</span>
+<span id="cb269-18"><a href="str_preds.html#cb269-18" tabindex="-1"></a>  bhef_chm_rast <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">rast</span>(fnm_temp)</span>
+<span id="cb269-19"><a href="str_preds.html#cb269-19" tabindex="-1"></a>}</span>
+<span id="cb269-20"><a href="str_preds.html#cb269-20" tabindex="-1"></a><span class="co"># arnf_chm_rast</span></span>
+<span id="cb269-21"><a href="str_preds.html#cb269-21" tabindex="-1"></a>fnm_temp <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;../data/ARNF_DiamondView_202510/&quot;</span>, <span class="fu">paste0</span>(<span class="st">&quot;arnf_chm_rast_&quot;</span>,agg_chm_res_m,<span class="st">&quot;m.tif&quot;</span>))</span>
+<span id="cb269-22"><a href="str_preds.html#cb269-22" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">file.exists</span>(fnm_temp)){</span>
+<span id="cb269-23"><a href="str_preds.html#cb269-23" tabindex="-1"></a>  rast_temp <span class="ot">&lt;-</span> arnf_chm_rast</span>
+<span id="cb269-24"><a href="str_preds.html#cb269-24" tabindex="-1"></a>  <span class="fu">remove</span>(arnf_chm_rast)</span>
+<span id="cb269-25"><a href="str_preds.html#cb269-25" tabindex="-1"></a>  <span class="fu">gc</span>()</span>
+<span id="cb269-26"><a href="str_preds.html#cb269-26" tabindex="-1"></a>  arnf_chm_rast <span class="ot">&lt;-</span> cloud2trees<span class="sc">:::</span><span class="fu">adjust_raster_resolution</span>(</span>
+<span id="cb269-27"><a href="str_preds.html#cb269-27" tabindex="-1"></a>    <span class="at">raster_object =</span> rast_temp</span>
+<span id="cb269-28"><a href="str_preds.html#cb269-28" tabindex="-1"></a>    , <span class="at">target_resolution =</span> agg_chm_res_m</span>
+<span id="cb269-29"><a href="str_preds.html#cb269-29" tabindex="-1"></a>    , <span class="at">fun =</span> max <span class="co"># max for CHM</span></span>
+<span id="cb269-30"><a href="str_preds.html#cb269-30" tabindex="-1"></a>    , <span class="at">resample_method =</span> <span class="st">&quot;bilinear&quot;</span></span>
+<span id="cb269-31"><a href="str_preds.html#cb269-31" tabindex="-1"></a>    , <span class="at">ofile =</span> fnm_temp</span>
+<span id="cb269-32"><a href="str_preds.html#cb269-32" tabindex="-1"></a>  )</span>
+<span id="cb269-33"><a href="str_preds.html#cb269-33" tabindex="-1"></a>  <span class="fu">remove</span>(fnm_temp,rast_temp)</span>
+<span id="cb269-34"><a href="str_preds.html#cb269-34" tabindex="-1"></a>  <span class="fu">gc</span>()</span>
+<span id="cb269-35"><a href="str_preds.html#cb269-35" tabindex="-1"></a>}<span class="cf">else</span>{</span>
+<span id="cb269-36"><a href="str_preds.html#cb269-36" tabindex="-1"></a>  arnf_chm_rast <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">rast</span>(fnm_temp)</span>
+<span id="cb269-37"><a href="str_preds.html#cb269-37" tabindex="-1"></a>}</span></code></pre></div>
+<p>Set the structural detection parameters based on pile construction prescription and anecdotal feedback from onsite observation</p>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Parameter</th>
+<th align="left">PSINF Mixed Conifer Site</th>
+<th align="left">TRFO-BLM Pinyon-Juniper Site</th>
+<th align="left">BHEF Ponderosa Pine Site</th>
+<th align="left">ARNF Ponderosa Pine Site</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>min_ht_m</code></td>
+<td align="left">1.0 (66% of min. hand pile)</td>
+<td align="left">0.75 (50% of min. hand pile)</td>
+<td align="left">1.25 (slightly &lt; DBH)</td>
+<td align="left">2.4 (truck height)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>max_ht_m</code></td>
+<td align="left">5.0 (2x truck height)</td>
+<td align="left">3.0 (2x hand pile height)</td>
+<td align="left">6.0 (2.5x truck height)</td>
+<td align="left">9.6 (4x truck height)</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>min_area_m2</code></td>
+<td align="left">2.0 (90% of min. hand pile)</td>
+<td align="left">2.0 (90% of min. hand pile)</td>
+<td align="left">54.0 (2x parking space)</td>
+<td align="left">54.0 (2x parking space)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>max_area_m2</code></td>
+<td align="left">54.0 (2x parking space)</td>
+<td align="left">22.5 (10x min. hand pile)</td>
+<td align="left">486.0 (18x parking space)</td>
+<td align="left">621.0 (23x parking space)</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>min_convexity_ratio</code></td>
+<td align="left">0.65 (strict)</td>
+<td align="left">0.55 (strict)</td>
+<td align="left">0.55 (strict)</td>
+<td align="left">0.55 (strict)</td>
+</tr>
+<tr class="even">
+<td align="left"><code>min_circularity_ratio</code></td>
+<td align="left">0.5 (strict)</td>
+<td align="left">0.35 (moderate)</td>
+<td align="left">0.0 (no circularity constraint)</td>
+<td align="left">0.3 (moderate)</td>
+</tr>
+</tbody>
+</table>
+<p>for the <code>spectral_weight</code> parameter we can be fairly strict with our spectral filtering across all of these study sites because the piles were generally constructed away from residual trees. As a reminder, the <code>spectral_weight</code> parameter defines the minimum number of the six independent spectral indices that must positively identify a candidate object as non-vegetated to retain it, where increasing the value towards six (6) enforces a stricter consensus to filter out live green vegetation and decreasing it allows for more permissive detection in areas where shadows or canopy overlap may obscure the spectral signature.</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Site</th>
+<th align="left"><code>spectral_weight</code></th>
+<th align="left">Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ARNF</td>
+<td align="left">5</td>
+<td align="left">Located in open landings, these piles have minimal overlap with live canopy; a strict weight ensures that any edge-case vegetation or weeds growing near the piles are effectively excluded.</td>
+</tr>
+<tr class="even">
+<td align="left">BHEF</td>
+<td align="left">5</td>
+<td align="left">A high consensus threshold is critical here to distinguish massive piles from residual tree groups, as high spectral weight ensures that objects with live green foliage are filtered out of the structural results.</td>
+</tr>
+<tr class="odd">
+<td align="left">TRFO-BLM</td>
+<td align="left">5</td>
+<td align="left">The “heavy intensity uniform thinning treatment” in this pinyon-juniper site which opened up significant space between residual trees likely allows for a strict threshold to reliably remove any candidates which may be green shrubs or low-hanging branches.</td>
+</tr>
+<tr class="even">
+<td align="left">PSINF</td>
+<td align="left">4</td>
+<td align="left">Because hand piles are often positioned near the residual trees such that many are shadowed by the canopy in the aerial imagery, a slightly lower weight prevents the accidental removal of piles that may be shadowed or have spectral “bleeding” from live tree crowns.</td>
+</tr>
+</tbody>
+</table>
+<p>let’s table that so we have the information</p>
+<div class="sourceCode" id="cb270"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb270-1"><a href="str_preds.html#cb270-1" tabindex="-1"></a>all_stand_boundary <span class="ot">&lt;-</span> all_stand_boundary <span class="sc">%&gt;%</span> </span>
+<span id="cb270-2"><a href="str_preds.html#cb270-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb270-3"><a href="str_preds.html#cb270-3" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb270-4"><a href="str_preds.html#cb270-4" tabindex="-1"></a>      <span class="at">site =</span> <span class="fu">c</span>(<span class="st">&quot;PSINF Mixed Conifer Site&quot;</span>, <span class="st">&quot;TRFO-BLM Pinyon-Juniper Site&quot;</span>, <span class="st">&quot;BHEF Ponderosa Pine Site&quot;</span>, <span class="st">&quot;ARNF Ponderosa Pine Site&quot;</span>)</span>
+<span id="cb270-5"><a href="str_preds.html#cb270-5" tabindex="-1"></a>      , <span class="at">min_ht_m =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.75</span>, <span class="fl">1.25</span>, <span class="fl">2.4</span>)</span>
+<span id="cb270-6"><a href="str_preds.html#cb270-6" tabindex="-1"></a>      , <span class="at">max_ht_m =</span> <span class="fu">c</span>(<span class="fl">5.0</span>, <span class="fl">3.0</span>, <span class="fl">6.0</span>, <span class="fl">9.6</span>)</span>
+<span id="cb270-7"><a href="str_preds.html#cb270-7" tabindex="-1"></a>      , <span class="at">min_area_m2 =</span> <span class="fu">c</span>(<span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">54.0</span>, <span class="fl">54.0</span>)</span>
+<span id="cb270-8"><a href="str_preds.html#cb270-8" tabindex="-1"></a>      , <span class="at">max_area_m2 =</span> <span class="fu">c</span>(<span class="fl">54.0</span>, <span class="fl">22.5</span>, <span class="fl">486.0</span>, <span class="fl">621.0</span>)</span>
+<span id="cb270-9"><a href="str_preds.html#cb270-9" tabindex="-1"></a>      , <span class="at">min_convexity_ratio =</span> <span class="fu">c</span>(<span class="fl">0.65</span>, <span class="fl">0.55</span>, <span class="fl">0.55</span>, <span class="fl">0.55</span>)</span>
+<span id="cb270-10"><a href="str_preds.html#cb270-10" tabindex="-1"></a>      , <span class="at">min_circularity_ratio =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.35</span>, <span class="fl">0.0</span>, <span class="fl">0.3</span>)</span>
+<span id="cb270-11"><a href="str_preds.html#cb270-11" tabindex="-1"></a>      , <span class="at">spectral_weight =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>)</span>
+<span id="cb270-12"><a href="str_preds.html#cb270-12" tabindex="-1"></a>      , <span class="at">chm_res_m =</span> <span class="fu">c</span>(</span>
+<span id="cb270-13"><a href="str_preds.html#cb270-13" tabindex="-1"></a>        terra<span class="sc">::</span><span class="fu">res</span>(psinf_chm_rast)[<span class="dv">1</span>]</span>
+<span id="cb270-14"><a href="str_preds.html#cb270-14" tabindex="-1"></a>        , terra<span class="sc">::</span><span class="fu">res</span>(pj_chm_rast)[<span class="dv">1</span>]</span>
+<span id="cb270-15"><a href="str_preds.html#cb270-15" tabindex="-1"></a>        , terra<span class="sc">::</span><span class="fu">res</span>(bhef_chm_rast)[<span class="dv">1</span>]</span>
+<span id="cb270-16"><a href="str_preds.html#cb270-16" tabindex="-1"></a>        , terra<span class="sc">::</span><span class="fu">res</span>(arnf_chm_rast)[<span class="dv">1</span>]</span>
+<span id="cb270-17"><a href="str_preds.html#cb270-17" tabindex="-1"></a>      )</span>
+<span id="cb270-18"><a href="str_preds.html#cb270-18" tabindex="-1"></a>    )  </span>
+<span id="cb270-19"><a href="str_preds.html#cb270-19" tabindex="-1"></a>    , <span class="at">by =</span> <span class="st">&quot;site&quot;</span></span>
+<span id="cb270-20"><a href="str_preds.html#cb270-20" tabindex="-1"></a>  )</span>
+<span id="cb270-21"><a href="str_preds.html#cb270-21" tabindex="-1"></a>all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 4
+## Columns: 13
+## $ site                  &lt;chr&gt; &quot;ARNF Ponderosa Pine Site&quot;, &quot;BHEF Ponderosa Pine…
+## $ geometry              &lt;GEOMETRY [m]&gt; MULTIPOLYGON (((-794262.3 2..., MULTIPO…
+## $ site_area_m2          &lt;dbl&gt; 736062.04, 1031024.64, 174975.91, 51736.28
+## $ site_area_ha          &lt;dbl&gt; 73.606204, 103.102464, 17.497591, 5.173628
+## $ site_data_lab         &lt;chr&gt; &quot;arnf&quot;, &quot;bhef&quot;, &quot;psinf&quot;, &quot;pj&quot;
+## $ min_ht_m              &lt;dbl&gt; 2.40, 1.25, 1.00, 0.75
+## $ max_ht_m              &lt;dbl&gt; 9.6, 6.0, 5.0, 3.0
+## $ min_area_m2           &lt;dbl&gt; 54, 54, 2, 2
+## $ max_area_m2           &lt;dbl&gt; 621.0, 486.0, 54.0, 22.5
+## $ min_convexity_ratio   &lt;dbl&gt; 0.55, 0.55, 0.65, 0.55
+## $ min_circularity_ratio &lt;dbl&gt; 0.30, 0.00, 0.50, 0.35
+## $ spectral_weight       &lt;dbl&gt; 5, 5, 4, 5
+## $ chm_res_m             &lt;dbl&gt; 0.15, 0.15, 0.10, 0.10</code></pre>
+<p>generate a <code>kableExtra</code> table</p>
+<div class="sourceCode" id="cb272"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb272-1"><a href="str_preds.html#cb272-1" tabindex="-1"></a>all_stand_boundary <span class="sc">%&gt;%</span> </span>
+<span id="cb272-2"><a href="str_preds.html#cb272-2" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb272-3"><a href="str_preds.html#cb272-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(</span>
+<span id="cb272-4"><a href="str_preds.html#cb272-4" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;site_area&quot;</span>)</span>
+<span id="cb272-5"><a href="str_preds.html#cb272-5" tabindex="-1"></a>    , site_data_lab</span>
+<span id="cb272-6"><a href="str_preds.html#cb272-6" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-7"><a href="str_preds.html#cb272-7" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">cols=</span><span class="sc">-</span>site) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-8"><a href="str_preds.html#cb272-8" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb272-9"><a href="str_preds.html#cb272-9" tabindex="-1"></a>    <span class="at">value =</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb272-10"><a href="str_preds.html#cb272-10" tabindex="-1"></a>      name <span class="sc">==</span> <span class="st">&quot;spectral_weight&quot;</span> <span class="sc">~</span> scales<span class="sc">::</span><span class="fu">comma</span>(value,<span class="at">accuracy=</span><span class="dv">1</span>)</span>
+<span id="cb272-11"><a href="str_preds.html#cb272-11" tabindex="-1"></a>      , name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;min_ht_m&quot;</span>, <span class="st">&quot;chm_res_m&quot;</span>, <span class="st">&quot;min_convexity_ratio&quot;</span>, <span class="st">&quot;min_circularity_ratio&quot;</span>) <span class="sc">~</span> scales<span class="sc">::</span><span class="fu">comma</span>(value,<span class="at">accuracy=</span><span class="fl">0.01</span>)</span>
+<span id="cb272-12"><a href="str_preds.html#cb272-12" tabindex="-1"></a>      , T <span class="sc">~</span> scales<span class="sc">::</span><span class="fu">comma</span>(value,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb272-13"><a href="str_preds.html#cb272-13" tabindex="-1"></a>    )</span>
+<span id="cb272-14"><a href="str_preds.html#cb272-14" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-15"><a href="str_preds.html#cb272-15" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(<span class="at">names_from =</span> site, <span class="at">values_from =</span> value) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-16"><a href="str_preds.html#cb272-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">parameter =</span> name) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-17"><a href="str_preds.html#cb272-17" tabindex="-1"></a>  <span class="co"># kable</span></span>
+<span id="cb272-18"><a href="str_preds.html#cb272-18" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb272-19"><a href="str_preds.html#cb272-19" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;user-defined thresholds for size and expected pile shape regularity&quot;</span></span>
+<span id="cb272-20"><a href="str_preds.html#cb272-20" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb272-21"><a href="str_preds.html#cb272-21" tabindex="-1"></a>    <span class="co"># , digits = 2</span></span>
+<span id="cb272-22"><a href="str_preds.html#cb272-22" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb272-23"><a href="str_preds.html#cb272-23" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>()</span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-301">Table 7.1: </span>user-defined thresholds for size and expected pile shape regularity
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+parameter
+</th>
+<th style="text-align:left;">
+ARNF Ponderosa Pine Site
+</th>
+<th style="text-align:left;">
+BHEF Ponderosa Pine Site
+</th>
+<th style="text-align:left;">
+PSINF Mixed Conifer Site
+</th>
+<th style="text-align:left;">
+TRFO-BLM Pinyon-Juniper Site
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+min_ht_m
+</td>
+<td style="text-align:left;">
+2.40
+</td>
+<td style="text-align:left;">
+1.25
+</td>
+<td style="text-align:left;">
+1.00
+</td>
+<td style="text-align:left;">
+0.75
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+max_ht_m
+</td>
+<td style="text-align:left;">
+9.6
+</td>
+<td style="text-align:left;">
+6.0
+</td>
+<td style="text-align:left;">
+5.0
+</td>
+<td style="text-align:left;">
+3.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+min_area_m2
+</td>
+<td style="text-align:left;">
+54.0
+</td>
+<td style="text-align:left;">
+54.0
+</td>
+<td style="text-align:left;">
+2.0
+</td>
+<td style="text-align:left;">
+2.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+max_area_m2
+</td>
+<td style="text-align:left;">
+621.0
+</td>
+<td style="text-align:left;">
+486.0
+</td>
+<td style="text-align:left;">
+54.0
+</td>
+<td style="text-align:left;">
+22.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+min_convexity_ratio
+</td>
+<td style="text-align:left;">
+0.55
+</td>
+<td style="text-align:left;">
+0.55
+</td>
+<td style="text-align:left;">
+0.65
+</td>
+<td style="text-align:left;">
+0.55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+min_circularity_ratio
+</td>
+<td style="text-align:left;">
+0.30
+</td>
+<td style="text-align:left;">
+0.00
+</td>
+<td style="text-align:left;">
+0.50
+</td>
+<td style="text-align:left;">
+0.35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+spectral_weight
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chm_res_m
+</td>
+<td style="text-align:left;">
+0.15
+</td>
+<td style="text-align:left;">
+0.15
+</td>
+<td style="text-align:left;">
+0.10
+</td>
+<td style="text-align:left;">
+0.10
+</td>
+</tr>
+</tbody>
+</table>
+<p>let’s organize our site boundary, ground truth, CHM, and RGB data into lists so we can programmatically iterate through all sites more efficiently</p>
+<div class="sourceCode" id="cb273"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb273-1"><a href="str_preds.html#cb273-1" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-2"><a href="str_preds.html#cb273-2" tabindex="-1"></a><span class="co"># stand_boundary</span></span>
+<span id="cb273-3"><a href="str_preds.html#cb273-3" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-4"><a href="str_preds.html#cb273-4" tabindex="-1"></a>  <span class="co"># suffix</span></span>
+<span id="cb273-5"><a href="str_preds.html#cb273-5" tabindex="-1"></a>  suffix_temp <span class="ot">&lt;-</span> <span class="st">&quot;_stand_boundary&quot;</span></span>
+<span id="cb273-6"><a href="str_preds.html#cb273-6" tabindex="-1"></a>  <span class="co"># convert to list of objects and remove the suffix from the name in the list</span></span>
+<span id="cb273-7"><a href="str_preds.html#cb273-7" tabindex="-1"></a>  stand_boundary <span class="ot">&lt;-</span></span>
+<span id="cb273-8"><a href="str_preds.html#cb273-8" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-9"><a href="str_preds.html#cb273-9" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-10"><a href="str_preds.html#cb273-10" tabindex="-1"></a>    base<span class="sc">::</span><span class="fu">mget</span>(<span class="at">inherits =</span> T) <span class="sc">%&gt;%</span></span>
+<span id="cb273-11"><a href="str_preds.html#cb273-11" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, suffix_temp))</span>
+<span id="cb273-12"><a href="str_preds.html#cb273-12" tabindex="-1"></a>  <span class="co"># names(stand_boundary)</span></span>
+<span id="cb273-13"><a href="str_preds.html#cb273-13" tabindex="-1"></a>  <span class="co"># dplyr::glimpse(stand_boundary)</span></span>
+<span id="cb273-14"><a href="str_preds.html#cb273-14" tabindex="-1"></a>  <span class="co"># remove</span></span>
+<span id="cb273-15"><a href="str_preds.html#cb273-15" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-16"><a href="str_preds.html#cb273-16" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-17"><a href="str_preds.html#cb273-17" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(\(x) <span class="fu">remove</span>(<span class="at">list =</span> x,<span class="at">inherits =</span> T))</span>
+<span id="cb273-18"><a href="str_preds.html#cb273-18" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-19"><a href="str_preds.html#cb273-19" tabindex="-1"></a><span class="co"># slash_piles_polys</span></span>
+<span id="cb273-20"><a href="str_preds.html#cb273-20" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-21"><a href="str_preds.html#cb273-21" tabindex="-1"></a>  <span class="co"># suffix</span></span>
+<span id="cb273-22"><a href="str_preds.html#cb273-22" tabindex="-1"></a>  suffix_temp <span class="ot">&lt;-</span> <span class="st">&quot;_slash_piles_polys&quot;</span></span>
+<span id="cb273-23"><a href="str_preds.html#cb273-23" tabindex="-1"></a>  <span class="co"># convert to list of objects and remove the suffix from the name in the list</span></span>
+<span id="cb273-24"><a href="str_preds.html#cb273-24" tabindex="-1"></a>  slash_piles_polys <span class="ot">&lt;-</span></span>
+<span id="cb273-25"><a href="str_preds.html#cb273-25" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-26"><a href="str_preds.html#cb273-26" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-27"><a href="str_preds.html#cb273-27" tabindex="-1"></a>    base<span class="sc">::</span><span class="fu">mget</span>(<span class="at">inherits =</span> T) <span class="sc">%&gt;%</span></span>
+<span id="cb273-28"><a href="str_preds.html#cb273-28" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, suffix_temp))</span>
+<span id="cb273-29"><a href="str_preds.html#cb273-29" tabindex="-1"></a>  <span class="co"># names(slash_piles_polys)</span></span>
+<span id="cb273-30"><a href="str_preds.html#cb273-30" tabindex="-1"></a>  <span class="co"># dplyr::glimpse(slash_piles_polys)</span></span>
+<span id="cb273-31"><a href="str_preds.html#cb273-31" tabindex="-1"></a>  <span class="co"># remove</span></span>
+<span id="cb273-32"><a href="str_preds.html#cb273-32" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-33"><a href="str_preds.html#cb273-33" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-34"><a href="str_preds.html#cb273-34" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(\(x) <span class="fu">remove</span>(<span class="at">list =</span> x,<span class="at">inherits =</span> T))</span>
+<span id="cb273-35"><a href="str_preds.html#cb273-35" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-36"><a href="str_preds.html#cb273-36" tabindex="-1"></a><span class="co"># chm_rast</span></span>
+<span id="cb273-37"><a href="str_preds.html#cb273-37" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-38"><a href="str_preds.html#cb273-38" tabindex="-1"></a>  <span class="co"># suffix</span></span>
+<span id="cb273-39"><a href="str_preds.html#cb273-39" tabindex="-1"></a>  suffix_temp <span class="ot">&lt;-</span> <span class="st">&quot;_chm_rast&quot;</span></span>
+<span id="cb273-40"><a href="str_preds.html#cb273-40" tabindex="-1"></a>  <span class="co"># convert to list of objects and remove the suffix from the name in the list</span></span>
+<span id="cb273-41"><a href="str_preds.html#cb273-41" tabindex="-1"></a>  chm_rast <span class="ot">&lt;-</span></span>
+<span id="cb273-42"><a href="str_preds.html#cb273-42" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-43"><a href="str_preds.html#cb273-43" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-44"><a href="str_preds.html#cb273-44" tabindex="-1"></a>    base<span class="sc">::</span><span class="fu">mget</span>(<span class="at">inherits =</span> T) <span class="sc">%&gt;%</span></span>
+<span id="cb273-45"><a href="str_preds.html#cb273-45" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, suffix_temp))</span>
+<span id="cb273-46"><a href="str_preds.html#cb273-46" tabindex="-1"></a>  <span class="co"># names(chm_rast)</span></span>
+<span id="cb273-47"><a href="str_preds.html#cb273-47" tabindex="-1"></a>  <span class="co"># dplyr::glimpse(chm_rast)</span></span>
+<span id="cb273-48"><a href="str_preds.html#cb273-48" tabindex="-1"></a>  <span class="co"># remove</span></span>
+<span id="cb273-49"><a href="str_preds.html#cb273-49" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-50"><a href="str_preds.html#cb273-50" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-51"><a href="str_preds.html#cb273-51" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(\(x) <span class="fu">remove</span>(<span class="at">list =</span> x,<span class="at">inherits =</span> T))</span>
+<span id="cb273-52"><a href="str_preds.html#cb273-52" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-53"><a href="str_preds.html#cb273-53" tabindex="-1"></a><span class="co"># rgb_rast</span></span>
+<span id="cb273-54"><a href="str_preds.html#cb273-54" tabindex="-1"></a><span class="do">##########################################</span></span>
+<span id="cb273-55"><a href="str_preds.html#cb273-55" tabindex="-1"></a>  <span class="co"># suffix</span></span>
+<span id="cb273-56"><a href="str_preds.html#cb273-56" tabindex="-1"></a>  suffix_temp <span class="ot">&lt;-</span> <span class="st">&quot;_rgb_rast&quot;</span></span>
+<span id="cb273-57"><a href="str_preds.html#cb273-57" tabindex="-1"></a>  <span class="co"># convert to list of objects and remove the suffix from the name in the list</span></span>
+<span id="cb273-58"><a href="str_preds.html#cb273-58" tabindex="-1"></a>  rgb_rast <span class="ot">&lt;-</span></span>
+<span id="cb273-59"><a href="str_preds.html#cb273-59" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-60"><a href="str_preds.html#cb273-60" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-61"><a href="str_preds.html#cb273-61" tabindex="-1"></a>    base<span class="sc">::</span><span class="fu">mget</span>(<span class="at">inherits =</span> T) <span class="sc">%&gt;%</span></span>
+<span id="cb273-62"><a href="str_preds.html#cb273-62" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, suffix_temp))</span>
+<span id="cb273-63"><a href="str_preds.html#cb273-63" tabindex="-1"></a>  <span class="co"># names(rgb_rast)</span></span>
+<span id="cb273-64"><a href="str_preds.html#cb273-64" tabindex="-1"></a>  <span class="co"># dplyr::glimpse(rgb_rast)</span></span>
+<span id="cb273-65"><a href="str_preds.html#cb273-65" tabindex="-1"></a>  <span class="co"># remove</span></span>
+<span id="cb273-66"><a href="str_preds.html#cb273-66" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb273-67"><a href="str_preds.html#cb273-67" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb273-68"><a href="str_preds.html#cb273-68" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(\(x) <span class="fu">remove</span>(<span class="at">list =</span> x,<span class="at">inherits =</span> T))</span></code></pre></div>
+</div>
+</div>
+<div id="chm-based-slash-pile-candidates" class="section level2 hasAnchor" number="7.2">
+<h2><span class="header-section-number">7.2</span> CHM-based Slash Pile Candidates<a href="str_preds.html#chm-based-slash-pile-candidates" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Our geometric, rules-based methodology uses input CHM data and user-defined thresholds for size (height and area) and 2D pile footprint shape regularity (convexity and circularity). We <a href="geom_detect.html#slash_pile_detect_fn">defined a function</a> to make the detection from the CHM easy given the parameters we reviewed above: <code>slash_pile_detect()</code></p>
+<p>check the <a href="geom_detect.html#seg_methods">segmentation parameters</a> to be used in each of the DBSCAN and Watershed segmentation methods</p>
+<div class="sourceCode" id="cb274"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb274-1"><a href="str_preds.html#cb274-1" tabindex="-1"></a>segmentation_params_used <span class="ot">&lt;-</span> </span>
+<span id="cb274-2"><a href="str_preds.html#cb274-2" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb274-3"><a href="str_preds.html#cb274-3" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb274-4"><a href="str_preds.html#cb274-4" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb274-5"><a href="str_preds.html#cb274-5" tabindex="-1"></a>    \(x)</span>
+<span id="cb274-6"><a href="str_preds.html#cb274-6" tabindex="-1"></a>    <span class="fu">get_segmentation_params</span>(</span>
+<span id="cb274-7"><a href="str_preds.html#cb274-7" tabindex="-1"></a>        <span class="at">min_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_ht_m)</span>
+<span id="cb274-8"><a href="str_preds.html#cb274-8" tabindex="-1"></a>        , <span class="at">max_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_ht_m)</span>
+<span id="cb274-9"><a href="str_preds.html#cb274-9" tabindex="-1"></a>        , <span class="at">min_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_area_m2)</span>
+<span id="cb274-10"><a href="str_preds.html#cb274-10" tabindex="-1"></a>        , <span class="at">max_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_area_m2)</span>
+<span id="cb274-11"><a href="str_preds.html#cb274-11" tabindex="-1"></a>        , <span class="at">rast_res_m =</span> terra<span class="sc">::</span><span class="fu">res</span>(chm_rast[[x]])[<span class="dv">1</span>]</span>
+<span id="cb274-12"><a href="str_preds.html#cb274-12" tabindex="-1"></a>      )</span>
+<span id="cb274-13"><a href="str_preds.html#cb274-13" tabindex="-1"></a>  )</span>
+<span id="cb274-14"><a href="str_preds.html#cb274-14" tabindex="-1"></a><span class="co"># segmentation_params_used</span></span></code></pre></div>
+<p>We’ll get the predictions using both the DBSCAN and Watershed segmentation approaches. Review <a href="geom_detect.html#seg_methods">this section</a> for a refresher on how we use these methods</p>
+<div class="sourceCode" id="cb275"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb275-1"><a href="str_preds.html#cb275-1" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb275-2"><a href="str_preds.html#cb275-2" tabindex="-1"></a><span class="co"># map over slash_pile_detect for dbscan</span></span>
+<span id="cb275-3"><a href="str_preds.html#cb275-3" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb275-4"><a href="str_preds.html#cb275-4" tabindex="-1"></a>  <span class="co"># file.names to only run if not already done since it takes a while for all sites</span></span>
+<span id="cb275-5"><a href="str_preds.html#cb275-5" tabindex="-1"></a>  dir_temp <span class="ot">&lt;-</span> <span class="st">&quot;../data&quot;</span></span>
+<span id="cb275-6"><a href="str_preds.html#cb275-6" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(dir_temp)){<span class="fu">dir.create</span>(dir_temp,<span class="at">showWarnings =</span> F)}</span>
+<span id="cb275-7"><a href="str_preds.html#cb275-7" tabindex="-1"></a>  nmsfx_temp <span class="ot">&lt;-</span> <span class="st">&quot;_dbscan_structural_preds.gpkg&quot;</span></span>
+<span id="cb275-8"><a href="str_preds.html#cb275-8" tabindex="-1"></a>  <span class="cf">if</span>(</span>
+<span id="cb275-9"><a href="str_preds.html#cb275-9" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">all</span>(<span class="fu">file.exists</span>( <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(all_stand_boundary<span class="sc">$</span>site_data_lab,nmsfx_temp)) ))</span>
+<span id="cb275-10"><a href="str_preds.html#cb275-10" tabindex="-1"></a>  ){</span>
+<span id="cb275-11"><a href="str_preds.html#cb275-11" tabindex="-1"></a>    <span class="co"># map over slash_pile_detect for dbscan</span></span>
+<span id="cb275-12"><a href="str_preds.html#cb275-12" tabindex="-1"></a>    dbscan_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-13"><a href="str_preds.html#cb275-13" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-14"><a href="str_preds.html#cb275-14" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-15"><a href="str_preds.html#cb275-15" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-16"><a href="str_preds.html#cb275-16" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-17"><a href="str_preds.html#cb275-17" tabindex="-1"></a>        <span class="fu">slash_pile_detect</span>(</span>
+<span id="cb275-18"><a href="str_preds.html#cb275-18" tabindex="-1"></a>            <span class="at">chm_rast =</span> chm_rast[[x]]</span>
+<span id="cb275-19"><a href="str_preds.html#cb275-19" tabindex="-1"></a>            , <span class="at">seg_method =</span> <span class="st">&quot;dbscan&quot;</span></span>
+<span id="cb275-20"><a href="str_preds.html#cb275-20" tabindex="-1"></a>            , <span class="at">min_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_ht_m)</span>
+<span id="cb275-21"><a href="str_preds.html#cb275-21" tabindex="-1"></a>            , <span class="at">max_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_ht_m)</span>
+<span id="cb275-22"><a href="str_preds.html#cb275-22" tabindex="-1"></a>            , <span class="at">min_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_area_m2)</span>
+<span id="cb275-23"><a href="str_preds.html#cb275-23" tabindex="-1"></a>            , <span class="at">max_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_area_m2)</span>
+<span id="cb275-24"><a href="str_preds.html#cb275-24" tabindex="-1"></a>            , <span class="at">min_convexity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_convexity_ratio)</span>
+<span id="cb275-25"><a href="str_preds.html#cb275-25" tabindex="-1"></a>            , <span class="at">min_circularity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_circularity_ratio)</span>
+<span id="cb275-26"><a href="str_preds.html#cb275-26" tabindex="-1"></a>            , <span class="at">ofile =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb275-27"><a href="str_preds.html#cb275-27" tabindex="-1"></a>          )</span>
+<span id="cb275-28"><a href="str_preds.html#cb275-28" tabindex="-1"></a>          <span class="co"># purrr::pluck(&quot;segs_sf&quot;)</span></span>
+<span id="cb275-29"><a href="str_preds.html#cb275-29" tabindex="-1"></a>        , <span class="at">.progress =</span> T</span>
+<span id="cb275-30"><a href="str_preds.html#cb275-30" tabindex="-1"></a>      )</span>
+<span id="cb275-31"><a href="str_preds.html#cb275-31" tabindex="-1"></a>    <span class="co"># # write</span></span>
+<span id="cb275-32"><a href="str_preds.html#cb275-32" tabindex="-1"></a>    <span class="co">#   dbscan_structural_preds %&gt;% </span></span>
+<span id="cb275-33"><a href="str_preds.html#cb275-33" tabindex="-1"></a>    <span class="co">#     purrr::imap(</span></span>
+<span id="cb275-34"><a href="str_preds.html#cb275-34" tabindex="-1"></a>    <span class="co">#       \(x,nm)</span></span>
+<span id="cb275-35"><a href="str_preds.html#cb275-35" tabindex="-1"></a>    <span class="co">#       sf::st_write(</span></span>
+<span id="cb275-36"><a href="str_preds.html#cb275-36" tabindex="-1"></a>    <span class="co">#         obj = x</span></span>
+<span id="cb275-37"><a href="str_preds.html#cb275-37" tabindex="-1"></a>    <span class="co">#         , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))</span></span>
+<span id="cb275-38"><a href="str_preds.html#cb275-38" tabindex="-1"></a>    <span class="co">#         , append = F</span></span>
+<span id="cb275-39"><a href="str_preds.html#cb275-39" tabindex="-1"></a>    <span class="co">#         , quiet = T</span></span>
+<span id="cb275-40"><a href="str_preds.html#cb275-40" tabindex="-1"></a>    <span class="co">#       )</span></span>
+<span id="cb275-41"><a href="str_preds.html#cb275-41" tabindex="-1"></a>    <span class="co">#     )</span></span>
+<span id="cb275-42"><a href="str_preds.html#cb275-42" tabindex="-1"></a>    </span>
+<span id="cb275-43"><a href="str_preds.html#cb275-43" tabindex="-1"></a>    <span class="co"># read files</span></span>
+<span id="cb275-44"><a href="str_preds.html#cb275-44" tabindex="-1"></a>    dbscan_structural_preds <span class="ot">&lt;-</span> dbscan_structural_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb275-45"><a href="str_preds.html#cb275-45" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-46"><a href="str_preds.html#cb275-46" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-47"><a href="str_preds.html#cb275-47" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> x, <span class="at">quiet =</span> T)</span>
+<span id="cb275-48"><a href="str_preds.html#cb275-48" tabindex="-1"></a>      )</span>
+<span id="cb275-49"><a href="str_preds.html#cb275-49" tabindex="-1"></a>  }<span class="cf">else</span>{</span>
+<span id="cb275-50"><a href="str_preds.html#cb275-50" tabindex="-1"></a>    <span class="co"># read already done</span></span>
+<span id="cb275-51"><a href="str_preds.html#cb275-51" tabindex="-1"></a>    dbscan_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-52"><a href="str_preds.html#cb275-52" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-53"><a href="str_preds.html#cb275-53" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-54"><a href="str_preds.html#cb275-54" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-55"><a href="str_preds.html#cb275-55" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-56"><a href="str_preds.html#cb275-56" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(</span>
+<span id="cb275-57"><a href="str_preds.html#cb275-57" tabindex="-1"></a>          <span class="at">dsn =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb275-58"><a href="str_preds.html#cb275-58" tabindex="-1"></a>          , <span class="at">quiet =</span> T</span>
+<span id="cb275-59"><a href="str_preds.html#cb275-59" tabindex="-1"></a>        )</span>
+<span id="cb275-60"><a href="str_preds.html#cb275-60" tabindex="-1"></a>      )</span>
+<span id="cb275-61"><a href="str_preds.html#cb275-61" tabindex="-1"></a>  }</span>
+<span id="cb275-62"><a href="str_preds.html#cb275-62" tabindex="-1"></a>  <span class="co"># filter all candidate piles for only those that intersect with the study boundary</span></span>
+<span id="cb275-63"><a href="str_preds.html#cb275-63" tabindex="-1"></a>  dbscan_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-64"><a href="str_preds.html#cb275-64" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-65"><a href="str_preds.html#cb275-65" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-66"><a href="str_preds.html#cb275-66" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-67"><a href="str_preds.html#cb275-67" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-68"><a href="str_preds.html#cb275-68" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">inner_join</span>(</span>
+<span id="cb275-69"><a href="str_preds.html#cb275-69" tabindex="-1"></a>          dbscan_structural_preds[[x]]</span>
+<span id="cb275-70"><a href="str_preds.html#cb275-70" tabindex="-1"></a>          , dbscan_structural_preds[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb275-71"><a href="str_preds.html#cb275-71" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_intersection</span>(</span>
+<span id="cb275-72"><a href="str_preds.html#cb275-72" tabindex="-1"></a>              stand_boundary[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb275-73"><a href="str_preds.html#cb275-73" tabindex="-1"></a>              sf<span class="sc">::</span><span class="fu">st_transform</span>(sf<span class="sc">::</span><span class="fu">st_crs</span>(dbscan_structural_preds[[x]]))</span>
+<span id="cb275-74"><a href="str_preds.html#cb275-74" tabindex="-1"></a>            ) <span class="sc">%&gt;%</span> </span>
+<span id="cb275-75"><a href="str_preds.html#cb275-75" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-76"><a href="str_preds.html#cb275-76" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb275-77"><a href="str_preds.html#cb275-77" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">is_in_stand =</span> T)</span>
+<span id="cb275-78"><a href="str_preds.html#cb275-78" tabindex="-1"></a>          , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb275-79"><a href="str_preds.html#cb275-79" tabindex="-1"></a>        )</span>
+<span id="cb275-80"><a href="str_preds.html#cb275-80" tabindex="-1"></a>      )</span>
+<span id="cb275-81"><a href="str_preds.html#cb275-81" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb275-82"><a href="str_preds.html#cb275-82" tabindex="-1"></a><span class="co"># map over slash_pile_detect for watershed</span></span>
+<span id="cb275-83"><a href="str_preds.html#cb275-83" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb275-84"><a href="str_preds.html#cb275-84" tabindex="-1"></a>  <span class="co"># file.names to only run if not already done since it takes a while for all sites</span></span>
+<span id="cb275-85"><a href="str_preds.html#cb275-85" tabindex="-1"></a>  dir_temp <span class="ot">&lt;-</span> <span class="st">&quot;../data&quot;</span></span>
+<span id="cb275-86"><a href="str_preds.html#cb275-86" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(dir_temp)){<span class="fu">dir.create</span>(dir_temp,<span class="at">showWarnings =</span> F)}</span>
+<span id="cb275-87"><a href="str_preds.html#cb275-87" tabindex="-1"></a>  nmsfx_temp <span class="ot">&lt;-</span> <span class="st">&quot;_watershed_structural_preds.gpkg&quot;</span></span>
+<span id="cb275-88"><a href="str_preds.html#cb275-88" tabindex="-1"></a>  <span class="cf">if</span>(</span>
+<span id="cb275-89"><a href="str_preds.html#cb275-89" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">all</span>(<span class="fu">file.exists</span>( <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(all_stand_boundary<span class="sc">$</span>site_data_lab,nmsfx_temp)) ))</span>
+<span id="cb275-90"><a href="str_preds.html#cb275-90" tabindex="-1"></a>  ){</span>
+<span id="cb275-91"><a href="str_preds.html#cb275-91" tabindex="-1"></a>    <span class="co"># map over slash_pile_detect for watershed</span></span>
+<span id="cb275-92"><a href="str_preds.html#cb275-92" tabindex="-1"></a>    watershed_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-93"><a href="str_preds.html#cb275-93" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-94"><a href="str_preds.html#cb275-94" tabindex="-1"></a>      <span class="co"># .[2:4] %&gt;% </span></span>
+<span id="cb275-95"><a href="str_preds.html#cb275-95" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-96"><a href="str_preds.html#cb275-96" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-97"><a href="str_preds.html#cb275-97" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-98"><a href="str_preds.html#cb275-98" tabindex="-1"></a>        <span class="fu">slash_pile_detect</span>(</span>
+<span id="cb275-99"><a href="str_preds.html#cb275-99" tabindex="-1"></a>            <span class="at">chm_rast =</span> chm_rast[[x]]</span>
+<span id="cb275-100"><a href="str_preds.html#cb275-100" tabindex="-1"></a>            , <span class="at">seg_method =</span> <span class="st">&quot;watershed&quot;</span></span>
+<span id="cb275-101"><a href="str_preds.html#cb275-101" tabindex="-1"></a>            , <span class="at">min_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_ht_m)</span>
+<span id="cb275-102"><a href="str_preds.html#cb275-102" tabindex="-1"></a>            , <span class="at">max_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_ht_m)</span>
+<span id="cb275-103"><a href="str_preds.html#cb275-103" tabindex="-1"></a>            , <span class="at">min_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_area_m2)</span>
+<span id="cb275-104"><a href="str_preds.html#cb275-104" tabindex="-1"></a>            , <span class="at">max_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_area_m2)</span>
+<span id="cb275-105"><a href="str_preds.html#cb275-105" tabindex="-1"></a>            , <span class="at">min_convexity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_convexity_ratio)</span>
+<span id="cb275-106"><a href="str_preds.html#cb275-106" tabindex="-1"></a>            , <span class="at">min_circularity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_circularity_ratio)</span>
+<span id="cb275-107"><a href="str_preds.html#cb275-107" tabindex="-1"></a>            , <span class="at">ofile =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb275-108"><a href="str_preds.html#cb275-108" tabindex="-1"></a>          )</span>
+<span id="cb275-109"><a href="str_preds.html#cb275-109" tabindex="-1"></a>          <span class="co"># purrr::pluck(&quot;segs_sf&quot;)</span></span>
+<span id="cb275-110"><a href="str_preds.html#cb275-110" tabindex="-1"></a>        , <span class="at">.progress =</span> T</span>
+<span id="cb275-111"><a href="str_preds.html#cb275-111" tabindex="-1"></a>      )</span>
+<span id="cb275-112"><a href="str_preds.html#cb275-112" tabindex="-1"></a>    <span class="co"># read files</span></span>
+<span id="cb275-113"><a href="str_preds.html#cb275-113" tabindex="-1"></a>    watershed_structural_preds <span class="ot">&lt;-</span> watershed_structural_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb275-114"><a href="str_preds.html#cb275-114" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-115"><a href="str_preds.html#cb275-115" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-116"><a href="str_preds.html#cb275-116" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> x, <span class="at">quiet =</span> T)</span>
+<span id="cb275-117"><a href="str_preds.html#cb275-117" tabindex="-1"></a>      )</span>
+<span id="cb275-118"><a href="str_preds.html#cb275-118" tabindex="-1"></a>  }<span class="cf">else</span>{</span>
+<span id="cb275-119"><a href="str_preds.html#cb275-119" tabindex="-1"></a>    <span class="co"># read already done</span></span>
+<span id="cb275-120"><a href="str_preds.html#cb275-120" tabindex="-1"></a>    watershed_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-121"><a href="str_preds.html#cb275-121" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-122"><a href="str_preds.html#cb275-122" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-123"><a href="str_preds.html#cb275-123" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-124"><a href="str_preds.html#cb275-124" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-125"><a href="str_preds.html#cb275-125" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(</span>
+<span id="cb275-126"><a href="str_preds.html#cb275-126" tabindex="-1"></a>          <span class="at">dsn =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb275-127"><a href="str_preds.html#cb275-127" tabindex="-1"></a>          , <span class="at">quiet =</span> T</span>
+<span id="cb275-128"><a href="str_preds.html#cb275-128" tabindex="-1"></a>        )</span>
+<span id="cb275-129"><a href="str_preds.html#cb275-129" tabindex="-1"></a>      )</span>
+<span id="cb275-130"><a href="str_preds.html#cb275-130" tabindex="-1"></a>  }</span>
+<span id="cb275-131"><a href="str_preds.html#cb275-131" tabindex="-1"></a>  <span class="co"># filter all candidate piles for only those that intersect with the study boundary</span></span>
+<span id="cb275-132"><a href="str_preds.html#cb275-132" tabindex="-1"></a>  watershed_structural_preds <span class="ot">&lt;-</span> </span>
+<span id="cb275-133"><a href="str_preds.html#cb275-133" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb275-134"><a href="str_preds.html#cb275-134" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-135"><a href="str_preds.html#cb275-135" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb275-136"><a href="str_preds.html#cb275-136" tabindex="-1"></a>        \(x)</span>
+<span id="cb275-137"><a href="str_preds.html#cb275-137" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">inner_join</span>(</span>
+<span id="cb275-138"><a href="str_preds.html#cb275-138" tabindex="-1"></a>          watershed_structural_preds[[x]]</span>
+<span id="cb275-139"><a href="str_preds.html#cb275-139" tabindex="-1"></a>          , watershed_structural_preds[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb275-140"><a href="str_preds.html#cb275-140" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_intersection</span>(</span>
+<span id="cb275-141"><a href="str_preds.html#cb275-141" tabindex="-1"></a>              stand_boundary[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb275-142"><a href="str_preds.html#cb275-142" tabindex="-1"></a>              sf<span class="sc">::</span><span class="fu">st_transform</span>(sf<span class="sc">::</span><span class="fu">st_crs</span>(watershed_structural_preds[[x]]))</span>
+<span id="cb275-143"><a href="str_preds.html#cb275-143" tabindex="-1"></a>            ) <span class="sc">%&gt;%</span> </span>
+<span id="cb275-144"><a href="str_preds.html#cb275-144" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb275-145"><a href="str_preds.html#cb275-145" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb275-146"><a href="str_preds.html#cb275-146" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">is_in_stand =</span> T)</span>
+<span id="cb275-147"><a href="str_preds.html#cb275-147" tabindex="-1"></a>          , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb275-148"><a href="str_preds.html#cb275-148" tabindex="-1"></a>        )</span>
+<span id="cb275-149"><a href="str_preds.html#cb275-149" tabindex="-1"></a>      )</span></code></pre></div>
+<p>let’s summarize the number of structural candidate segments and the area they cover by site</p>
+<div class="sourceCode" id="cb276"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb276-1"><a href="str_preds.html#cb276-1" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb276-2"><a href="str_preds.html#cb276-2" tabindex="-1"></a>  <span class="co"># watershed</span></span>
+<span id="cb276-3"><a href="str_preds.html#cb276-3" tabindex="-1"></a>    watershed_structural_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb276-4"><a href="str_preds.html#cb276-4" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb276-5"><a href="str_preds.html#cb276-5" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb276-6"><a href="str_preds.html#cb276-6" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb276-7"><a href="str_preds.html#cb276-7" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-8"><a href="str_preds.html#cb276-8" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-9"><a href="str_preds.html#cb276-9" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb276-10"><a href="str_preds.html#cb276-10" tabindex="-1"></a>          <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">n</span>()</span>
+<span id="cb276-11"><a href="str_preds.html#cb276-11" tabindex="-1"></a>          , <span class="at">area_m2 =</span> <span class="fu">sum</span>(area_m2)</span>
+<span id="cb276-12"><a href="str_preds.html#cb276-12" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-13"><a href="str_preds.html#cb276-13" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb276-14"><a href="str_preds.html#cb276-14" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb276-15"><a href="str_preds.html#cb276-15" tabindex="-1"></a>        )</span>
+<span id="cb276-16"><a href="str_preds.html#cb276-16" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-17"><a href="str_preds.html#cb276-17" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-18"><a href="str_preds.html#cb276-18" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;watershed&quot;</span>)</span>
+<span id="cb276-19"><a href="str_preds.html#cb276-19" tabindex="-1"></a>  , <span class="co"># dbscan</span></span>
+<span id="cb276-20"><a href="str_preds.html#cb276-20" tabindex="-1"></a>    dbscan_structural_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb276-21"><a href="str_preds.html#cb276-21" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb276-22"><a href="str_preds.html#cb276-22" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb276-23"><a href="str_preds.html#cb276-23" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb276-24"><a href="str_preds.html#cb276-24" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-25"><a href="str_preds.html#cb276-25" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-26"><a href="str_preds.html#cb276-26" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb276-27"><a href="str_preds.html#cb276-27" tabindex="-1"></a>          <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">n</span>()</span>
+<span id="cb276-28"><a href="str_preds.html#cb276-28" tabindex="-1"></a>          , <span class="at">area_m2 =</span> <span class="fu">sum</span>(area_m2)</span>
+<span id="cb276-29"><a href="str_preds.html#cb276-29" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-30"><a href="str_preds.html#cb276-30" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb276-31"><a href="str_preds.html#cb276-31" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb276-32"><a href="str_preds.html#cb276-32" tabindex="-1"></a>        )</span>
+<span id="cb276-33"><a href="str_preds.html#cb276-33" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-34"><a href="str_preds.html#cb276-34" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-35"><a href="str_preds.html#cb276-35" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span>)</span>
+<span id="cb276-36"><a href="str_preds.html#cb276-36" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-37"><a href="str_preds.html#cb276-37" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb276-38"><a href="str_preds.html#cb276-38" tabindex="-1"></a>  <span class="at">avg_size =</span> scales<span class="sc">::</span><span class="fu">comma</span>(area_m2<span class="sc">/</span>n, <span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb276-39"><a href="str_preds.html#cb276-39" tabindex="-1"></a>  , dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb276-40"><a href="str_preds.html#cb276-40" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">where</span>(is.numeric)</span>
+<span id="cb276-41"><a href="str_preds.html#cb276-41" tabindex="-1"></a>    , <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb276-42"><a href="str_preds.html#cb276-42" tabindex="-1"></a>  )</span>
+<span id="cb276-43"><a href="str_preds.html#cb276-43" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-44"><a href="str_preds.html#cb276-44" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">relocate</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-45"><a href="str_preds.html#cb276-45" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">arrange</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-46"><a href="str_preds.html#cb276-46" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb276-47"><a href="str_preds.html#cb276-47" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Structurally detected candidate segments by method and study site&quot;</span></span>
+<span id="cb276-48"><a href="str_preds.html#cb276-48" tabindex="-1"></a>  , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb276-49"><a href="str_preds.html#cb276-49" tabindex="-1"></a>    <span class="st">&quot;site&quot;</span>, <span class="st">&quot;method&quot;</span></span>
+<span id="cb276-50"><a href="str_preds.html#cb276-50" tabindex="-1"></a>    , <span class="st">&quot;# candidates&quot;</span></span>
+<span id="cb276-51"><a href="str_preds.html#cb276-51" tabindex="-1"></a>    , <span class="st">&quot;total&lt;br&gt;candidate area (m&lt;sup&gt;2&lt;/sup&gt;)&quot;</span></span>
+<span id="cb276-52"><a href="str_preds.html#cb276-52" tabindex="-1"></a>    , <span class="st">&quot;mean&lt;br&gt;candidate area (m&lt;sup&gt;2&lt;/sup&gt;)&quot;</span></span>
+<span id="cb276-53"><a href="str_preds.html#cb276-53" tabindex="-1"></a>  )</span>
+<span id="cb276-54"><a href="str_preds.html#cb276-54" tabindex="-1"></a>  , <span class="at">escape =</span> F</span>
+<span id="cb276-55"><a href="str_preds.html#cb276-55" tabindex="-1"></a>  <span class="co"># , digits = 2</span></span>
+<span id="cb276-56"><a href="str_preds.html#cb276-56" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb276-57"><a href="str_preds.html#cb276-57" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb276-58"><a href="str_preds.html#cb276-58" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)</span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-307">Table 7.2: </span>Structurally detected candidate segments by method and study site
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:left;">
+# candidates
+</th>
+<th style="text-align:left;">
+total<br>candidate area (m<sup>2</sup>)
+</th>
+<th style="text-align:left;">
+mean<br>candidate area (m<sup>2</sup>)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+ARNF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+76
+</td>
+<td style="text-align:left;">
+16,533
+</td>
+<td style="text-align:left;">
+217.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+92
+</td>
+<td style="text-align:left;">
+16,896
+</td>
+<td style="text-align:left;">
+183.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+BHEF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+270
+</td>
+<td style="text-align:left;">
+44,802
+</td>
+<td style="text-align:left;">
+165.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+319
+</td>
+<td style="text-align:left;">
+47,933
+</td>
+<td style="text-align:left;">
+150.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+PSINF Mixed Conifer Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+188
+</td>
+<td style="text-align:left;">
+1,422
+</td>
+<td style="text-align:left;">
+7.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+193
+</td>
+<td style="text-align:left;">
+1,450
+</td>
+<td style="text-align:left;">
+7.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+TRFO-BLM Pinyon-Juniper Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+378
+</td>
+<td style="text-align:left;">
+3,273
+</td>
+<td style="text-align:left;">
+8.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+377
+</td>
+<td style="text-align:left;">
+3,235
+</td>
+<td style="text-align:left;">
+8.6
+</td>
+</tr>
+</tbody>
+</table>
+<div id="dbscan-candidates" class="section level3 hasAnchor" number="7.2.1">
+<h3><span class="header-section-number">7.2.1</span> DBSCAN Candidates<a href="str_preds.html#dbscan-candidates" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We’ll quickly plot the structurally-detected candidate segments using the DBSCAN method for each study site</p>
+<div class="sourceCode" id="cb277"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb277-1"><a href="str_preds.html#cb277-1" tabindex="-1"></a><span class="co"># function to plot ortho</span></span>
+<span id="cb277-2"><a href="str_preds.html#cb277-2" tabindex="-1"></a>terra_plt_ortho <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb277-3"><a href="str_preds.html#cb277-3" tabindex="-1"></a>  ortho</span>
+<span id="cb277-4"><a href="str_preds.html#cb277-4" tabindex="-1"></a>  , gt_piles</span>
+<span id="cb277-5"><a href="str_preds.html#cb277-5" tabindex="-1"></a>  , pred_piles</span>
+<span id="cb277-6"><a href="str_preds.html#cb277-6" tabindex="-1"></a>  , boundary</span>
+<span id="cb277-7"><a href="str_preds.html#cb277-7" tabindex="-1"></a>  , title</span>
+<span id="cb277-8"><a href="str_preds.html#cb277-8" tabindex="-1"></a>) {</span>
+<span id="cb277-9"><a href="str_preds.html#cb277-9" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">plotRGB</span>(ortho, <span class="at">stretch =</span> <span class="st">&quot;lin&quot;</span>)</span>
+<span id="cb277-10"><a href="str_preds.html#cb277-10" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb277-11"><a href="str_preds.html#cb277-11" tabindex="-1"></a>    boundary <span class="sc">%&gt;%</span> </span>
+<span id="cb277-12"><a href="str_preds.html#cb277-12" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_transform</span>(terra<span class="sc">::</span><span class="fu">crs</span>(ortho)) <span class="sc">%&gt;%</span> </span>
+<span id="cb277-13"><a href="str_preds.html#cb277-13" tabindex="-1"></a>      terra<span class="sc">::</span><span class="fu">vect</span>()</span>
+<span id="cb277-14"><a href="str_preds.html#cb277-14" tabindex="-1"></a>    , <span class="at">add =</span> T, <span class="at">border =</span> <span class="st">&quot;black&quot;</span>, <span class="at">col =</span> <span class="cn">NA</span></span>
+<span id="cb277-15"><a href="str_preds.html#cb277-15" tabindex="-1"></a>    , <span class="at">main =</span> title</span>
+<span id="cb277-16"><a href="str_preds.html#cb277-16" tabindex="-1"></a>  )</span>
+<span id="cb277-17"><a href="str_preds.html#cb277-17" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb277-18"><a href="str_preds.html#cb277-18" tabindex="-1"></a>    gt_piles <span class="sc">%&gt;%</span> </span>
+<span id="cb277-19"><a href="str_preds.html#cb277-19" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(is_in_stand) <span class="sc">%&gt;%</span> </span>
+<span id="cb277-20"><a href="str_preds.html#cb277-20" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_transform</span>(terra<span class="sc">::</span><span class="fu">crs</span>(ortho)) <span class="sc">%&gt;%</span> </span>
+<span id="cb277-21"><a href="str_preds.html#cb277-21" tabindex="-1"></a>      terra<span class="sc">::</span><span class="fu">vect</span>()</span>
+<span id="cb277-22"><a href="str_preds.html#cb277-22" tabindex="-1"></a>    , <span class="at">add =</span> T, <span class="at">border =</span> <span class="st">&quot;cyan&quot;</span>, <span class="at">col =</span> <span class="cn">NA</span>, <span class="at">lwd =</span> <span class="fl">1.2</span></span>
+<span id="cb277-23"><a href="str_preds.html#cb277-23" tabindex="-1"></a>  )</span>
+<span id="cb277-24"><a href="str_preds.html#cb277-24" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">plot</span>(</span>
+<span id="cb277-25"><a href="str_preds.html#cb277-25" tabindex="-1"></a>    pred_piles <span class="sc">%&gt;%</span> </span>
+<span id="cb277-26"><a href="str_preds.html#cb277-26" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_transform</span>(terra<span class="sc">::</span><span class="fu">crs</span>(ortho)) <span class="sc">%&gt;%</span> </span>
+<span id="cb277-27"><a href="str_preds.html#cb277-27" tabindex="-1"></a>      terra<span class="sc">::</span><span class="fu">vect</span>()</span>
+<span id="cb277-28"><a href="str_preds.html#cb277-28" tabindex="-1"></a>    , <span class="at">add =</span> T, <span class="at">border =</span> <span class="st">&quot;magenta&quot;</span>, <span class="at">col =</span> <span class="cn">NA</span>, <span class="at">lwd =</span> <span class="fl">1.2</span></span>
+<span id="cb277-29"><a href="str_preds.html#cb277-29" tabindex="-1"></a>  )</span>
+<span id="cb277-30"><a href="str_preds.html#cb277-30" tabindex="-1"></a>}</span>
+<span id="cb277-31"><a href="str_preds.html#cb277-31" tabindex="-1"></a><span class="co"># map over it </span></span>
+<span id="cb277-32"><a href="str_preds.html#cb277-32" tabindex="-1"></a>all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb277-33"><a href="str_preds.html#cb277-33" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb277-34"><a href="str_preds.html#cb277-34" tabindex="-1"></a>    \(x)</span>
+<span id="cb277-35"><a href="str_preds.html#cb277-35" tabindex="-1"></a>    <span class="fu">terra_plt_ortho</span>(</span>
+<span id="cb277-36"><a href="str_preds.html#cb277-36" tabindex="-1"></a>      <span class="at">ortho =</span> rgb_rast[[x]]</span>
+<span id="cb277-37"><a href="str_preds.html#cb277-37" tabindex="-1"></a>      , <span class="at">gt_piles =</span> slash_piles_polys[[x]]</span>
+<span id="cb277-38"><a href="str_preds.html#cb277-38" tabindex="-1"></a>      , <span class="at">pred_piles =</span> dbscan_structural_preds[[x]]</span>
+<span id="cb277-39"><a href="str_preds.html#cb277-39" tabindex="-1"></a>      , <span class="at">boundary =</span> stand_boundary[[x]]</span>
+<span id="cb277-40"><a href="str_preds.html#cb277-40" tabindex="-1"></a>      , <span class="at">title =</span> <span class="fu">paste0</span>(</span>
+<span id="cb277-41"><a href="str_preds.html#cb277-41" tabindex="-1"></a>        <span class="st">&quot;DBSCAN: &quot;</span></span>
+<span id="cb277-42"><a href="str_preds.html#cb277-42" tabindex="-1"></a>        , all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb277-43"><a href="str_preds.html#cb277-43" tabindex="-1"></a>      )</span>
+<span id="cb277-44"><a href="str_preds.html#cb277-44" tabindex="-1"></a>    )</span>
+<span id="cb277-45"><a href="str_preds.html#cb277-45" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-308-1.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-308-2.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-308-3.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-308-4.png" width="1008" /></p>
+</div>
+<div id="watershed-candidates" class="section level3 hasAnchor" number="7.2.2">
+<h3><span class="header-section-number">7.2.2</span> Watershed Candidates<a href="str_preds.html#watershed-candidates" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We’ll quickly plot the structurally-detected candidate segments using the Watershed method for each study site</p>
+<div class="sourceCode" id="cb278"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb278-1"><a href="str_preds.html#cb278-1" tabindex="-1"></a><span class="co"># map over it </span></span>
+<span id="cb278-2"><a href="str_preds.html#cb278-2" tabindex="-1"></a>all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb278-3"><a href="str_preds.html#cb278-3" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb278-4"><a href="str_preds.html#cb278-4" tabindex="-1"></a>    \(x)</span>
+<span id="cb278-5"><a href="str_preds.html#cb278-5" tabindex="-1"></a>    <span class="fu">terra_plt_ortho</span>(</span>
+<span id="cb278-6"><a href="str_preds.html#cb278-6" tabindex="-1"></a>      <span class="at">ortho =</span> rgb_rast[[x]]</span>
+<span id="cb278-7"><a href="str_preds.html#cb278-7" tabindex="-1"></a>      , <span class="at">gt_piles =</span> slash_piles_polys[[x]]</span>
+<span id="cb278-8"><a href="str_preds.html#cb278-8" tabindex="-1"></a>      , <span class="at">pred_piles =</span> watershed_structural_preds[[x]]</span>
+<span id="cb278-9"><a href="str_preds.html#cb278-9" tabindex="-1"></a>      , <span class="at">boundary =</span> stand_boundary[[x]]</span>
+<span id="cb278-10"><a href="str_preds.html#cb278-10" tabindex="-1"></a>      , <span class="at">title =</span> <span class="fu">paste0</span>(</span>
+<span id="cb278-11"><a href="str_preds.html#cb278-11" tabindex="-1"></a>        <span class="st">&quot;Watershed: &quot;</span></span>
+<span id="cb278-12"><a href="str_preds.html#cb278-12" tabindex="-1"></a>        , all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb278-13"><a href="str_preds.html#cb278-13" tabindex="-1"></a>      )</span>
+<span id="cb278-14"><a href="str_preds.html#cb278-14" tabindex="-1"></a>    )</span>
+<span id="cb278-15"><a href="str_preds.html#cb278-15" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-309-1.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-309-2.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-309-3.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-309-4.png" width="1008" /></p>
+</div>
+</div>
+<div id="spectral-filter-slash-pile-candidates" class="section level2 hasAnchor" number="7.3">
+<h2><span class="header-section-number">7.3</span> Spectral Filter Slash Pile Candidates<a href="str_preds.html#spectral-filter-slash-pile-candidates" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Now, we’ll apply spectral filtering of the structurally-detected candidate piles using our <a href="data_fusion.html#data_fusion">data fusion approach</a>. As a quick reminder, the spectral filtering functions to distinguish woody debris from live vegetation. We use a spectral voting system using six independent spectral indices derived from RGB data alone. The <code>spectral_weight</code> parameter defines the consensus threshold, requiring a specific number of index thresholds (0-6) required to retain structural candidate piles to generate the final method prediction.</p>
+<p>see our parameter setting table above above for the <code>spectral_weight</code> setting which defines how many of the six spectral thresholds must be met for a candidate pile to be retained for final selection as a predicted slash pile.</p>
+<div class="sourceCode" id="cb279"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb279-1"><a href="str_preds.html#cb279-1" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb279-2"><a href="str_preds.html#cb279-2" tabindex="-1"></a><span class="co"># map over polygon_spectral_filtering for dbscan</span></span>
+<span id="cb279-3"><a href="str_preds.html#cb279-3" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb279-4"><a href="str_preds.html#cb279-4" tabindex="-1"></a>  <span class="co"># file.names to only run if not already done since it takes a while for all sites</span></span>
+<span id="cb279-5"><a href="str_preds.html#cb279-5" tabindex="-1"></a>  dir_temp <span class="ot">&lt;-</span> <span class="st">&quot;../data&quot;</span></span>
+<span id="cb279-6"><a href="str_preds.html#cb279-6" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(dir_temp)){<span class="fu">dir.create</span>(dir_temp,<span class="at">showWarnings =</span> F)}</span>
+<span id="cb279-7"><a href="str_preds.html#cb279-7" tabindex="-1"></a>  nmsfx_temp <span class="ot">&lt;-</span> <span class="st">&quot;_dbscan_spectral_preds.gpkg&quot;</span></span>
+<span id="cb279-8"><a href="str_preds.html#cb279-8" tabindex="-1"></a>  <span class="cf">if</span>(</span>
+<span id="cb279-9"><a href="str_preds.html#cb279-9" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">all</span>(<span class="fu">file.exists</span>( <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(all_stand_boundary<span class="sc">$</span>site_data_lab,nmsfx_temp)) ))</span>
+<span id="cb279-10"><a href="str_preds.html#cb279-10" tabindex="-1"></a>  ){</span>
+<span id="cb279-11"><a href="str_preds.html#cb279-11" tabindex="-1"></a>    <span class="co"># map over polygon_spectral_filtering for dbscan</span></span>
+<span id="cb279-12"><a href="str_preds.html#cb279-12" tabindex="-1"></a>    dbscan_spectral_preds <span class="ot">&lt;-</span> </span>
+<span id="cb279-13"><a href="str_preds.html#cb279-13" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb279-14"><a href="str_preds.html#cb279-14" tabindex="-1"></a>      <span class="co"># .[1:2] %&gt;%</span></span>
+<span id="cb279-15"><a href="str_preds.html#cb279-15" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb279-16"><a href="str_preds.html#cb279-16" tabindex="-1"></a>      <span class="co"># map_chr returns character bc we&#39;ll return file path </span></span>
+<span id="cb279-17"><a href="str_preds.html#cb279-17" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map_chr</span>(</span>
+<span id="cb279-18"><a href="str_preds.html#cb279-18" tabindex="-1"></a>        <span class="cf">function</span>(x) {</span>
+<span id="cb279-19"><a href="str_preds.html#cb279-19" tabindex="-1"></a>          <span class="co"># polygon_spectral_filtering</span></span>
+<span id="cb279-20"><a href="str_preds.html#cb279-20" tabindex="-1"></a>          safe_polygon_spectral_filtering <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">safely</span>(polygon_spectral_filtering)</span>
+<span id="cb279-21"><a href="str_preds.html#cb279-21" tabindex="-1"></a>          segs_sf <span class="ot">&lt;-</span> <span class="fu">safe_polygon_spectral_filtering</span>(</span>
+<span id="cb279-22"><a href="str_preds.html#cb279-22" tabindex="-1"></a>              <span class="at">sf_data =</span> dbscan_structural_preds[[x]]</span>
+<span id="cb279-23"><a href="str_preds.html#cb279-23" tabindex="-1"></a>              , <span class="at">rgb_rast =</span> rgb_rast[[x]]</span>
+<span id="cb279-24"><a href="str_preds.html#cb279-24" tabindex="-1"></a>              <span class="co"># define the band index</span></span>
+<span id="cb279-25"><a href="str_preds.html#cb279-25" tabindex="-1"></a>              , <span class="at">red_band_idx =</span> <span class="dv">1</span></span>
+<span id="cb279-26"><a href="str_preds.html#cb279-26" tabindex="-1"></a>              , <span class="at">green_band_idx =</span> <span class="dv">2</span></span>
+<span id="cb279-27"><a href="str_preds.html#cb279-27" tabindex="-1"></a>              , <span class="at">blue_band_idx =</span> <span class="dv">3</span></span>
+<span id="cb279-28"><a href="str_preds.html#cb279-28" tabindex="-1"></a>              , <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb279-29"><a href="str_preds.html#cb279-29" tabindex="-1"></a>              , <span class="at">filter_return =</span> F</span>
+<span id="cb279-30"><a href="str_preds.html#cb279-30" tabindex="-1"></a>            )</span>
+<span id="cb279-31"><a href="str_preds.html#cb279-31" tabindex="-1"></a>          <span class="cf">if</span>(<span class="fu">is.null</span>(segs_sf<span class="sc">$</span>result)){</span>
+<span id="cb279-32"><a href="str_preds.html#cb279-32" tabindex="-1"></a>            <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb279-33"><a href="str_preds.html#cb279-33" tabindex="-1"></a>          }<span class="cf">else</span>{</span>
+<span id="cb279-34"><a href="str_preds.html#cb279-34" tabindex="-1"></a>            segs_sf <span class="ot">&lt;-</span> segs_sf<span class="sc">$</span>result<span class="sc">$</span>segs_sf <span class="sc">%&gt;%</span> </span>
+<span id="cb279-35"><a href="str_preds.html#cb279-35" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb279-36"><a href="str_preds.html#cb279-36" tabindex="-1"></a>                <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb279-37"><a href="str_preds.html#cb279-37" tabindex="-1"></a>              )</span>
+<span id="cb279-38"><a href="str_preds.html#cb279-38" tabindex="-1"></a>          }</span>
+<span id="cb279-39"><a href="str_preds.html#cb279-39" tabindex="-1"></a>          <span class="co"># write</span></span>
+<span id="cb279-40"><a href="str_preds.html#cb279-40" tabindex="-1"></a>          fpth <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb279-41"><a href="str_preds.html#cb279-41" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_write</span>(</span>
+<span id="cb279-42"><a href="str_preds.html#cb279-42" tabindex="-1"></a>            <span class="at">obj =</span> segs_sf</span>
+<span id="cb279-43"><a href="str_preds.html#cb279-43" tabindex="-1"></a>            , <span class="at">dsn =</span> fpth</span>
+<span id="cb279-44"><a href="str_preds.html#cb279-44" tabindex="-1"></a>            , <span class="at">append =</span> F</span>
+<span id="cb279-45"><a href="str_preds.html#cb279-45" tabindex="-1"></a>            , <span class="at">quiet =</span> T</span>
+<span id="cb279-46"><a href="str_preds.html#cb279-46" tabindex="-1"></a>          )</span>
+<span id="cb279-47"><a href="str_preds.html#cb279-47" tabindex="-1"></a>          <span class="co"># return</span></span>
+<span id="cb279-48"><a href="str_preds.html#cb279-48" tabindex="-1"></a>          <span class="fu">return</span>(fpth)</span>
+<span id="cb279-49"><a href="str_preds.html#cb279-49" tabindex="-1"></a>        }</span>
+<span id="cb279-50"><a href="str_preds.html#cb279-50" tabindex="-1"></a>      )</span>
+<span id="cb279-51"><a href="str_preds.html#cb279-51" tabindex="-1"></a>    <span class="co"># read files</span></span>
+<span id="cb279-52"><a href="str_preds.html#cb279-52" tabindex="-1"></a>    dbscan_spectral_preds <span class="ot">&lt;-</span> dbscan_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb279-53"><a href="str_preds.html#cb279-53" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb279-54"><a href="str_preds.html#cb279-54" tabindex="-1"></a>        \(x)</span>
+<span id="cb279-55"><a href="str_preds.html#cb279-55" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> x, <span class="at">quiet =</span> T)</span>
+<span id="cb279-56"><a href="str_preds.html#cb279-56" tabindex="-1"></a>      )</span>
+<span id="cb279-57"><a href="str_preds.html#cb279-57" tabindex="-1"></a>  }<span class="cf">else</span>{</span>
+<span id="cb279-58"><a href="str_preds.html#cb279-58" tabindex="-1"></a>    <span class="co"># read already done</span></span>
+<span id="cb279-59"><a href="str_preds.html#cb279-59" tabindex="-1"></a>    dbscan_spectral_preds <span class="ot">&lt;-</span> </span>
+<span id="cb279-60"><a href="str_preds.html#cb279-60" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb279-61"><a href="str_preds.html#cb279-61" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb279-62"><a href="str_preds.html#cb279-62" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb279-63"><a href="str_preds.html#cb279-63" tabindex="-1"></a>        \(x)</span>
+<span id="cb279-64"><a href="str_preds.html#cb279-64" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(</span>
+<span id="cb279-65"><a href="str_preds.html#cb279-65" tabindex="-1"></a>          <span class="at">dsn =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb279-66"><a href="str_preds.html#cb279-66" tabindex="-1"></a>          , <span class="at">quiet =</span> T</span>
+<span id="cb279-67"><a href="str_preds.html#cb279-67" tabindex="-1"></a>        )</span>
+<span id="cb279-68"><a href="str_preds.html#cb279-68" tabindex="-1"></a>      )</span>
+<span id="cb279-69"><a href="str_preds.html#cb279-69" tabindex="-1"></a>  }</span>
+<span id="cb279-70"><a href="str_preds.html#cb279-70" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb279-71"><a href="str_preds.html#cb279-71" tabindex="-1"></a><span class="co"># map over polygon_spectral_filtering for watershed</span></span>
+<span id="cb279-72"><a href="str_preds.html#cb279-72" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb279-73"><a href="str_preds.html#cb279-73" tabindex="-1"></a>  <span class="co"># file.names to only run if not already done since it takes a while for all sites</span></span>
+<span id="cb279-74"><a href="str_preds.html#cb279-74" tabindex="-1"></a>  dir_temp <span class="ot">&lt;-</span> <span class="st">&quot;../data&quot;</span></span>
+<span id="cb279-75"><a href="str_preds.html#cb279-75" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span><span class="fu">dir.exists</span>(dir_temp)){<span class="fu">dir.create</span>(dir_temp,<span class="at">showWarnings =</span> F)}</span>
+<span id="cb279-76"><a href="str_preds.html#cb279-76" tabindex="-1"></a>  nmsfx_temp <span class="ot">&lt;-</span> <span class="st">&quot;_watershed_spectral_preds.gpkg&quot;</span></span>
+<span id="cb279-77"><a href="str_preds.html#cb279-77" tabindex="-1"></a>  <span class="cf">if</span>(</span>
+<span id="cb279-78"><a href="str_preds.html#cb279-78" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">all</span>(<span class="fu">file.exists</span>( <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(all_stand_boundary<span class="sc">$</span>site_data_lab,nmsfx_temp)) ))</span>
+<span id="cb279-79"><a href="str_preds.html#cb279-79" tabindex="-1"></a>  ){</span>
+<span id="cb279-80"><a href="str_preds.html#cb279-80" tabindex="-1"></a>    <span class="co"># map over polygon_spectral_filtering for watershed</span></span>
+<span id="cb279-81"><a href="str_preds.html#cb279-81" tabindex="-1"></a>    watershed_spectral_preds <span class="ot">&lt;-</span> </span>
+<span id="cb279-82"><a href="str_preds.html#cb279-82" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb279-83"><a href="str_preds.html#cb279-83" tabindex="-1"></a>      <span class="co"># .[3:4] %&gt;%</span></span>
+<span id="cb279-84"><a href="str_preds.html#cb279-84" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb279-85"><a href="str_preds.html#cb279-85" tabindex="-1"></a>      <span class="co"># map_chr returns character bc we&#39;ll return file path </span></span>
+<span id="cb279-86"><a href="str_preds.html#cb279-86" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map_chr</span>(</span>
+<span id="cb279-87"><a href="str_preds.html#cb279-87" tabindex="-1"></a>        <span class="cf">function</span>(x) {</span>
+<span id="cb279-88"><a href="str_preds.html#cb279-88" tabindex="-1"></a>          <span class="co"># polygon_spectral_filtering</span></span>
+<span id="cb279-89"><a href="str_preds.html#cb279-89" tabindex="-1"></a>          safe_polygon_spectral_filtering <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">safely</span>(polygon_spectral_filtering)</span>
+<span id="cb279-90"><a href="str_preds.html#cb279-90" tabindex="-1"></a>          segs_sf <span class="ot">&lt;-</span> <span class="fu">safe_polygon_spectral_filtering</span>(</span>
+<span id="cb279-91"><a href="str_preds.html#cb279-91" tabindex="-1"></a>              <span class="at">sf_data =</span> watershed_structural_preds[[x]]</span>
+<span id="cb279-92"><a href="str_preds.html#cb279-92" tabindex="-1"></a>              , <span class="at">rgb_rast =</span> rgb_rast[[x]]</span>
+<span id="cb279-93"><a href="str_preds.html#cb279-93" tabindex="-1"></a>              <span class="co"># define the band index</span></span>
+<span id="cb279-94"><a href="str_preds.html#cb279-94" tabindex="-1"></a>              , <span class="at">red_band_idx =</span> <span class="dv">1</span></span>
+<span id="cb279-95"><a href="str_preds.html#cb279-95" tabindex="-1"></a>              , <span class="at">green_band_idx =</span> <span class="dv">2</span></span>
+<span id="cb279-96"><a href="str_preds.html#cb279-96" tabindex="-1"></a>              , <span class="at">blue_band_idx =</span> <span class="dv">3</span></span>
+<span id="cb279-97"><a href="str_preds.html#cb279-97" tabindex="-1"></a>              , <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb279-98"><a href="str_preds.html#cb279-98" tabindex="-1"></a>              , <span class="at">filter_return =</span> F</span>
+<span id="cb279-99"><a href="str_preds.html#cb279-99" tabindex="-1"></a>            )</span>
+<span id="cb279-100"><a href="str_preds.html#cb279-100" tabindex="-1"></a>          <span class="cf">if</span>(<span class="fu">is.null</span>(segs_sf<span class="sc">$</span>result)){</span>
+<span id="cb279-101"><a href="str_preds.html#cb279-101" tabindex="-1"></a>            <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb279-102"><a href="str_preds.html#cb279-102" tabindex="-1"></a>          }<span class="cf">else</span>{</span>
+<span id="cb279-103"><a href="str_preds.html#cb279-103" tabindex="-1"></a>            segs_sf <span class="ot">&lt;-</span> segs_sf<span class="sc">$</span>result<span class="sc">$</span>segs_sf <span class="sc">%&gt;%</span> </span>
+<span id="cb279-104"><a href="str_preds.html#cb279-104" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb279-105"><a href="str_preds.html#cb279-105" tabindex="-1"></a>                <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb279-106"><a href="str_preds.html#cb279-106" tabindex="-1"></a>              )</span>
+<span id="cb279-107"><a href="str_preds.html#cb279-107" tabindex="-1"></a>          }</span>
+<span id="cb279-108"><a href="str_preds.html#cb279-108" tabindex="-1"></a>          <span class="co"># write</span></span>
+<span id="cb279-109"><a href="str_preds.html#cb279-109" tabindex="-1"></a>          fpth <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb279-110"><a href="str_preds.html#cb279-110" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_write</span>(</span>
+<span id="cb279-111"><a href="str_preds.html#cb279-111" tabindex="-1"></a>            <span class="at">obj =</span> segs_sf</span>
+<span id="cb279-112"><a href="str_preds.html#cb279-112" tabindex="-1"></a>            , <span class="at">dsn =</span> fpth</span>
+<span id="cb279-113"><a href="str_preds.html#cb279-113" tabindex="-1"></a>            , <span class="at">append =</span> F</span>
+<span id="cb279-114"><a href="str_preds.html#cb279-114" tabindex="-1"></a>            , <span class="at">quiet =</span> T</span>
+<span id="cb279-115"><a href="str_preds.html#cb279-115" tabindex="-1"></a>          )</span>
+<span id="cb279-116"><a href="str_preds.html#cb279-116" tabindex="-1"></a>          <span class="co"># return</span></span>
+<span id="cb279-117"><a href="str_preds.html#cb279-117" tabindex="-1"></a>          <span class="fu">return</span>(fpth)</span>
+<span id="cb279-118"><a href="str_preds.html#cb279-118" tabindex="-1"></a>        }</span>
+<span id="cb279-119"><a href="str_preds.html#cb279-119" tabindex="-1"></a>      )</span>
+<span id="cb279-120"><a href="str_preds.html#cb279-120" tabindex="-1"></a>    <span class="co"># read files</span></span>
+<span id="cb279-121"><a href="str_preds.html#cb279-121" tabindex="-1"></a>    watershed_spectral_preds <span class="ot">&lt;-</span> watershed_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb279-122"><a href="str_preds.html#cb279-122" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb279-123"><a href="str_preds.html#cb279-123" tabindex="-1"></a>        \(x)</span>
+<span id="cb279-124"><a href="str_preds.html#cb279-124" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> x, <span class="at">quiet =</span> T)</span>
+<span id="cb279-125"><a href="str_preds.html#cb279-125" tabindex="-1"></a>      )</span>
+<span id="cb279-126"><a href="str_preds.html#cb279-126" tabindex="-1"></a>  }<span class="cf">else</span>{</span>
+<span id="cb279-127"><a href="str_preds.html#cb279-127" tabindex="-1"></a>    <span class="co"># read already done</span></span>
+<span id="cb279-128"><a href="str_preds.html#cb279-128" tabindex="-1"></a>    watershed_spectral_preds <span class="ot">&lt;-</span> </span>
+<span id="cb279-129"><a href="str_preds.html#cb279-129" tabindex="-1"></a>      all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb279-130"><a href="str_preds.html#cb279-130" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb279-131"><a href="str_preds.html#cb279-131" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb279-132"><a href="str_preds.html#cb279-132" tabindex="-1"></a>        \(x)</span>
+<span id="cb279-133"><a href="str_preds.html#cb279-133" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_read</span>(</span>
+<span id="cb279-134"><a href="str_preds.html#cb279-134" tabindex="-1"></a>          <span class="at">dsn =</span> <span class="fu">file.path</span>(dir_temp, <span class="fu">paste0</span>(x,nmsfx_temp))</span>
+<span id="cb279-135"><a href="str_preds.html#cb279-135" tabindex="-1"></a>          , <span class="at">quiet =</span> T</span>
+<span id="cb279-136"><a href="str_preds.html#cb279-136" tabindex="-1"></a>        )</span>
+<span id="cb279-137"><a href="str_preds.html#cb279-137" tabindex="-1"></a>      )</span>
+<span id="cb279-138"><a href="str_preds.html#cb279-138" tabindex="-1"></a>  }</span></code></pre></div>
+<p>let’s check out the proportion that were filtered out for each site</p>
+<div class="sourceCode" id="cb280"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb280-1"><a href="str_preds.html#cb280-1" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb280-2"><a href="str_preds.html#cb280-2" tabindex="-1"></a>  watershed_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb280-3"><a href="str_preds.html#cb280-3" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb280-4"><a href="str_preds.html#cb280-4" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb280-5"><a href="str_preds.html#cb280-5" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb280-6"><a href="str_preds.html#cb280-6" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb280-7"><a href="str_preds.html#cb280-7" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb280-8"><a href="str_preds.html#cb280-8" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-9"><a href="str_preds.html#cb280-9" tabindex="-1"></a>          <span class="at">retained =</span> <span class="fu">ifelse</span>(inrange_th_votes<span class="sc">&gt;=</span>spectral_weight,<span class="st">&quot;retained&quot;</span>,<span class="st">&quot;removed&quot;</span>)</span>
+<span id="cb280-10"><a href="str_preds.html#cb280-10" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-11"><a href="str_preds.html#cb280-11" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">count</span>(retained) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-12"><a href="str_preds.html#cb280-12" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-13"><a href="str_preds.html#cb280-13" tabindex="-1"></a>          <span class="at">pct =</span> (n<span class="sc">/</span><span class="fu">sum</span>(n)) <span class="sc">%&gt;%</span> scales<span class="sc">::</span><span class="fu">percent</span>(<span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb280-14"><a href="str_preds.html#cb280-14" tabindex="-1"></a>          , <span class="at">n =</span> scales<span class="sc">::</span><span class="fu">comma</span>(n,<span class="at">accuracy=</span><span class="dv">1</span>)</span>
+<span id="cb280-15"><a href="str_preds.html#cb280-15" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-16"><a href="str_preds.html#cb280-16" tabindex="-1"></a>        tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(<span class="at">names_from =</span> retained, <span class="at">values_from =</span> <span class="sc">-</span>retained) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-17"><a href="str_preds.html#cb280-17" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-18"><a href="str_preds.html#cb280-18" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb280-19"><a href="str_preds.html#cb280-19" tabindex="-1"></a>          , <span class="at">method =</span> <span class="st">&quot;watershed&quot;</span></span>
+<span id="cb280-20"><a href="str_preds.html#cb280-20" tabindex="-1"></a>        )</span>
+<span id="cb280-21"><a href="str_preds.html#cb280-21" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-22"><a href="str_preds.html#cb280-22" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb280-23"><a href="str_preds.html#cb280-23" tabindex="-1"></a>  , dbscan_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb280-24"><a href="str_preds.html#cb280-24" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb280-25"><a href="str_preds.html#cb280-25" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb280-26"><a href="str_preds.html#cb280-26" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb280-27"><a href="str_preds.html#cb280-27" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb280-28"><a href="str_preds.html#cb280-28" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb280-29"><a href="str_preds.html#cb280-29" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-30"><a href="str_preds.html#cb280-30" tabindex="-1"></a>          <span class="at">retained =</span> <span class="fu">ifelse</span>(inrange_th_votes<span class="sc">&gt;=</span>spectral_weight,<span class="st">&quot;retained&quot;</span>,<span class="st">&quot;removed&quot;</span>)</span>
+<span id="cb280-31"><a href="str_preds.html#cb280-31" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-32"><a href="str_preds.html#cb280-32" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">count</span>(retained) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-33"><a href="str_preds.html#cb280-33" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-34"><a href="str_preds.html#cb280-34" tabindex="-1"></a>          <span class="at">pct =</span> (n<span class="sc">/</span><span class="fu">sum</span>(n)) <span class="sc">%&gt;%</span> scales<span class="sc">::</span><span class="fu">percent</span>(<span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb280-35"><a href="str_preds.html#cb280-35" tabindex="-1"></a>          , <span class="at">n =</span> scales<span class="sc">::</span><span class="fu">comma</span>(n,<span class="at">accuracy=</span><span class="dv">1</span>)</span>
+<span id="cb280-36"><a href="str_preds.html#cb280-36" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-37"><a href="str_preds.html#cb280-37" tabindex="-1"></a>        tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(<span class="at">names_from =</span> retained, <span class="at">values_from =</span> <span class="sc">-</span>retained) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-38"><a href="str_preds.html#cb280-38" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb280-39"><a href="str_preds.html#cb280-39" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb280-40"><a href="str_preds.html#cb280-40" tabindex="-1"></a>          , <span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span></span>
+<span id="cb280-41"><a href="str_preds.html#cb280-41" tabindex="-1"></a>        )</span>
+<span id="cb280-42"><a href="str_preds.html#cb280-42" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-43"><a href="str_preds.html#cb280-43" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb280-44"><a href="str_preds.html#cb280-44" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-45"><a href="str_preds.html#cb280-45" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">relocate</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-46"><a href="str_preds.html#cb280-46" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">arrange</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-47"><a href="str_preds.html#cb280-47" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb280-48"><a href="str_preds.html#cb280-48" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Spectrally filtered candidate segments by method and study site&quot;</span></span>
+<span id="cb280-49"><a href="str_preds.html#cb280-49" tabindex="-1"></a>  , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb280-50"><a href="str_preds.html#cb280-50" tabindex="-1"></a>    <span class="st">&quot;site&quot;</span>, <span class="st">&quot;method&quot;</span></span>
+<span id="cb280-51"><a href="str_preds.html#cb280-51" tabindex="-1"></a>    , <span class="st">&quot;# removed&quot;</span>, <span class="st">&quot;# retained&quot;</span></span>
+<span id="cb280-52"><a href="str_preds.html#cb280-52" tabindex="-1"></a>    , <span class="st">&quot;% removed&quot;</span>, <span class="st">&quot;% retained&quot;</span></span>
+<span id="cb280-53"><a href="str_preds.html#cb280-53" tabindex="-1"></a>  )</span>
+<span id="cb280-54"><a href="str_preds.html#cb280-54" tabindex="-1"></a>  , <span class="at">escape =</span> F</span>
+<span id="cb280-55"><a href="str_preds.html#cb280-55" tabindex="-1"></a>  <span class="co"># , digits = 2</span></span>
+<span id="cb280-56"><a href="str_preds.html#cb280-56" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb280-57"><a href="str_preds.html#cb280-57" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb280-58"><a href="str_preds.html#cb280-58" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)</span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-312">Table 7.3: </span>Spectrally filtered candidate segments by method and study site
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:left;">
+# removed
+</th>
+<th style="text-align:left;">
+# retained
+</th>
+<th style="text-align:left;">
+% removed
+</th>
+<th style="text-align:left;">
+% retained
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+ARNF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+53
+</td>
+<td style="text-align:left;">
+23
+</td>
+<td style="text-align:left;">
+69.7%
+</td>
+<td style="text-align:left;">
+30.3%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+66
+</td>
+<td style="text-align:left;">
+26
+</td>
+<td style="text-align:left;">
+71.7%
+</td>
+<td style="text-align:left;">
+28.3%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+BHEF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+246
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+91.1%
+</td>
+<td style="text-align:left;">
+8.9%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+294
+</td>
+<td style="text-align:left;">
+25
+</td>
+<td style="text-align:left;">
+92.2%
+</td>
+<td style="text-align:left;">
+7.8%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+PSINF Mixed Conifer Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+68
+</td>
+<td style="text-align:left;">
+120
+</td>
+<td style="text-align:left;">
+36.2%
+</td>
+<td style="text-align:left;">
+63.8%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+70
+</td>
+<td style="text-align:left;">
+123
+</td>
+<td style="text-align:left;">
+36.3%
+</td>
+<td style="text-align:left;">
+63.7%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+TRFO-BLM Pinyon-Juniper Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+48
+</td>
+<td style="text-align:left;">
+330
+</td>
+<td style="text-align:left;">
+12.7%
+</td>
+<td style="text-align:left;">
+87.3%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+48
+</td>
+<td style="text-align:left;">
+329
+</td>
+<td style="text-align:left;">
+12.7%
+</td>
+<td style="text-align:left;">
+87.3%
+</td>
+</tr>
+</tbody>
+</table>
+<p>we can look at a distribution of the number of spectral thresholds met by the structural candidates for each site and segmentation method</p>
+<div class="sourceCode" id="cb281"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb281-1"><a href="str_preds.html#cb281-1" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb281-2"><a href="str_preds.html#cb281-2" tabindex="-1"></a>   dbscan_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb281-3"><a href="str_preds.html#cb281-3" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb281-4"><a href="str_preds.html#cb281-4" tabindex="-1"></a>        \(x,nm)</span>
+<span id="cb281-5"><a href="str_preds.html#cb281-5" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">tibble</span>(<span class="at">inrange_th_votes =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-6"><a href="str_preds.html#cb281-6" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb281-7"><a href="str_preds.html#cb281-7" tabindex="-1"></a>            x <span class="sc">%&gt;%</span> </span>
+<span id="cb281-8"><a href="str_preds.html#cb281-8" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb281-9"><a href="str_preds.html#cb281-9" tabindex="-1"></a>              sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb281-10"><a href="str_preds.html#cb281-10" tabindex="-1"></a>              dplyr<span class="sc">::</span><span class="fu">count</span>(inrange_th_votes)</span>
+<span id="cb281-11"><a href="str_preds.html#cb281-11" tabindex="-1"></a>            , <span class="at">by =</span> <span class="st">&quot;inrange_th_votes&quot;</span></span>
+<span id="cb281-12"><a href="str_preds.html#cb281-12" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-13"><a href="str_preds.html#cb281-13" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb281-14"><a href="str_preds.html#cb281-14" tabindex="-1"></a>            <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb281-15"><a href="str_preds.html#cb281-15" tabindex="-1"></a>            , <span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span></span>
+<span id="cb281-16"><a href="str_preds.html#cb281-16" tabindex="-1"></a>            , <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(n,<span class="dv">0</span>)</span>
+<span id="cb281-17"><a href="str_preds.html#cb281-17" tabindex="-1"></a>          )</span>
+<span id="cb281-18"><a href="str_preds.html#cb281-18" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-19"><a href="str_preds.html#cb281-19" tabindex="-1"></a>     dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb281-20"><a href="str_preds.html#cb281-20" tabindex="-1"></a>   , watershed_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb281-21"><a href="str_preds.html#cb281-21" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb281-22"><a href="str_preds.html#cb281-22" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb281-23"><a href="str_preds.html#cb281-23" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">tibble</span>(<span class="at">inrange_th_votes =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">6</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-24"><a href="str_preds.html#cb281-24" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb281-25"><a href="str_preds.html#cb281-25" tabindex="-1"></a>          x <span class="sc">%&gt;%</span> </span>
+<span id="cb281-26"><a href="str_preds.html#cb281-26" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb281-27"><a href="str_preds.html#cb281-27" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb281-28"><a href="str_preds.html#cb281-28" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">count</span>(inrange_th_votes)</span>
+<span id="cb281-29"><a href="str_preds.html#cb281-29" tabindex="-1"></a>          , <span class="at">by =</span> <span class="st">&quot;inrange_th_votes&quot;</span></span>
+<span id="cb281-30"><a href="str_preds.html#cb281-30" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-31"><a href="str_preds.html#cb281-31" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb281-32"><a href="str_preds.html#cb281-32" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb281-33"><a href="str_preds.html#cb281-33" tabindex="-1"></a>          , <span class="at">method =</span> <span class="st">&quot;watershed&quot;</span></span>
+<span id="cb281-34"><a href="str_preds.html#cb281-34" tabindex="-1"></a>          , <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">coalesce</span>(n,<span class="dv">0</span>)</span>
+<span id="cb281-35"><a href="str_preds.html#cb281-35" tabindex="-1"></a>        )</span>
+<span id="cb281-36"><a href="str_preds.html#cb281-36" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-37"><a href="str_preds.html#cb281-37" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb281-38"><a href="str_preds.html#cb281-38" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-39"><a href="str_preds.html#cb281-39" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-40"><a href="str_preds.html#cb281-40" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb281-41"><a href="str_preds.html#cb281-41" tabindex="-1"></a>    <span class="at">pct =</span> n<span class="sc">/</span><span class="fu">sum</span>(n)</span>
+<span id="cb281-42"><a href="str_preds.html#cb281-42" tabindex="-1"></a>    , <span class="at">inrange_th_votes =</span> <span class="fu">ordered</span>(inrange_th_votes)</span>
+<span id="cb281-43"><a href="str_preds.html#cb281-43" tabindex="-1"></a>    , <span class="at">lab =</span> <span class="fu">paste0</span>(scales<span class="sc">::</span><span class="fu">percent</span>(pct,<span class="at">accuracy=</span><span class="fl">0.1</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">(n=&quot;</span>, scales<span class="sc">::</span><span class="fu">comma</span>(n,<span class="at">accuracy=</span><span class="dv">1</span>), <span class="st">&quot;)&quot;</span>)</span>
+<span id="cb281-44"><a href="str_preds.html#cb281-44" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb281-45"><a href="str_preds.html#cb281-45" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb281-46"><a href="str_preds.html#cb281-46" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb281-47"><a href="str_preds.html#cb281-47" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> inrange_th_votes, <span class="at">y =</span> pct, <span class="at">label =</span> lab, <span class="at">fill =</span> inrange_th_votes)</span>
+<span id="cb281-48"><a href="str_preds.html#cb281-48" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb281-49"><a href="str_preds.html#cb281-49" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_col</span>(</span>
+<span id="cb281-50"><a href="str_preds.html#cb281-50" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.6</span></span>
+<span id="cb281-51"><a href="str_preds.html#cb281-51" tabindex="-1"></a>    , <span class="at">color =</span> <span class="cn">NA</span>, <span class="at">alpha =</span> <span class="fl">0.95</span></span>
+<span id="cb281-52"><a href="str_preds.html#cb281-52" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb281-53"><a href="str_preds.html#cb281-53" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_text</span>(<span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb281-54"><a href="str_preds.html#cb281-54" tabindex="-1"></a>  <span class="co"># ggplot2::scale_fill_viridis_d(option = &quot;mako&quot;, direction = -1) +</span></span>
+<span id="cb281-55"><a href="str_preds.html#cb281-55" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_fill_brewer</span>(<span class="at">palette =</span>  <span class="st">&quot;Purples&quot;</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb281-56"><a href="str_preds.html#cb281-56" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_y_continuous</span>(</span>
+<span id="cb281-57"><a href="str_preds.html#cb281-57" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="at">by=</span><span class="fl">0.2</span>)</span>
+<span id="cb281-58"><a href="str_preds.html#cb281-58" tabindex="-1"></a>    , <span class="at">labels =</span> scales<span class="sc">::</span>percent</span>
+<span id="cb281-59"><a href="str_preds.html#cb281-59" tabindex="-1"></a>    , <span class="at">expand =</span> ggplot2<span class="sc">::</span><span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">0.2</span>))</span>
+<span id="cb281-60"><a href="str_preds.html#cb281-60" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb281-61"><a href="str_preds.html#cb281-61" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">facet_grid</span>(</span>
+<span id="cb281-62"><a href="str_preds.html#cb281-62" tabindex="-1"></a>    <span class="at">rows =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(site)</span>
+<span id="cb281-63"><a href="str_preds.html#cb281-63" tabindex="-1"></a>    , <span class="at">cols =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(method)</span>
+<span id="cb281-64"><a href="str_preds.html#cb281-64" tabindex="-1"></a>    , <span class="at">switch =</span> <span class="st">&quot;y&quot;</span></span>
+<span id="cb281-65"><a href="str_preds.html#cb281-65" tabindex="-1"></a>    , <span class="at">axes =</span> <span class="st">&quot;all_x&quot;</span></span>
+<span id="cb281-66"><a href="str_preds.html#cb281-66" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb281-67"><a href="str_preds.html#cb281-67" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb281-68"><a href="str_preds.html#cb281-68" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;spectral thresholds met&quot;</span>, <span class="at">y =</span> <span class="st">&quot;&quot;</span>, <span class="at">fill =</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb281-69"><a href="str_preds.html#cb281-69" tabindex="-1"></a>    , <span class="at">subtitle =</span> <span class="st">&quot;number of spectral thresholds met by the structural candidates&quot;</span></span>
+<span id="cb281-70"><a href="str_preds.html#cb281-70" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb281-71"><a href="str_preds.html#cb281-71" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb281-72"><a href="str_preds.html#cb281-72" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb281-73"><a href="str_preds.html#cb281-73" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb281-74"><a href="str_preds.html#cb281-74" tabindex="-1"></a>    , <span class="at">strip.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold&quot;</span>)</span>
+<span id="cb281-75"><a href="str_preds.html#cb281-75" tabindex="-1"></a>    , <span class="at">axis.text.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>)</span>
+<span id="cb281-76"><a href="str_preds.html#cb281-76" tabindex="-1"></a>    , <span class="at">axis.text.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb281-77"><a href="str_preds.html#cb281-77" tabindex="-1"></a>    , <span class="at">axis.ticks.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb281-78"><a href="str_preds.html#cb281-78" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-314-1.png" width="1008" /></p>
+<p>now that we know the breakdown, we can remove the candidates which did not meet the <code>spectral_weight</code> setting</p>
+<div class="sourceCode" id="cb282"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb282-1"><a href="str_preds.html#cb282-1" tabindex="-1"></a><span class="co"># filter all candidate piles for only those that meet the spectral_weight setting</span></span>
+<span id="cb282-2"><a href="str_preds.html#cb282-2" tabindex="-1"></a>dbscan_spectral_preds <span class="ot">&lt;-</span></span>
+<span id="cb282-3"><a href="str_preds.html#cb282-3" tabindex="-1"></a>    dbscan_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb282-4"><a href="str_preds.html#cb282-4" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb282-5"><a href="str_preds.html#cb282-5" tabindex="-1"></a>      \(x)</span>
+<span id="cb282-6"><a href="str_preds.html#cb282-6" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb282-7"><a href="str_preds.html#cb282-7" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(inrange_th_votes<span class="sc">&gt;=</span>spectral_weight)</span>
+<span id="cb282-8"><a href="str_preds.html#cb282-8" tabindex="-1"></a>    )</span>
+<span id="cb282-9"><a href="str_preds.html#cb282-9" tabindex="-1"></a>watershed_spectral_preds <span class="ot">&lt;-</span></span>
+<span id="cb282-10"><a href="str_preds.html#cb282-10" tabindex="-1"></a>    watershed_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb282-11"><a href="str_preds.html#cb282-11" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb282-12"><a href="str_preds.html#cb282-12" tabindex="-1"></a>      \(x)</span>
+<span id="cb282-13"><a href="str_preds.html#cb282-13" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb282-14"><a href="str_preds.html#cb282-14" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(inrange_th_votes<span class="sc">&gt;=</span>spectral_weight)</span>
+<span id="cb282-15"><a href="str_preds.html#cb282-15" tabindex="-1"></a>    )</span></code></pre></div>
+<p>let’s summarize the number of final candidate segments that passed the spectral filtering and the area they cover by site</p>
+<div class="sourceCode" id="cb283"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb283-1"><a href="str_preds.html#cb283-1" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb283-2"><a href="str_preds.html#cb283-2" tabindex="-1"></a>  <span class="co"># watershed</span></span>
+<span id="cb283-3"><a href="str_preds.html#cb283-3" tabindex="-1"></a>    watershed_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb283-4"><a href="str_preds.html#cb283-4" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb283-5"><a href="str_preds.html#cb283-5" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb283-6"><a href="str_preds.html#cb283-6" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb283-7"><a href="str_preds.html#cb283-7" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-8"><a href="str_preds.html#cb283-8" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-9"><a href="str_preds.html#cb283-9" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb283-10"><a href="str_preds.html#cb283-10" tabindex="-1"></a>          <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">n</span>()</span>
+<span id="cb283-11"><a href="str_preds.html#cb283-11" tabindex="-1"></a>          , <span class="at">area_m2 =</span> <span class="fu">sum</span>(area_m2)</span>
+<span id="cb283-12"><a href="str_preds.html#cb283-12" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-13"><a href="str_preds.html#cb283-13" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb283-14"><a href="str_preds.html#cb283-14" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb283-15"><a href="str_preds.html#cb283-15" tabindex="-1"></a>        )</span>
+<span id="cb283-16"><a href="str_preds.html#cb283-16" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-17"><a href="str_preds.html#cb283-17" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-18"><a href="str_preds.html#cb283-18" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;watershed&quot;</span>)</span>
+<span id="cb283-19"><a href="str_preds.html#cb283-19" tabindex="-1"></a>  , <span class="co"># dbscan</span></span>
+<span id="cb283-20"><a href="str_preds.html#cb283-20" tabindex="-1"></a>    dbscan_spectral_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb283-21"><a href="str_preds.html#cb283-21" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb283-22"><a href="str_preds.html#cb283-22" tabindex="-1"></a>      \(x,nm)</span>
+<span id="cb283-23"><a href="str_preds.html#cb283-23" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb283-24"><a href="str_preds.html#cb283-24" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-25"><a href="str_preds.html#cb283-25" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-26"><a href="str_preds.html#cb283-26" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb283-27"><a href="str_preds.html#cb283-27" tabindex="-1"></a>          <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">n</span>()</span>
+<span id="cb283-28"><a href="str_preds.html#cb283-28" tabindex="-1"></a>          , <span class="at">area_m2 =</span> <span class="fu">sum</span>(area_m2)</span>
+<span id="cb283-29"><a href="str_preds.html#cb283-29" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-30"><a href="str_preds.html#cb283-30" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb283-31"><a href="str_preds.html#cb283-31" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb283-32"><a href="str_preds.html#cb283-32" tabindex="-1"></a>        )</span>
+<span id="cb283-33"><a href="str_preds.html#cb283-33" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-34"><a href="str_preds.html#cb283-34" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-35"><a href="str_preds.html#cb283-35" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span>)</span>
+<span id="cb283-36"><a href="str_preds.html#cb283-36" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-37"><a href="str_preds.html#cb283-37" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb283-38"><a href="str_preds.html#cb283-38" tabindex="-1"></a>  <span class="at">avg_size =</span> scales<span class="sc">::</span><span class="fu">comma</span>(area_m2<span class="sc">/</span>n, <span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb283-39"><a href="str_preds.html#cb283-39" tabindex="-1"></a>  , dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb283-40"><a href="str_preds.html#cb283-40" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">where</span>(is.numeric)</span>
+<span id="cb283-41"><a href="str_preds.html#cb283-41" tabindex="-1"></a>    , <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb283-42"><a href="str_preds.html#cb283-42" tabindex="-1"></a>  )</span>
+<span id="cb283-43"><a href="str_preds.html#cb283-43" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-44"><a href="str_preds.html#cb283-44" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">relocate</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-45"><a href="str_preds.html#cb283-45" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">arrange</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-46"><a href="str_preds.html#cb283-46" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb283-47"><a href="str_preds.html#cb283-47" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Final, spectrally filtered candidate segments by method and study site&quot;</span></span>
+<span id="cb283-48"><a href="str_preds.html#cb283-48" tabindex="-1"></a>  , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb283-49"><a href="str_preds.html#cb283-49" tabindex="-1"></a>    <span class="st">&quot;site&quot;</span>, <span class="st">&quot;method&quot;</span></span>
+<span id="cb283-50"><a href="str_preds.html#cb283-50" tabindex="-1"></a>    , <span class="st">&quot;# candidates&quot;</span></span>
+<span id="cb283-51"><a href="str_preds.html#cb283-51" tabindex="-1"></a>    , <span class="st">&quot;total&lt;br&gt;candidate area (m&lt;sup&gt;2&lt;/sup&gt;)&quot;</span></span>
+<span id="cb283-52"><a href="str_preds.html#cb283-52" tabindex="-1"></a>    , <span class="st">&quot;mean&lt;br&gt;candidate area (m&lt;sup&gt;2&lt;/sup&gt;)&quot;</span></span>
+<span id="cb283-53"><a href="str_preds.html#cb283-53" tabindex="-1"></a>  )</span>
+<span id="cb283-54"><a href="str_preds.html#cb283-54" tabindex="-1"></a>  , <span class="at">escape =</span> F</span>
+<span id="cb283-55"><a href="str_preds.html#cb283-55" tabindex="-1"></a>  <span class="co"># , digits = 2</span></span>
+<span id="cb283-56"><a href="str_preds.html#cb283-56" tabindex="-1"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb283-57"><a href="str_preds.html#cb283-57" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb283-58"><a href="str_preds.html#cb283-58" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)</span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-316">Table 7.4: </span>Final, spectrally filtered candidate segments by method and study site
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:left;">
+# candidates
+</th>
+<th style="text-align:left;">
+total<br>candidate area (m<sup>2</sup>)
+</th>
+<th style="text-align:left;">
+mean<br>candidate area (m<sup>2</sup>)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+ARNF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+23
+</td>
+<td style="text-align:left;">
+8,553
+</td>
+<td style="text-align:left;">
+371.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+26
+</td>
+<td style="text-align:left;">
+8,488
+</td>
+<td style="text-align:left;">
+326.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+BHEF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+4,339
+</td>
+<td style="text-align:left;">
+180.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+25
+</td>
+<td style="text-align:left;">
+4,434
+</td>
+<td style="text-align:left;">
+177.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+PSINF Mixed Conifer Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+120
+</td>
+<td style="text-align:left;">
+1,072
+</td>
+<td style="text-align:left;">
+8.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+123
+</td>
+<td style="text-align:left;">
+1,113
+</td>
+<td style="text-align:left;">
+9.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+TRFO-BLM Pinyon-Juniper Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+330
+</td>
+<td style="text-align:left;">
+2,935
+</td>
+<td style="text-align:left;">
+8.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+329
+</td>
+<td style="text-align:left;">
+2,905
+</td>
+<td style="text-align:left;">
+8.8
+</td>
+</tr>
+</tbody>
+</table>
+<div id="dbscan-candidates-1" class="section level3 hasAnchor" number="7.3.1">
+<h3><span class="header-section-number">7.3.1</span> DBSCAN Candidates<a href="str_preds.html#dbscan-candidates-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We’ll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site</p>
+<div class="sourceCode" id="cb284"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb284-1"><a href="str_preds.html#cb284-1" tabindex="-1"></a><span class="co"># map over it </span></span>
+<span id="cb284-2"><a href="str_preds.html#cb284-2" tabindex="-1"></a>all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb284-3"><a href="str_preds.html#cb284-3" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb284-4"><a href="str_preds.html#cb284-4" tabindex="-1"></a>    \(x)</span>
+<span id="cb284-5"><a href="str_preds.html#cb284-5" tabindex="-1"></a>    <span class="fu">terra_plt_ortho</span>(</span>
+<span id="cb284-6"><a href="str_preds.html#cb284-6" tabindex="-1"></a>      <span class="at">ortho =</span> rgb_rast[[x]]</span>
+<span id="cb284-7"><a href="str_preds.html#cb284-7" tabindex="-1"></a>      , <span class="at">gt_piles =</span> slash_piles_polys[[x]]</span>
+<span id="cb284-8"><a href="str_preds.html#cb284-8" tabindex="-1"></a>      , <span class="at">pred_piles =</span> dbscan_spectral_preds[[x]]</span>
+<span id="cb284-9"><a href="str_preds.html#cb284-9" tabindex="-1"></a>      , <span class="at">boundary =</span> stand_boundary[[x]]</span>
+<span id="cb284-10"><a href="str_preds.html#cb284-10" tabindex="-1"></a>      , <span class="at">title =</span> <span class="fu">paste0</span>(</span>
+<span id="cb284-11"><a href="str_preds.html#cb284-11" tabindex="-1"></a>        <span class="st">&quot;Final DBSCAN: &quot;</span></span>
+<span id="cb284-12"><a href="str_preds.html#cb284-12" tabindex="-1"></a>        , all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb284-13"><a href="str_preds.html#cb284-13" tabindex="-1"></a>      )</span>
+<span id="cb284-14"><a href="str_preds.html#cb284-14" tabindex="-1"></a>    )</span>
+<span id="cb284-15"><a href="str_preds.html#cb284-15" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-317-1.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-317-2.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-317-3.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-317-4.png" width="1008" /></p>
+</div>
+<div id="watershed-candidates-1" class="section level3 hasAnchor" number="7.3.2">
+<h3><span class="header-section-number">7.3.2</span> Watershed Candidates<a href="str_preds.html#watershed-candidates-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We’ll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site</p>
+<div class="sourceCode" id="cb285"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb285-1"><a href="str_preds.html#cb285-1" tabindex="-1"></a><span class="co"># map over it </span></span>
+<span id="cb285-2"><a href="str_preds.html#cb285-2" tabindex="-1"></a>all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb285-3"><a href="str_preds.html#cb285-3" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb285-4"><a href="str_preds.html#cb285-4" tabindex="-1"></a>    \(x)</span>
+<span id="cb285-5"><a href="str_preds.html#cb285-5" tabindex="-1"></a>    <span class="fu">terra_plt_ortho</span>(</span>
+<span id="cb285-6"><a href="str_preds.html#cb285-6" tabindex="-1"></a>      <span class="at">ortho =</span> rgb_rast[[x]]</span>
+<span id="cb285-7"><a href="str_preds.html#cb285-7" tabindex="-1"></a>      , <span class="at">gt_piles =</span> slash_piles_polys[[x]]</span>
+<span id="cb285-8"><a href="str_preds.html#cb285-8" tabindex="-1"></a>      , <span class="at">pred_piles =</span> watershed_spectral_preds[[x]]</span>
+<span id="cb285-9"><a href="str_preds.html#cb285-9" tabindex="-1"></a>      , <span class="at">boundary =</span> stand_boundary[[x]]</span>
+<span id="cb285-10"><a href="str_preds.html#cb285-10" tabindex="-1"></a>      , <span class="at">title =</span> <span class="fu">paste0</span>(</span>
+<span id="cb285-11"><a href="str_preds.html#cb285-11" tabindex="-1"></a>        <span class="st">&quot;Final Watershed: &quot;</span></span>
+<span id="cb285-12"><a href="str_preds.html#cb285-12" tabindex="-1"></a>        , all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>x) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb285-13"><a href="str_preds.html#cb285-13" tabindex="-1"></a>      )</span>
+<span id="cb285-14"><a href="str_preds.html#cb285-14" tabindex="-1"></a>    )</span>
+<span id="cb285-15"><a href="str_preds.html#cb285-15" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-318-1.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-318-2.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-318-3.png" width="1008" /><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-318-4.png" width="1008" /></p>
+</div>
+</div>
+<div id="detection-accuracy" class="section level2 hasAnchor" number="7.4">
+<h2><span class="header-section-number">7.4</span> Detection Accuracy<a href="str_preds.html#detection-accuracy" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>let’s evaluate how our method performed at correctly predicting the presence of slash piles on the landscape</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="meth_eval.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

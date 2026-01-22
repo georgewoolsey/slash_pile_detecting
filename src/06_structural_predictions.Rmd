@@ -1,4 +1,4 @@
-# Methodology Evaluation{#str_preds}
+# Method Predictions{#str_preds}
 
 We are finally ready to make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data. To this point we have:
 
@@ -88,6 +88,15 @@ Set the structural detection parameters based on pile construction prescription 
 | `max_area_m2` | 54.0 (2x parking space) | 22.5 (10x min. hand pile) | 486.0 (18x parking space) | 621.0 (23x parking space) |
 | `min_convexity_ratio` | 0.65 (strict) | 0.55 (strict) | 0.55 (strict) | 0.55 (strict) |
 | `min_circularity_ratio` | 0.5 (strict) | 0.35 (moderate) | 0.0 (no circularity constraint) | 0.3 (moderate) |
+
+for the `spectral_weight` parameter we can be fairly strict with our spectral filtering across all of these study sites because the piles were generally constructed away from residual trees. As a reminder, the `spectral_weight` parameter defines the minimum number of the six independent spectral indices that must positively identify a candidate object as non-vegetated to retain it, where increasing the value towards six (6) enforces a stricter consensus to filter out live green vegetation and decreasing it allows for more permissive detection in areas where shadows or canopy overlap may obscure the spectral signature.
+
+| Site | `spectral_weight` | Justification |
+| :--- | :--- | :--- |
+| ARNF | 5 | Located in open landings, these piles have minimal overlap with live canopy; a strict weight ensures that any edge-case vegetation or weeds growing near the piles are effectively excluded. |
+| BHEF | 5 | A high consensus threshold is critical here to distinguish massive piles from residual tree groups, as high spectral weight ensures that objects with live green foliage are filtered out of the structural results. |
+| TRFO-BLM | 5 | The "heavy intensity uniform thinning treatment" in this pinyon-juniper site which opened up significant space between residual trees likely allows for a strict threshold to reliably remove any candidates which may be green shrubs or low-hanging branches. |
+| PSINF | 4 | Because hand piles are often positioned near the residual trees such that many are shadowed by the canopy in the aerial imagery, a slightly lower weight prevents the accidental removal of piles that may be shadowed or have spectral "bleeding" from live tree crowns. |
 
 let's table that so we have the information
 
@@ -579,7 +588,7 @@ gc()
 
 ## Spectral Filter Slash Pile Candidates
 
-Now, we'll apply spectral filtering of the structurally-detected candidate piles using our [data fusion approach](#data_fusion). 
+Now, we'll apply spectral filtering of the structurally-detected candidate piles using our [data fusion approach](#data_fusion). As a quick reminder, the spectral filtering functions to distinguish woody debris from live vegetation. We use a spectral voting system using six independent spectral indices derived from RGB data alone. The `spectral_weight` parameter defines the consensus threshold, requiring a specific number of index thresholds (0-6) required to retain structural candidate piles to generate the final method prediction.
 
 see our parameter setting table above above for the `spectral_weight` setting which defines how many of the six spectral thresholds must be met for a candidate pile to be retained for final selection as a predicted slash pile.
 
@@ -794,8 +803,6 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 ```
 
-
-
 ```{r, include=FALSE, eval=FALSE}
 watershed_spectral_preds[["bhef"]] %>% 
   dplyr::glimpse()
@@ -841,7 +848,174 @@ ggplot2::ggplot() +
 
 ```
 
-### DBSCAN Candidates
+we can look at a distribution of the number of spectral thresholds met by the structural candidates for each site and segmentation method
+
+```{r}
+dplyr::bind_rows(
+   dbscan_spectral_preds %>% 
+      purrr::imap(
+        \(x,nm)
+        dplyr::tibble(inrange_th_votes = 0:6) %>% 
+          dplyr::left_join(
+            x %>% 
+              dplyr::ungroup() %>% 
+              sf::st_drop_geometry() %>%
+              dplyr::count(inrange_th_votes)
+            , by = "inrange_th_votes"
+          ) %>% 
+          dplyr::mutate(
+            site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+            , method = "dbscan"
+            , n = dplyr::coalesce(n,0)
+          )
+      ) %>% 
+     dplyr::bind_rows()
+   , watershed_spectral_preds %>% 
+    purrr::imap(
+      \(x,nm)
+      dplyr::tibble(inrange_th_votes = 0:6) %>% 
+        dplyr::left_join(
+          x %>% 
+            dplyr::ungroup() %>% 
+            sf::st_drop_geometry() %>%
+            dplyr::count(inrange_th_votes)
+          , by = "inrange_th_votes"
+        ) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+          , method = "watershed"
+          , n = dplyr::coalesce(n,0)
+        )
+    ) %>% 
+    dplyr::bind_rows()
+  ) %>% 
+  dplyr::group_by(site,method) %>% 
+  dplyr::mutate(
+    pct = n/sum(n)
+    , inrange_th_votes = ordered(inrange_th_votes)
+    , lab = paste0(scales::percent(pct,accuracy=0.1), "\n(n=", scales::comma(n,accuracy=1), ")")
+  ) %>% 
+  dplyr::ungroup() %>%
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(x = inrange_th_votes, y = pct, label = lab, fill = inrange_th_votes)
+  ) +
+  ggplot2::geom_col(
+    width = 0.6
+    , color = NA, alpha = 0.95
+  ) +
+  ggplot2::geom_text(color = "black", size = 3, vjust = -0.2) +
+  # ggplot2::scale_fill_viridis_d(option = "mako", direction = -1) +
+  ggplot2::scale_fill_brewer(palette =  "Purples", direction = 1) +
+  ggplot2::scale_y_continuous(
+    breaks = seq(0,1,by=0.2)
+    , labels = scales::percent
+    , expand = ggplot2::expansion(mult = c(0,0.2))
+  ) +
+  ggplot2::facet_grid(
+    rows = dplyr::vars(site)
+    , cols = dplyr::vars(method)
+    , switch = "y"
+    , axes = "all_x"
+  ) +
+  ggplot2::labs(
+    x = "spectral thresholds met", y = "", fill = ""
+    , subtitle = "number of spectral thresholds met by the structural candidates"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , axis.text.x = ggplot2::element_text(size = 11)
+    , axis.text.y = ggplot2::element_blank()
+    , axis.ticks.y = ggplot2::element_blank()
+  )
+```
+
+now that we know the breakdown, we can remove the candidates which did not meet the `spectral_weight` setting
+
+```{r}
+# filter all candidate piles for only those that meet the spectral_weight setting
+dbscan_spectral_preds <-
+    dbscan_spectral_preds %>% 
+    purrr::map(
+      \(x)
+      x %>% 
+        dplyr::filter(inrange_th_votes>=spectral_weight)
+    )
+watershed_spectral_preds <-
+    watershed_spectral_preds %>% 
+    purrr::map(
+      \(x)
+      x %>% 
+        dplyr::filter(inrange_th_votes>=spectral_weight)
+    )
+```
+
+let's summarize the number of final candidate segments that passed the spectral filtering and the area they cover by site
+
+```{r}
+dplyr::bind_rows(
+  # watershed
+    watershed_spectral_preds %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::ungroup() %>% 
+        dplyr::summarise(
+          n = dplyr::n()
+          , area_m2 = sum(area_m2)
+        ) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+        )
+    ) %>% 
+    dplyr::bind_rows() %>% 
+    dplyr::mutate(method = "watershed")
+  , # dbscan
+    dbscan_spectral_preds %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::ungroup() %>% 
+        dplyr::summarise(
+          n = dplyr::n()
+          , area_m2 = sum(area_m2)
+        ) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+        )
+    ) %>% 
+    dplyr::bind_rows() %>% 
+    dplyr::mutate(method = "dbscan")
+) %>% 
+dplyr::mutate(
+  avg_size = scales::comma(area_m2/n, accuracy = 0.1)
+  , dplyr::across(
+    dplyr::where(is.numeric)
+    , ~scales::comma(.x,accuracy = 1)
+  )
+) %>% 
+dplyr::relocate(site,method) %>% 
+dplyr::arrange(site,method) %>% 
+kableExtra::kbl(
+  caption = "Final, spectrally filtered candidate segments by method and study site"
+  , col.names = c(
+    "site", "method"
+    , "# candidates"
+    , "total<br>candidate area (m<sup>2</sup>)"
+    , "mean<br>candidate area (m<sup>2</sup>)"
+  )
+  , escape = F
+  # , digits = 2
+) %>% 
+kableExtra::kable_styling() %>% 
+kableExtra::collapse_rows(columns = 1, valign = "top")
+
+```
+
+### DBSCAN Predictions
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site
 
@@ -856,15 +1030,14 @@ all_stand_boundary$site_data_lab %>%
       , pred_piles = dbscan_spectral_preds[[x]]
       , boundary = stand_boundary[[x]]
       , title = paste0(
-        "DBSCAN: "
+        "Final DBSCAN: "
         , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
       )
     )
   )
-dbscan_spectral_preds[["pj"]]
 ```
 
-### Watershed Candidates
+### Watershed Predictions
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site
 
@@ -879,7 +1052,7 @@ all_stand_boundary$site_data_lab %>%
       , pred_piles = watershed_spectral_preds[[x]]
       , boundary = stand_boundary[[x]]
       , title = paste0(
-        "Watershed: "
+        "Final Watershed: "
         , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
       )
     )
@@ -889,4 +1062,108 @@ all_stand_boundary$site_data_lab %>%
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 gc()
+```
+
+## Detection Accuracy
+
+let's evaluate how our method performed at correctly predicting the presence of slash piles on the landscape
+
+```{r}
+xxx
+# ground_truth_prediction_match_ans <- 
+  ground_truth_prediction_match(
+    ground_truth = slash_piles_polys[["pj"]] %>% 
+      sf::st_transform( sf::st_crs(watershed_spectral_preds[["pj"]]) ) %>% 
+      dplyr::arrange(desc(image_gt_area_m2)) # this is so the algorithm starts with the largest
+    , gt_id = "pile_id"
+    , predictions = watershed_spectral_preds[["pj"]]
+    , pred_id = "pred_id"
+    , min_iou_pct = 0.45
+  )
+  # agg_ground_truth_match() %>% 
+  # kbl_agg_gt_match(caption = "pile detection and form quantification accuracy metrics<br>structural only prior to data fusion")
+
+# huh?
+ground_truth_prediction_match_ans %>% dplyr::glimpse()
+```
+
+how did our predictions do for this test example?
+
+```{r}
+# what did we get?
+ground_truth_prediction_match_ans %>% 
+  dplyr::count(match_grp) %>% 
+  dplyr::mutate(pct = (n/sum(n)) %>% scales::percent(accuracy=0.1))
+```
+
+let's quickly look at the IoU values on the true positives
+
+```{r}
+ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
+```
+
+here is the distribution of IoU for the TP matches
+
+```{r}
+# palette
+pal_match_grp = c(
+  "omission"=viridis::cividis(3)[1]
+  , "commission"= viridis::cividis(3)[2]
+  , "true positive"=viridis::cividis(3)[3]
+)
+# plot
+ground_truth_prediction_match_ans %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(x = iou, color = match_grp, fill = match_grp)) +
+  ggplot2::geom_density(mapping = ggplot2::aes(y=ggplot2::after_stat(scaled)), alpha = 0.8) +
+  ggplot2::scale_color_manual(values=pal_match_grp) +
+  ggplot2::scale_fill_manual(values=pal_match_grp) +
+  ggplot2::scale_y_continuous(NULL,breaks=NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    color="",fill="",x="IoU of correct precitions"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(size = 9, face = "bold", color = "black")
+  )
+```
+
+let's look at the results spatially noting that just because a prediction overlaps with a ground truth pile does not mean that it meets the IoU threshold for determining a positive match. in these cases where the IoU was insufficient, a commission (FP) will overlap with an omission (FN).
+
+```{r}
+# plot it
+ggplot2::ggplot() +
+  ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 
+  ggplot2::geom_sf(
+    data = 
+      aoi_slash_piles_polys %>% 
+        dplyr::left_join(
+          ground_truth_prediction_match_ans %>% 
+            dplyr::select(pile_id,match_grp)
+          , by = "pile_id"
+        )
+    , mapping = ggplot2::aes(fill = match_grp)
+    , color = NA ,alpha=0.7
+  ) + 
+  ggplot2::geom_sf(
+    data =
+      predictions_temp %>%
+        dplyr::left_join(
+          ground_truth_prediction_match_ans %>%
+            dplyr::select(pred_id,match_grp)
+          , by = "pred_id"
+        )
+    , mapping = ggplot2::aes(fill = match_grp, color = match_grp)
+    , alpha = 0
+    , lwd = 1.1
+  ) +
+  ggplot2::scale_fill_manual(values = pal_match_grp, name = "") +
+  ggplot2::scale_color_manual(values = pal_match_grp, name = "") +
+  ggplot2::theme_void() +
+  ggplot2::guides(
+    fill = ggplot2::guide_legend(override.aes = list(color = c(NA,NA,pal_match_grp["commission"])))
+    , color = "none"
+  )
 ```
