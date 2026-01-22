@@ -102,7 +102,7 @@ all_stand_boundary <- all_stand_boundary %>%
       , max_area_m2 = c(54.0, 22.5, 486.0, 621.0)
       , min_convexity_ratio = c(0.65, 0.55, 0.55, 0.55)
       , min_circularity_ratio = c(0.5, 0.35, 0.0, 0.3)
-      , spectral_weight = c(5, 5, 6, 6)
+      , spectral_weight = c(4, 5, 5, 5)
       , chm_res_m = c(
         terra::res(psinf_chm_rast)[1]
         , terra::res(pj_chm_rast)[1]
@@ -277,7 +277,7 @@ segmentation_params_used <-
 
 We'll get the predictions using both the DBSCAN and Watershed segmentation approaches. Review [this section](#seg_methods) for a refresher on how we use these methods
 
-```{r, results=F, warning=FALSE}
+```{r str-pred, results=F, warning=FALSE}
 ##################################################
 # map over slash_pile_detect for dbscan
 ##################################################
@@ -583,7 +583,7 @@ Now, we'll apply spectral filtering of the structurally-detected candidate piles
 
 see our parameter setting table above above for the `spectral_weight` setting which defines how many of the six spectral thresholds must be met for a candidate pile to be retained for final selection as a predicted slash pile.
 
-```{r, results=F, message=F}
+```{r spect-pred, results=F, message=F}
 ##################################################
 # map over polygon_spectral_filtering for dbscan
 ##################################################
@@ -597,35 +597,49 @@ see our parameter setting table above above for the `spectral_weight` setting wh
     # map over polygon_spectral_filtering for dbscan
     dbscan_spectral_preds <- 
       all_stand_boundary$site_data_lab %>% 
-      # .[2:4] %>% 
+      # .[1:2] %>%
       purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        polygon_spectral_filtering(
-          sf_data = dbscan_structural_preds[[x]]
-          , rgb_rast = rgb_rast[[x]]
-          # define the band index
-          , red_band_idx = 1
-          , green_band_idx = 2
-          , blue_band_idx = 3
-          , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
-          , filter_return = T
-        ) %>% 
-        purrr::pluck("segs_sf")
-        , .progress = T
-      )
-    
-    # write
-      dbscan_spectral_preds %>%
-        purrr::imap(
-          \(x,nm)
+      # map_chr returns character bc we'll return file path 
+      purrr::map_chr(
+        function(x) {
+          # polygon_spectral_filtering
+          safe_polygon_spectral_filtering <- purrr::safely(polygon_spectral_filtering)
+          segs_sf <- safe_polygon_spectral_filtering(
+              sf_data = dbscan_structural_preds[[x]]
+              , rgb_rast = rgb_rast[[x]]
+              # define the band index
+              , red_band_idx = 1
+              , green_band_idx = 2
+              , blue_band_idx = 3
+              , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
+              , filter_return = F
+            )
+          if(is.null(segs_sf$result)){
+            return(NULL)
+          }else{
+            segs_sf <- segs_sf$result$segs_sf %>% 
+              dplyr::mutate(
+                spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
+              )
+          }
+          # write
+          fpth <- file.path(dir_temp, paste0(x,nmsfx_temp))
           sf::st_write(
-            obj = x
-            , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
+            obj = segs_sf
+            , dsn = fpth
             , append = F
             , quiet = T
           )
-        )
+          # return
+          return(fpth)
+        }
+      )
+    # read files
+    dbscan_spectral_preds <- dbscan_spectral_preds %>% 
+      purrr::map(
+        \(x)
+        sf::st_read(dsn = x, quiet = T)
+      )
   }else{
     # read already done
     dbscan_spectral_preds <- 
@@ -652,35 +666,49 @@ see our parameter setting table above above for the `spectral_weight` setting wh
     # map over polygon_spectral_filtering for watershed
     watershed_spectral_preds <- 
       all_stand_boundary$site_data_lab %>% 
-      # .[2:4] %>% 
+      # .[3:4] %>%
       purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        polygon_spectral_filtering(
-          sf_data = watershed_structural_preds[[x]]
-          , rgb_rast = rgb_rast[[x]]
-          # define the band index
-          , red_band_idx = 1
-          , green_band_idx = 2
-          , blue_band_idx = 3
-          , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
-          , filter_return = T
-        ) %>% 
-        purrr::pluck("segs_sf")
-        , .progress = T
-      )
-    
-    # write
-      watershed_spectral_preds %>%
-        purrr::imap(
-          \(x,nm)
+      # map_chr returns character bc we'll return file path 
+      purrr::map_chr(
+        function(x) {
+          # polygon_spectral_filtering
+          safe_polygon_spectral_filtering <- purrr::safely(polygon_spectral_filtering)
+          segs_sf <- safe_polygon_spectral_filtering(
+              sf_data = watershed_structural_preds[[x]]
+              , rgb_rast = rgb_rast[[x]]
+              # define the band index
+              , red_band_idx = 1
+              , green_band_idx = 2
+              , blue_band_idx = 3
+              , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
+              , filter_return = F
+            )
+          if(is.null(segs_sf$result)){
+            return(NULL)
+          }else{
+            segs_sf <- segs_sf$result$segs_sf %>% 
+              dplyr::mutate(
+                spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(spectral_weight)
+              )
+          }
+          # write
+          fpth <- file.path(dir_temp, paste0(x,nmsfx_temp))
           sf::st_write(
-            obj = x
-            , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
+            obj = segs_sf
+            , dsn = fpth
             , append = F
             , quiet = T
           )
-        )
+          # return
+          return(fpth)
+        }
+      )
+    # read files
+    watershed_spectral_preds <- watershed_spectral_preds %>% 
+      purrr::map(
+        \(x)
+        sf::st_read(dsn = x, quiet = T)
+      )
   }else{
     # read already done
     watershed_spectral_preds <- 
@@ -697,6 +725,166 @@ see our parameter setting table above above for the `spectral_weight` setting wh
 
 ```
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+let's check out the proportion that were filtered out for each site
+
+```{r}
+dplyr::bind_rows(
+  watershed_spectral_preds %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        dplyr::ungroup() %>% 
+        sf::st_drop_geometry() %>%
+        dplyr::mutate(
+          retained = ifelse(inrange_th_votes>=spectral_weight,"retained","removed")
+        ) %>% 
+        dplyr::count(retained) %>% 
+        dplyr::mutate(
+          pct = (n/sum(n)) %>% scales::percent(accuracy = 0.1)
+          , n = scales::comma(n,accuracy=1)
+        ) %>% 
+        tidyr::pivot_wider(names_from = retained, values_from = -retained) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+          , method = "watershed"
+        )
+    ) %>% 
+    dplyr::bind_rows()
+  , dbscan_spectral_preds %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        dplyr::ungroup() %>% 
+        sf::st_drop_geometry() %>%
+        dplyr::mutate(
+          retained = ifelse(inrange_th_votes>=spectral_weight,"retained","removed")
+        ) %>% 
+        dplyr::count(retained) %>% 
+        dplyr::mutate(
+          pct = (n/sum(n)) %>% scales::percent(accuracy = 0.1)
+          , n = scales::comma(n,accuracy=1)
+        ) %>% 
+        tidyr::pivot_wider(names_from = retained, values_from = -retained) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+          , method = "dbscan"
+        )
+    ) %>% 
+    dplyr::bind_rows()
+) %>% 
+dplyr::relocate(site,method) %>% 
+dplyr::arrange(site,method) %>% 
+kableExtra::kbl(
+  caption = "Spectrally filtered candidate segments by method and study site"
+  , col.names = c(
+    "site", "method"
+    , "# removed", "# retained"
+    , "% removed", "% retained"
+  )
+  , escape = F
+  # , digits = 2
+) %>% 
+kableExtra::kable_styling() %>% 
+kableExtra::collapse_rows(columns = 1, valign = "top")
+
+```
+
+
+
+```{r, include=FALSE, eval=FALSE}
+watershed_spectral_preds[["bhef"]] %>% 
+  dplyr::glimpse()
+  dplyr::mutate(spectral_weight=5) %>% 
+  sf::st_write("../data/bhef_watershed_spectral_preds.gpkg", append = F, quiet = T)
+  
+ggplot2::ggplot() +
+  # ggplot2::geom_tile(
+  #   data = 
+  #     chm_rast[["bhef"]] %>% 
+  #     terra::as.data.frame(xy=T) %>% 
+  #     dplyr::rename(f=3)
+  #   , mapping = ggplot2::aes(x=x,y=y,fill=f)
+  # ) +
+  ggplot2::geom_sf(
+    data = 
+      stand_boundary[["bhef"]] %>% 
+      sf::st_transform(terra::crs(chm_rast[["bhef"]]))
+    , color = "black", fill = NA, lwd = 1.1
+  ) +
+  ggplot2::geom_sf(
+    data = 
+      slash_piles_polys[["bhef"]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      sf::st_transform(terra::crs(chm_rast[["bhef"]]))
+    , color = "cyan", fill = "cyan", lwd = 1.5
+  ) +
+  ggplot2::geom_sf(
+    data = 
+      watershed_spectral_preds[["bhef"]] %>% 
+      # sf::st_drop_geometry() %>% 
+      # dplyr::count(inrange_th_votes)
+      sf::st_transform(terra::crs(chm_rast[["bhef"]]))
+    , mapping = ggplot2::aes(color = as.factor(inrange_th_votes))
+    , fill = NA, lwd = 1.3
+  ) +
+  ggplot2::scale_fill_viridis_c(option = "plasma", alpha = 0.7) +
+  harrypotter::scale_color_hp_d(option = "lunalovegood") +
+  ggplot2::labs(fill = "CHM (m)", color = "spectral\nthresholds met") +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "top")
+  
+
+```
+
+### DBSCAN Candidates
+
+We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site
+
+```{r, results=F, fig.show='asis'}
+# map over it 
+all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    \(x)
+    terra_plt_ortho(
+      ortho = rgb_rast[[x]]
+      , gt_piles = slash_piles_polys[[x]]
+      , pred_piles = dbscan_spectral_preds[[x]]
+      , boundary = stand_boundary[[x]]
+      , title = paste0(
+        "DBSCAN: "
+        , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+      )
+    )
+  )
+dbscan_spectral_preds[["pj"]]
+```
+
+### Watershed Candidates
+
+We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site
+
+```{r, results=F, fig.show='asis'}
+# map over it 
+all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    \(x)
+    terra_plt_ortho(
+      ortho = rgb_rast[[x]]
+      , gt_piles = slash_piles_polys[[x]]
+      , pred_piles = watershed_spectral_preds[[x]]
+      , boundary = stand_boundary[[x]]
+      , title = paste0(
+        "Watershed: "
+        , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+      )
+    )
+  )
+```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])

@@ -1209,7 +1209,7 @@ ortho_plt_fn <- function(rgb_rast, stand, add_stand = F, buffer = 10, plt_lwd = 
 
 test our plotting function on a zoomed-in portion of the study area
 
-```{r}
+```{r,eval=F}
 ortho_plt_fn(
   psinf_rgb_rast
   , psinf_stand_boundary %>% 
@@ -1220,7 +1220,7 @@ ortho_plt_fn(
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r}
+```{r,eval=F}
 terra::plotRGB(psinf_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1310,7 +1310,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 test our `ggplot2` plotting function on a zoomed-in portion of the study area
 
-```{r}
+```{r,eval=F}
 ortho_plt_fn(
   pj_rgb_rast
   , pj_stand_boundary %>% 
@@ -1321,7 +1321,7 @@ ortho_plt_fn(
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r}
+```{r,eval=F}
 terra::plotRGB(pj_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1389,9 +1389,10 @@ what is the resolution of the original RGB data?
 terra::res(bhef_rgb_rast)
 ```
 
-let's reduce the resolution (i.e. increase the raster cell size; make more coarse)
+let's reduce the resolution (i.e. increase the raster cell size; make more coarse). for the sites with machine piles only (BHEF and ARNF), we'll only slightly increase the RGB resolution to 0.08m compared to the sites with hand piles which use a 0.06m resolution
 
 ```{r, results='hide'}
+my_rgb_res_m <- 0.08
 ###############################################################
 # clip to boundary and resample to change resolution
 ###############################################################
@@ -1408,25 +1409,14 @@ if(!file.exists(rgb_fnm_temp)){
         sf::st_buffer(10) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(bhef_rgb_rast))
-      , filename =  tempfile(fileext = ".tif")
+      , mask = T
+      , filename = tempfile(fileext = ".tif")
       , overwrite = TRUE
     ) 
-  # Mask the cropped raster to the precise shape of the polygon
-  # This function will also be processed on disk due to the file size
-  bhef_rgb_rast <- terra::mask(
-    crop_rgb_rast_temp
-    , bhef_stand_boundary %>% 
-      sf::st_union() %>% 
-      sf::st_buffer(10) %>% 
-      terra::vect() %>% 
-      terra::project(terra::crs(bhef_rgb_rast))
-    , filename = tempfile(fileext = ".tif")
-    , overwrite = TRUE
-  )
   
   ## apply the change_res_fn for our analysis we don't need such finery
   # this takes too long...
-  bhef_rgb_rast <- change_res_fn(bhef_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+  bhef_rgb_rast <- change_res_fn(crop_rgb_rast_temp, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
 }else{
   bhef_rgb_rast <- terra::rast(rgb_fnm_temp)
 }
@@ -1434,7 +1424,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r}
+```{r,eval=F}
 terra::plotRGB(bhef_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1497,25 +1487,14 @@ if(!file.exists(rgb_fnm_temp)){
         sf::st_buffer(10) %>% 
         terra::vect() %>% 
         terra::project(terra::crs(arnf_rgb_rast))
+      , mask = T
       , filename =  tempfile(fileext = ".tif")
       , overwrite = TRUE
     ) 
-  # Mask the cropped raster to the precise shape of the polygon
-  # This function will also be processed on disk due to the file size
-  arnf_rgb_rast <- terra::mask(
-    crop_rgb_rast_temp
-    , arnf_stand_boundary %>% 
-      sf::st_union() %>% 
-      sf::st_buffer(10) %>% 
-      terra::vect() %>% 
-      terra::project(terra::crs(arnf_rgb_rast))
-    , filename = tempfile(fileext = ".tif")
-    , overwrite = TRUE
-  )
   
   ## apply the change_res_fn for our analysis we don't need such finery
   # this takes too long...
-  arnf_rgb_rast <- change_res_fn(arnf_rgb_rast, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
+  arnf_rgb_rast <- change_res_fn(crop_rgb_rast_temp, my_res=my_rgb_res_m, ofile = rgb_fnm_temp)
 }else{
   arnf_rgb_rast <- terra::rast(rgb_fnm_temp)
 }
@@ -1523,7 +1502,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 test our `ggplot2` plotting function on a zoomed-in portion of the study area
 
-```{r}
+```{r,eval=F}
 ortho_plt_fn(
   arnf_rgb_rast
   , arnf_stand_boundary %>% 
@@ -1534,7 +1513,7 @@ ortho_plt_fn(
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r}
+```{r,eval=F}
 terra::plotRGB(arnf_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
