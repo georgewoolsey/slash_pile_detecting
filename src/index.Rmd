@@ -96,10 +96,11 @@ We will follow the general analysis outline in five distinct sections:
 2. **Point Cloud Processing:** We will demonstrate how to process the point cloud data to generate the required inputs for the propose pile detection method.
 3. **Geometry-based Slash Pile Detection:** We will detail the geometry-based slash pile detection method which uses user-defined thresholds applied to geometric features from a Canopy Height Model (CHM) derived from UAS-DAP point cloud data.
 4. **Spectral Refinement Methodology:** We will detail the complementary spectral refinement methodology which uses RGB data to filter the structurally-detected candidate piles.
-5. **Method Evaluation:** We will detail and demonstrate our method evaluation process in which we review detection accuracy metrics (e.g. Precision, Recall, F-Score) and quantification accuracy metrics (e.g. height MAPE, diameter RMSE, etc.)
-6. **Structural-Only Methodology Evaluation:** We will evaluate the accuracy of the structural-only methodology in terms of slash pile detection (F-score, Recall, Precision) across four distinct treatment units spanning unique prescriptions and forest types.
-7. **Data Fusion Methodology Evaluation:** We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile detection (F-score, Recall, Precision) when using spectral data to refine predictions.
-8. **Sensitivity Analysis:** Finally, we will perform a sensitivity analysis on the key user-defined parameters of the proposed method to systematically quantify the impact of each varied parameter on the stability and performance of the slash pile detection.
+5. **Method Evaluation Detail:** We will detail and demonstrate our method evaluation process in which we review detection accuracy metrics (e.g. Precision, Recall, F-Score) and quantification accuracy metrics (e.g. height MAPE, diameter RMSE, etc.)
+6. **Experimental Methodology Predictions:** We will make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data with the structural and spectral data fusion approach.
+7. **Detection Accuracy:** We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile detection (F-score, Recall, Precision).
+8. **Quantification Accuracy:** We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile form quantification (e.g. height and diameter MAPE, RMSE, ME).
+9. **Sensitivity Analysis:** Finally, we will perform a sensitivity analysis on the key user-defined parameters of the proposed method to systematically quantify the impact of each varied parameter on the stability and performance of the slash pile detection.
 
 ```{r, include=FALSE, echo=FALSE}
 knitr::write_bib(c(

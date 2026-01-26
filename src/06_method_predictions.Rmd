@@ -1,6 +1,6 @@
-# Method Predictions{#str_preds}
+# Method Predictions{#meth_preds}
 
-We are finally ready to make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data. To this point we have:
+We are finally ready to make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data with a structural and spectral data fusion approach. To this point we have:
 
 1. Provided a data overview: [here](#data_desc) and [here](#data_load)
 2. [Processed the UAS point cloud](#ptcld_process)
@@ -8,7 +8,7 @@ We are finally ready to make predictions using our proposed training-free, rules
 4. [Demonstrated our spectral refinement (i.e. data fusion) methodology](#data_fusion)
 5. and [Reviewed how we will evaluate our method](#meth_eval)
 
-In this section, we'll evaluate the effectiveness of the proposed geometric, rules-based methodology by assessing its performance using our data fusion approach which utilizes both structural data (i.e. CHM) and spectral RGB data  across the four study sites. The integration of spectral data in our data fusion approach allows for less restrictive structural settings, while the absence of spectral filtering would necessitate stricter size and geometric thresholds to minimize false positive predictions. We only test the data fusion method here because the spectral data from imagery is foundational to UAS-DAP point cloud data. That is, aerial imagery is the raw input data used to generate the aerial point cloud data which represents structure in 3D space in UAS-DAP workflows.
+In this section, we'll implement the proposed geometric, rules-based slash piled detection methodology on our experimental sites using our data fusion approach which utilizes both structural data (i.e. CHM) and spectral RGB data across the four study sites. The integration of spectral data in our data fusion approach allows for less restrictive structural settings, while the absence of spectral filtering would necessitate stricter size and geometric thresholds to minimize false positive predictions. We only test the data fusion method here because the spectral data from imagery is foundational to UAS-DAP point cloud data. That is, aerial imagery is the raw input data used to generate the aerial point cloud data which represents structure in 3D space in UAS-DAP workflows.
 
 ## Size and Geometric Parameter Settings
 
@@ -510,7 +510,7 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected candidate segments using the DBSCAN method for each study site
 
-```{r, results=F, fig.show='asis'}
+```{r,eval=F, results=F, fig.show='asis'}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -547,8 +547,8 @@ all_stand_boundary$site_data_lab %>%
     \(x)
     terra_plt_ortho(
       ortho = rgb_rast[[x]]
-      , gt_piles = slash_piles_polys[[x]]
-      , pred_piles = dbscan_structural_preds[[x]]
+      , gt_piles = slash_piles_polys[[x]] %>% dplyr::filter(is_in_stand)
+      , pred_piles = dbscan_structural_preds[[x]] %>% dplyr::filter(is_in_stand)
       , boundary = stand_boundary[[x]]
       , title = paste0(
         "DBSCAN: "
@@ -563,15 +563,15 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected candidate segments using the Watershed method for each study site
 
-```{r, results=F, fig.show='asis'}
+```{r,eval=F, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
     \(x)
     terra_plt_ortho(
       ortho = rgb_rast[[x]]
-      , gt_piles = slash_piles_polys[[x]]
-      , pred_piles = watershed_structural_preds[[x]]
+      , gt_piles = slash_piles_polys[[x]] %>% dplyr::filter(is_in_stand)
+      , pred_piles = watershed_structural_preds[[x]] %>% dplyr::filter(is_in_stand)
       , boundary = stand_boundary[[x]]
       , title = paste0(
         "Watershed: "
@@ -931,6 +931,29 @@ dplyr::bind_rows(
   )
 ```
 
+```{r, include=F, eval=F}
+# watershed_spectral_preds[["pj"]] %>% dplyr::glimpse()
+(2:6) %>% 
+purrr::map(
+  \(x)
+  ground_truth_prediction_match(
+    ground_truth = slash_piles_polys[["arnf"]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      sf::st_transform( sf::st_crs(watershed_spectral_preds[["arnf"]]) ) %>% 
+      dplyr::arrange(desc(image_gt_area_m2)) # this is so the algorithm starts with the largest
+    , gt_id = "pile_id"
+    , predictions = watershed_spectral_preds[["arnf"]] %>% 
+      dplyr::filter(is_in_stand,inrange_th_votes>=x)
+    , pred_id = "pred_id"
+    , min_iou_pct = 0.45
+  ) %>% 
+  agg_ground_truth_match() %>% 
+  dplyr::mutate(spectral_weight = x)
+) %>% 
+  dplyr::bind_rows()
+  
+```
+
 now that we know the breakdown, we can remove the candidates which did not meet the `spectral_weight` setting
 
 ```{r}
@@ -1019,15 +1042,15 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site
 
-```{r, results=F, fig.show='asis'}
+```{r,eval=F, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
     \(x)
     terra_plt_ortho(
       ortho = rgb_rast[[x]]
-      , gt_piles = slash_piles_polys[[x]]
-      , pred_piles = dbscan_spectral_preds[[x]]
+      , gt_piles = slash_piles_polys[[x]] %>% dplyr::filter(is_in_stand)
+      , pred_piles = dbscan_spectral_preds[[x]] %>% dplyr::filter(is_in_stand)
       , boundary = stand_boundary[[x]]
       , title = paste0(
         "Final DBSCAN: "
@@ -1041,15 +1064,15 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site
 
-```{r, results=F, fig.show='asis'}
+```{r,eval=F, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
     \(x)
     terra_plt_ortho(
       ortho = rgb_rast[[x]]
-      , gt_piles = slash_piles_polys[[x]]
-      , pred_piles = watershed_spectral_preds[[x]]
+      , gt_piles = slash_piles_polys[[x]] %>% dplyr::filter(is_in_stand)
+      , pred_piles = watershed_spectral_preds[[x]] %>% dplyr::filter(is_in_stand)
       , boundary = stand_boundary[[x]]
       , title = paste0(
         "Final Watershed: "
@@ -1064,106 +1087,3 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-## Detection Accuracy
-
-let's evaluate how our method performed at correctly predicting the presence of slash piles on the landscape
-
-```{r}
-xxx
-# ground_truth_prediction_match_ans <- 
-  ground_truth_prediction_match(
-    ground_truth = slash_piles_polys[["pj"]] %>% 
-      sf::st_transform( sf::st_crs(watershed_spectral_preds[["pj"]]) ) %>% 
-      dplyr::arrange(desc(image_gt_area_m2)) # this is so the algorithm starts with the largest
-    , gt_id = "pile_id"
-    , predictions = watershed_spectral_preds[["pj"]]
-    , pred_id = "pred_id"
-    , min_iou_pct = 0.45
-  )
-  # agg_ground_truth_match() %>% 
-  # kbl_agg_gt_match(caption = "pile detection and form quantification accuracy metrics<br>structural only prior to data fusion")
-
-# huh?
-ground_truth_prediction_match_ans %>% dplyr::glimpse()
-```
-
-how did our predictions do for this test example?
-
-```{r}
-# what did we get?
-ground_truth_prediction_match_ans %>% 
-  dplyr::count(match_grp) %>% 
-  dplyr::mutate(pct = (n/sum(n)) %>% scales::percent(accuracy=0.1))
-```
-
-let's quickly look at the IoU values on the true positives
-
-```{r}
-ground_truth_prediction_match_ans %>% dplyr::select(iou) %>% summary()
-```
-
-here is the distribution of IoU for the TP matches
-
-```{r}
-# palette
-pal_match_grp = c(
-  "omission"=viridis::cividis(3)[1]
-  , "commission"= viridis::cividis(3)[2]
-  , "true positive"=viridis::cividis(3)[3]
-)
-# plot
-ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = iou, color = match_grp, fill = match_grp)) +
-  ggplot2::geom_density(mapping = ggplot2::aes(y=ggplot2::after_stat(scaled)), alpha = 0.8) +
-  ggplot2::scale_color_manual(values=pal_match_grp) +
-  ggplot2::scale_fill_manual(values=pal_match_grp) +
-  ggplot2::scale_y_continuous(NULL,breaks=NULL) +
-  ggplot2::scale_x_continuous(labels=scales::percent) +
-  ggplot2::labs(
-    color="",fill="",x="IoU of correct precitions"
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    legend.position = "none"
-    , strip.text = ggplot2::element_text(size = 9, face = "bold", color = "black")
-  )
-```
-
-let's look at the results spatially noting that just because a prediction overlaps with a ground truth pile does not mean that it meets the IoU threshold for determining a positive match. in these cases where the IoU was insufficient, a commission (FP) will overlap with an omission (FN).
-
-```{r}
-# plot it
-ggplot2::ggplot() +
-  ggplot2::geom_sf(data = aoi_boundary, color = "black", fill = NA) + 
-  ggplot2::geom_sf(
-    data = 
-      aoi_slash_piles_polys %>% 
-        dplyr::left_join(
-          ground_truth_prediction_match_ans %>% 
-            dplyr::select(pile_id,match_grp)
-          , by = "pile_id"
-        )
-    , mapping = ggplot2::aes(fill = match_grp)
-    , color = NA ,alpha=0.7
-  ) + 
-  ggplot2::geom_sf(
-    data =
-      predictions_temp %>%
-        dplyr::left_join(
-          ground_truth_prediction_match_ans %>%
-            dplyr::select(pred_id,match_grp)
-          , by = "pred_id"
-        )
-    , mapping = ggplot2::aes(fill = match_grp, color = match_grp)
-    , alpha = 0
-    , lwd = 1.1
-  ) +
-  ggplot2::scale_fill_manual(values = pal_match_grp, name = "") +
-  ggplot2::scale_color_manual(values = pal_match_grp, name = "") +
-  ggplot2::theme_void() +
-  ggplot2::guides(
-    fill = ggplot2::guide_legend(override.aes = list(color = c(NA,NA,pal_match_grp["commission"])))
-    , color = "none"
-  )
-```
