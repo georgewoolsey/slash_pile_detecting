@@ -10,7 +10,9 @@ tab:unnamed-chunk-238
 tab:unnamed-chunk-301
 tab:unnamed-chunk-307
 tab:unnamed-chunk-312
-tab:unnamed-chunk-316
+tab:unnamed-chunk-317
+tab:unnamed-chunk-325
+tab:unnamed-chunk-334
 introduction
 objective
 data_desc
@@ -90,7 +92,7 @@ meth_eval
 iou_match
 detect_metrics_form
 quant_metrics_form
-str_preds
+meth_preds
 size-and-geometric-parameter-settings
 psinf-mixed-conifer-site-4
 trfo-blm-pinyon-juniper-site-4
@@ -101,6 +103,8 @@ chm-based-slash-pile-candidates
 dbscan-candidates
 watershed-candidates
 spectral-filter-slash-pile-candidates
-dbscan-candidates-1
-watershed-candidates-1
-detection-accuracy
+dbscan-predictions
+watershed-predictions
+preds_detect
+instance-matching
+detection-accuracy-metrics

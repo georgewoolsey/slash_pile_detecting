@@ -537,7 +537,7 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected candidate segments using the DBSCAN method for each study site
 
-```{r,eval=F, results=F, fig.show='asis'}
+```{r,eval=T, results=F, fig.show='asis'}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -590,7 +590,7 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected candidate segments using the Watershed method for each study site
 
-```{r,eval=F, results=F, fig.show='asis'}
+```{r,eval=T, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
@@ -877,7 +877,7 @@ ggplot2::ggplot() +
 
 we can look at a distribution of the number of spectral thresholds met by the structural candidates for each site and segmentation method
 
-```{r}
+```{r, fig.height=9.7}
 dplyr::bind_rows(
    dbscan_spectral_preds %>% 
       purrr::imap(
@@ -951,8 +951,8 @@ dplyr::bind_rows(
   ggplot2::theme_light() +
   ggplot2::theme(
     legend.position = "none"
-    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
-    , axis.text.x = ggplot2::element_text(size = 11)
+    , strip.text = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , axis.text.x = ggplot2::element_text(size = 9)
     , axis.text.y = ggplot2::element_blank()
     , axis.ticks.y = ggplot2::element_blank()
   )
@@ -1095,7 +1095,7 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site
 
-```{r,eval=F, results=F, fig.show='asis'}
+```{r,eval=T, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
@@ -1117,7 +1117,7 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site
 
-```{r,eval=F, results=F, fig.show='asis'}
+```{r,eval=T, results=F, fig.show='asis'}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(

@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Section 8 Detection Accuracy | Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Section 8 Detection Accuracy | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Section 8 Detection Accuracy | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="meth_preds.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data and Site Descriptions</a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="index.html"><a href="index.html#silvicultural-prescriptions"><i class="fa fa-check"></i><b>1.2.1</b> Silvicultural Prescriptions</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="data_load.html"><a href="data_load.html"><i class="fa fa-check"></i><b>2</b> Data Overview</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="data_load.html"><a href="data_load.html#study-units-vector-data"><i class="fa fa-check"></i><b>2.1</b> Study Units Vector Data</a></li>
+<li class="chapter" data-level="2.2" data-path="data_load.html"><a href="data_load.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="data_load.html"><a href="data_load.html#standardize-pile-data"><i class="fa fa-check"></i><b>2.2.1</b> Standardize Pile Data</a></li>
+<li class="chapter" data-level="2.2.2" data-path="data_load.html"><a href="data_load.html#pile-form-measurements"><i class="fa fa-check"></i><b>2.2.2</b> Pile Form Measurements</a></li>
+<li class="chapter" data-level="2.2.3" data-path="data_load.html"><a href="data_load.html#image-annotation-comparison"><i class="fa fa-check"></i><b>2.2.3</b> Image-Annotation Comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="data_load.html"><a href="data_load.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-1"><i class="fa fa-check"></i><b>2.3.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.3.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-1"><i class="fa fa-check"></i><b>2.3.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.3.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.3.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="data_load.html"><a href="data_load.html#slash-pile-rgb-imagery"><i class="fa fa-check"></i><b>2.4</b> Slash Pile RGB Imagery</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-2"><i class="fa fa-check"></i><b>2.4.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.4.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-2"><i class="fa fa-check"></i><b>2.4.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.4.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.5" data-path="data_load.html"><a href="data_load.html#all"><i class="fa fa-check"></i><b>2.4.5</b> All</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>3</b> Point Cloud Processing</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>3.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#psinf-mixed-conifer-site-3"><i class="fa fa-check"></i><b>3.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="3.1.2" data-path="ptcld_process.html"><a href="ptcld_process.html#trfo-blm-pinyon-juniper-site-3"><i class="fa fa-check"></i><b>3.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="3.1.3" data-path="ptcld_process.html"><a href="ptcld_process.html#bhef-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="3.1.4" data-path="ptcld_process.html"><a href="ptcld_process.html#arnf-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="ptcld_process.html"><a href="ptcld_process.html#clean-up"><i class="fa fa-check"></i><b>3.2</b> Clean Up</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="geom_detect.html"><a href="geom_detect.html"><i class="fa fa-check"></i><b>4</b> Geometry-based Slash Pile Detection</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="geom_detect.html"><a href="geom_detect.html#d_area"><i class="fa fa-check"></i><b>4.1</b> Demonstration Area</a></li>
+<li class="chapter" data-level="4.2" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-methods"><i class="fa fa-check"></i><b>4.2</b> Segmentation Methods</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="geom_detect.html"><a href="geom_detect.html#seg_methods"><i class="fa fa-check"></i><b>4.2.1</b> Overview of Methods</a></li>
+<li class="chapter" data-level="4.2.2" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.2</b> Watershed Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.3" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.3</b> DBSCAN Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.4" data-path="geom_detect.html"><a href="geom_detect.html#comparison-of-candidate-segments"><i class="fa fa-check"></i><b>4.2.4</b> Comparison of Candidate Segments</a></li>
+<li class="chapter" data-level="4.2.5" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-function"><i class="fa fa-check"></i><b>4.2.5</b> Segmentation Function</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="geom_detect.html"><a href="geom_detect.html#candidate-shape-refinement-and-area-filtering"><i class="fa fa-check"></i><b>4.3</b> Candidate Shape Refinement and Area filtering</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation"><i class="fa fa-check"></i><b>4.3.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.3.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation"><i class="fa fa-check"></i><b>4.3.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.3.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison"><i class="fa fa-check"></i><b>4.3.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="geom_detect.html"><a href="geom_detect.html#candidate-geometric-filtering"><i class="fa fa-check"></i><b>4.4</b> Candidate Geometric filtering</a>
+<ul>
+<li class="chapter" data-level="4.4.1" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-convexity"><i class="fa fa-check"></i><b>4.4.1</b> Shape Irregularity: Convexity</a></li>
+<li class="chapter" data-level="4.4.2" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-circularity"><i class="fa fa-check"></i><b>4.4.2</b> Shape Irregularity: Circularity</a></li>
+</ul></li>
+<li class="chapter" data-level="4.5" data-path="geom_detect.html"><a href="geom_detect.html#structural-metrics-from-chm"><i class="fa fa-check"></i><b>4.5</b> Structural Metrics from CHM</a>
+<ul>
+<li class="chapter" data-level="4.5.1" data-path="geom_detect.html"><a href="geom_detect.html#structural-rasters"><i class="fa fa-check"></i><b>4.5.1</b> Structural Rasters</a></li>
+<li class="chapter" data-level="4.5.2" data-path="geom_detect.html"><a href="geom_detect.html#demonstration-candidate-segment-metrics"><i class="fa fa-check"></i><b>4.5.2</b> Demonstration Candidate Segment Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="4.6" data-path="geom_detect.html"><a href="geom_detect.html#final-shape-refinement"><i class="fa fa-check"></i><b>4.6</b> Final Shape Refinement</a>
+<ul>
+<li class="chapter" data-level="4.6.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-3"><i class="fa fa-check"></i><b>4.6.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.6.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-3"><i class="fa fa-check"></i><b>4.6.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.6.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison-2"><i class="fa fa-check"></i><b>4.6.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.7" data-path="geom_detect.html"><a href="geom_detect.html#slash_pile_detect_fn"><i class="fa fa-check"></i><b>4.7</b> Pile Detection Function</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="data_fusion.html"><a href="data_fusion.html"><i class="fa fa-check"></i><b>5</b> Data Fusion</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="data_fusion.html"><a href="data_fusion.html#rgb-indices"><i class="fa fa-check"></i><b>5.1</b> RGB Indices</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-functions"><i class="fa fa-check"></i><b>5.1.1</b> Spectral Index Functions</a></li>
+<li class="chapter" data-level="5.1.2" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-of-polygons"><i class="fa fa-check"></i><b>5.1.2</b> Spectral Index of Polygons</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="data_fusion.html"><a href="data_fusion.html#demonstration-pile-spectral-summary"><i class="fa fa-check"></i><b>5.2</b> Demonstration Pile Spectral Summary</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="data_fusion.html"><a href="data_fusion.html#voting-system"><i class="fa fa-check"></i><b>5.2.1</b> Voting System</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="data_fusion.html"><a href="data_fusion.html#polygon_spectral_filtering"><i class="fa fa-check"></i><b>5.3</b> Candidate Polygon Spectral Filtering Function</a></li>
+<li class="chapter" data-level="5.4" data-path="data_fusion.html"><a href="data_fusion.html#data-fusion-method-demonstration"><i class="fa fa-check"></i><b>5.4</b> Data Fusion Method Demonstration</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="meth_eval.html"><a href="meth_eval.html"><i class="fa fa-check"></i><b>6</b> Method Evaluation</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="meth_eval.html"><a href="meth_eval.html#iou_match"><i class="fa fa-check"></i><b>6.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="6.2" data-path="meth_eval.html"><a href="meth_eval.html#detect_metrics_form"><i class="fa fa-check"></i><b>6.2</b> Detection Accuracy Metrics</a></li>
+<li class="chapter" data-level="6.3" data-path="meth_eval.html"><a href="meth_eval.html#quant_metrics_form"><i class="fa fa-check"></i><b>6.3</b> Quantification Accuracy Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="meth_preds.html"><a href="meth_preds.html"><i class="fa fa-check"></i><b>7</b> Method Predictions</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="meth_preds.html"><a href="meth_preds.html#size-and-geometric-parameter-settings"><i class="fa fa-check"></i><b>7.1</b> Size and Geometric Parameter Settings</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="meth_preds.html"><a href="meth_preds.html#psinf-mixed-conifer-site-4"><i class="fa fa-check"></i><b>7.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="7.1.2" data-path="meth_preds.html"><a href="meth_preds.html#trfo-blm-pinyon-juniper-site-4"><i class="fa fa-check"></i><b>7.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="7.1.3" data-path="meth_preds.html"><a href="meth_preds.html#bhef-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.4" data-path="meth_preds.html"><a href="meth_preds.html#arnf-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.5" data-path="meth_preds.html"><a href="meth_preds.html#study-paremeter-settings"><i class="fa fa-check"></i><b>7.1.5</b> Study Paremeter Settings</a></li>
+</ul></li>
+<li class="chapter" data-level="7.2" data-path="meth_preds.html"><a href="meth_preds.html#chm-based-slash-pile-candidates"><i class="fa fa-check"></i><b>7.2</b> CHM-based Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.2.1" data-path="meth_preds.html"><a href="meth_preds.html#dbscan-candidates"><i class="fa fa-check"></i><b>7.2.1</b> DBSCAN Candidates</a></li>
+<li class="chapter" data-level="7.2.2" data-path="meth_preds.html"><a href="meth_preds.html#watershed-candidates"><i class="fa fa-check"></i><b>7.2.2</b> Watershed Candidates</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="meth_preds.html"><a href="meth_preds.html#spectral-filter-slash-pile-candidates"><i class="fa fa-check"></i><b>7.3</b> Spectral Filter Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.3.1" data-path="meth_preds.html"><a href="meth_preds.html#dbscan-predictions"><i class="fa fa-check"></i><b>7.3.1</b> DBSCAN Predictions</a></li>
+<li class="chapter" data-level="7.3.2" data-path="meth_preds.html"><a href="meth_preds.html#watershed-predictions"><i class="fa fa-check"></i><b>7.3.2</b> Watershed Predictions</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="preds_detect.html"><a href="preds_detect.html"><i class="fa fa-check"></i><b>8</b> Detection Accuracy</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="preds_detect.html"><a href="preds_detect.html#instance-matching"><i class="fa fa-check"></i><b>8.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="8.2" data-path="preds_detect.html"><a href="preds_detect.html#detection-accuracy-metrics"><i class="fa fa-check"></i><b>8.2</b> Detection Accuracy Metrics</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="preds_detect" class="section level1 hasAnchor" number="8">
+<h1><span class="header-section-number">Section 8</span> Detection Accuracy<a href="preds_detect.html#preds_detect" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>To this point we have:</p>
+<ol style="list-style-type: decimal">
+<li>Provided a data overview: <a href="index.html#data_desc">here</a> and <a href="data_load.html#data_load">here</a></li>
+<li><a href="ptcld_process.html#ptcld_process">Processed the UAS point cloud</a></li>
+<li><a href="geom_detect.html#geom_detect">Demonstrated our geometry-based slash pile detection methodology</a></li>
+<li><a href="data_fusion.html#data_fusion">Demonstrated our spectral refinement (i.e. data fusion) methodology</a></li>
+<li><a href="meth_eval.html#meth_eval">Reviewed how we will evaluate our method</a></li>
+<li>and <a href="meth_preds.html#meth_preds">Made predictions using our method on our experimental sites</a></li>
+</ol>
+<p>In this section, we’ll evaluate the effectiveness of the proposed geometric, rules-based slash pile detection methodology by assessing its detection accuracy performance. We fully reviewed the detection accuracy assessment <a href="meth_eval.html#detect_metrics_form">workflow here</a>, but here is a quick overview:</p>
+<p>Detection accuracy metrics are calculated by aggregating raw TP (true positive), FP (false positive; commission), and FN (false negative; omission) counts to quantify the method’s ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (TP) instances correctly match ground truth instances with a prediction, commission tree predictions do not match a ground truth tree (false positive; FP), and omissions are ground truth instances for which no predictions match (FN)</p>
+<div id="instance-matching" class="section level2 hasAnchor" number="8.1">
+<h2><span class="header-section-number">8.1</span> Instance Matching<a href="preds_detect.html#instance-matching" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The first step in evaluating the performance of our slash pile detection methodology is to perform instance matching. Instance matching is the process of checking our predictions of slash pile presence (or absence) against the actual pile locations in real life (we use image-annotated pile outlines as ground truth) to determine if the method correctly identifies presence and absence. We use the framework established by Puliti et al. <a href="https://doi.org/10.48550/arXiv.2309.01279">(2023, p. 14)</a> to validate detections based on an Intersection over Union (IoU) threshold. We set this threshold at 45% which is slightly more permissive than the 50% used by Puliti et al. (2023) for tree crowns to accommodate the fact that our target objects are located on the forest floor rather than in the canopy and are therefore subject to higher levels of occlusion from aerial data.</p>
+<p>we reviewed this process and defined the function <code>ground_truth_prediction_match()</code> <a href="meth_eval.html#iou_match">here</a></p>
+<div class="sourceCode" id="cb286"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb286-1"><a href="preds_detect.html#cb286-1" tabindex="-1"></a><span class="co"># map over ground_truth_prediction_match for dbscan</span></span>
+<span id="cb286-2"><a href="preds_detect.html#cb286-2" tabindex="-1"></a>  dbscan_gt_pred_match <span class="ot">&lt;-</span> </span>
+<span id="cb286-3"><a href="preds_detect.html#cb286-3" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb286-4"><a href="preds_detect.html#cb286-4" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb286-5"><a href="preds_detect.html#cb286-5" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb286-6"><a href="preds_detect.html#cb286-6" tabindex="-1"></a>      \(x)</span>
+<span id="cb286-7"><a href="preds_detect.html#cb286-7" tabindex="-1"></a>      <span class="fu">ground_truth_prediction_match</span>(</span>
+<span id="cb286-8"><a href="preds_detect.html#cb286-8" tabindex="-1"></a>          <span class="at">ground_truth =</span> slash_piles_polys[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb286-9"><a href="preds_detect.html#cb286-9" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(is_in_stand) <span class="sc">%&gt;%</span> </span>
+<span id="cb286-10"><a href="preds_detect.html#cb286-10" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_transform</span>( sf<span class="sc">::</span><span class="fu">st_crs</span>(dbscan_spectral_preds[[x]]) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb286-11"><a href="preds_detect.html#cb286-11" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(image_gt_area_m2)) <span class="co"># this is so the algorithm starts with the largest</span></span>
+<span id="cb286-12"><a href="preds_detect.html#cb286-12" tabindex="-1"></a>          , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb286-13"><a href="preds_detect.html#cb286-13" tabindex="-1"></a>          , <span class="at">predictions =</span> dbscan_spectral_preds[[x]]</span>
+<span id="cb286-14"><a href="preds_detect.html#cb286-14" tabindex="-1"></a>          , <span class="at">pred_id =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb286-15"><a href="preds_detect.html#cb286-15" tabindex="-1"></a>          , <span class="at">min_iou_pct =</span> <span class="fl">0.45</span></span>
+<span id="cb286-16"><a href="preds_detect.html#cb286-16" tabindex="-1"></a>        )</span>
+<span id="cb286-17"><a href="preds_detect.html#cb286-17" tabindex="-1"></a>      , <span class="at">.progress =</span> T</span>
+<span id="cb286-18"><a href="preds_detect.html#cb286-18" tabindex="-1"></a>    )</span>
+<span id="cb286-19"><a href="preds_detect.html#cb286-19" tabindex="-1"></a><span class="co"># map over ground_truth_prediction_match for watershed</span></span>
+<span id="cb286-20"><a href="preds_detect.html#cb286-20" tabindex="-1"></a>  watershed_gt_pred_match <span class="ot">&lt;-</span> </span>
+<span id="cb286-21"><a href="preds_detect.html#cb286-21" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb286-22"><a href="preds_detect.html#cb286-22" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb286-23"><a href="preds_detect.html#cb286-23" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb286-24"><a href="preds_detect.html#cb286-24" tabindex="-1"></a>      \(x)</span>
+<span id="cb286-25"><a href="preds_detect.html#cb286-25" tabindex="-1"></a>      <span class="fu">ground_truth_prediction_match</span>(</span>
+<span id="cb286-26"><a href="preds_detect.html#cb286-26" tabindex="-1"></a>          <span class="at">ground_truth =</span> slash_piles_polys[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb286-27"><a href="preds_detect.html#cb286-27" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(is_in_stand) <span class="sc">%&gt;%</span> </span>
+<span id="cb286-28"><a href="preds_detect.html#cb286-28" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_transform</span>( sf<span class="sc">::</span><span class="fu">st_crs</span>(watershed_spectral_preds[[x]]) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb286-29"><a href="preds_detect.html#cb286-29" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(image_gt_area_m2)) <span class="co"># this is so the algorithm starts with the largest</span></span>
+<span id="cb286-30"><a href="preds_detect.html#cb286-30" tabindex="-1"></a>          , <span class="at">gt_id =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb286-31"><a href="preds_detect.html#cb286-31" tabindex="-1"></a>          , <span class="at">predictions =</span> watershed_spectral_preds[[x]]</span>
+<span id="cb286-32"><a href="preds_detect.html#cb286-32" tabindex="-1"></a>          , <span class="at">pred_id =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb286-33"><a href="preds_detect.html#cb286-33" tabindex="-1"></a>          , <span class="at">min_iou_pct =</span> <span class="fl">0.45</span></span>
+<span id="cb286-34"><a href="preds_detect.html#cb286-34" tabindex="-1"></a>        )</span>
+<span id="cb286-35"><a href="preds_detect.html#cb286-35" tabindex="-1"></a>      , <span class="at">.progress =</span> T</span>
+<span id="cb286-36"><a href="preds_detect.html#cb286-36" tabindex="-1"></a>    )</span></code></pre></div>
+<p>let’s see what the instance matching data looks like</p>
+<div class="sourceCode" id="cb287"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb287-1"><a href="preds_detect.html#cb287-1" tabindex="-1"></a><span class="co"># what did we get?</span></span>
+<span id="cb287-2"><a href="preds_detect.html#cb287-2" tabindex="-1"></a>dbscan_gt_pred_match[[<span class="dv">1</span>]] <span class="sc">%&gt;%</span> </span>
+<span id="cb287-3"><a href="preds_detect.html#cb287-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 24
+## Columns: 6
+## $ pile_id   &lt;int&gt; 7, 8, 4, 6, 15, 13, 17, 11, 10, 9, 19, 18, 2, 5, 12, 1, 14, …
+## $ i_area    &lt;dbl&gt; 536.5570, 539.9044, 492.3933, 449.3572, 422.1786, 425.3035, …
+## $ u_area    &lt;dbl&gt; 593.2048, 579.0174, 519.5787, 483.3788, 459.7354, 454.9364, …
+## $ iou       &lt;dbl&gt; 0.9045055, 0.9324494, 0.9476780, 0.9296171, 0.9183078, 0.934…
+## $ pred_id   &lt;dbl&gt; 24249, 23782, 12862, 23411, 15434, 14529, 7687, 16382, 22005…
+## $ match_grp &lt;ord&gt; true positive, true positive, true positive, true positive, …</code></pre>
+<p>let’s quickly look at the distribution of IoU for the TP matches</p>
+<div class="sourceCode" id="cb289"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb289-1"><a href="preds_detect.html#cb289-1" tabindex="-1"></a><span class="co"># palette</span></span>
+<span id="cb289-2"><a href="preds_detect.html#cb289-2" tabindex="-1"></a>pal_match_grp <span class="ot">=</span> <span class="fu">c</span>(</span>
+<span id="cb289-3"><a href="preds_detect.html#cb289-3" tabindex="-1"></a>  <span class="st">&quot;omission&quot;</span><span class="ot">=</span>viridis<span class="sc">::</span><span class="fu">cividis</span>(<span class="dv">3</span>)[<span class="dv">1</span>]</span>
+<span id="cb289-4"><a href="preds_detect.html#cb289-4" tabindex="-1"></a>  , <span class="st">&quot;commission&quot;</span><span class="ot">=</span> viridis<span class="sc">::</span><span class="fu">cividis</span>(<span class="dv">3</span>)[<span class="dv">2</span>]</span>
+<span id="cb289-5"><a href="preds_detect.html#cb289-5" tabindex="-1"></a>  , <span class="st">&quot;true positive&quot;</span><span class="ot">=</span>viridis<span class="sc">::</span><span class="fu">cividis</span>(<span class="dv">3</span>)[<span class="dv">3</span>]</span>
+<span id="cb289-6"><a href="preds_detect.html#cb289-6" tabindex="-1"></a>)</span>
+<span id="cb289-7"><a href="preds_detect.html#cb289-7" tabindex="-1"></a><span class="co"># plot</span></span>
+<span id="cb289-8"><a href="preds_detect.html#cb289-8" tabindex="-1"></a>iou_dta_temp <span class="ot">&lt;-</span> </span>
+<span id="cb289-9"><a href="preds_detect.html#cb289-9" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb289-10"><a href="preds_detect.html#cb289-10" tabindex="-1"></a>   dbscan_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb289-11"><a href="preds_detect.html#cb289-11" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb289-12"><a href="preds_detect.html#cb289-12" tabindex="-1"></a>        \(x,nm)</span>
+<span id="cb289-13"><a href="preds_detect.html#cb289-13" tabindex="-1"></a>        x <span class="sc">%&gt;%</span> </span>
+<span id="cb289-14"><a href="preds_detect.html#cb289-14" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(match_grp<span class="sc">==</span><span class="st">&quot;true positive&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb289-15"><a href="preds_detect.html#cb289-15" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb289-16"><a href="preds_detect.html#cb289-16" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb289-17"><a href="preds_detect.html#cb289-17" tabindex="-1"></a>          , <span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span></span>
+<span id="cb289-18"><a href="preds_detect.html#cb289-18" tabindex="-1"></a>        )</span>
+<span id="cb289-19"><a href="preds_detect.html#cb289-19" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb289-20"><a href="preds_detect.html#cb289-20" tabindex="-1"></a>     dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb289-21"><a href="preds_detect.html#cb289-21" tabindex="-1"></a>   , watershed_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb289-22"><a href="preds_detect.html#cb289-22" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb289-23"><a href="preds_detect.html#cb289-23" tabindex="-1"></a>        \(x,nm)</span>
+<span id="cb289-24"><a href="preds_detect.html#cb289-24" tabindex="-1"></a>        x <span class="sc">%&gt;%</span> </span>
+<span id="cb289-25"><a href="preds_detect.html#cb289-25" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(match_grp<span class="sc">==</span><span class="st">&quot;true positive&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb289-26"><a href="preds_detect.html#cb289-26" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb289-27"><a href="preds_detect.html#cb289-27" tabindex="-1"></a>          <span class="at">site =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb289-28"><a href="preds_detect.html#cb289-28" tabindex="-1"></a>          , <span class="at">method =</span> <span class="st">&quot;watershed&quot;</span></span>
+<span id="cb289-29"><a href="preds_detect.html#cb289-29" tabindex="-1"></a>        )</span>
+<span id="cb289-30"><a href="preds_detect.html#cb289-30" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb289-31"><a href="preds_detect.html#cb289-31" tabindex="-1"></a>     dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb289-32"><a href="preds_detect.html#cb289-32" tabindex="-1"></a>  )</span>
+<span id="cb289-33"><a href="preds_detect.html#cb289-33" tabindex="-1"></a><span class="co"># plot it</span></span>
+<span id="cb289-34"><a href="preds_detect.html#cb289-34" tabindex="-1"></a></span>
+<span id="cb289-35"><a href="preds_detect.html#cb289-35" tabindex="-1"></a>iou_dta_temp <span class="sc">%&gt;%</span> </span>
+<span id="cb289-36"><a href="preds_detect.html#cb289-36" tabindex="-1"></a>  <span class="co"># dplyr::glimpse()</span></span>
+<span id="cb289-37"><a href="preds_detect.html#cb289-37" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(<span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> iou)) <span class="sc">+</span></span>
+<span id="cb289-38"><a href="preds_detect.html#cb289-38" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.45</span>, <span class="at">color =</span> <span class="st">&quot;gray&quot;</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb289-39"><a href="preds_detect.html#cb289-39" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_violin</span>(</span>
+<span id="cb289-40"><a href="preds_detect.html#cb289-40" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">0</span>, <span class="at">color =</span> match_grp, <span class="at">fill =</span> match_grp)</span>
+<span id="cb289-41"><a href="preds_detect.html#cb289-41" tabindex="-1"></a>    , <span class="at">alpha =</span> <span class="fl">0.8</span></span>
+<span id="cb289-42"><a href="preds_detect.html#cb289-42" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb289-43"><a href="preds_detect.html#cb289-43" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_boxplot</span>(<span class="at">width =</span> <span class="fl">0.1</span>, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">outliers =</span> F) <span class="sc">+</span></span>
+<span id="cb289-44"><a href="preds_detect.html#cb289-44" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_color_manual</span>(<span class="at">values=</span>pal_match_grp) <span class="sc">+</span></span>
+<span id="cb289-45"><a href="preds_detect.html#cb289-45" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_fill_manual</span>(<span class="at">values=</span>pal_match_grp) <span class="sc">+</span></span>
+<span id="cb289-46"><a href="preds_detect.html#cb289-46" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_y_continuous</span>(<span class="cn">NULL</span>,<span class="at">breaks=</span><span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb289-47"><a href="preds_detect.html#cb289-47" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="at">labels=</span>scales<span class="sc">::</span>percent, <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">breaks_extended</span>(<span class="at">n=</span><span class="dv">6</span>)) <span class="sc">+</span></span>
+<span id="cb289-48"><a href="preds_detect.html#cb289-48" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">facet_grid</span>(</span>
+<span id="cb289-49"><a href="preds_detect.html#cb289-49" tabindex="-1"></a>    <span class="at">rows =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(site)</span>
+<span id="cb289-50"><a href="preds_detect.html#cb289-50" tabindex="-1"></a>    , <span class="at">cols =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(method)</span>
+<span id="cb289-51"><a href="preds_detect.html#cb289-51" tabindex="-1"></a>    <span class="co"># , scales = &quot;free_y&quot;</span></span>
+<span id="cb289-52"><a href="preds_detect.html#cb289-52" tabindex="-1"></a>    , <span class="at">switch =</span> <span class="st">&quot;y&quot;</span></span>
+<span id="cb289-53"><a href="preds_detect.html#cb289-53" tabindex="-1"></a>    , <span class="at">axes =</span> <span class="st">&quot;all_x&quot;</span></span>
+<span id="cb289-54"><a href="preds_detect.html#cb289-54" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb289-55"><a href="preds_detect.html#cb289-55" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb289-56"><a href="preds_detect.html#cb289-56" tabindex="-1"></a>    <span class="at">color=</span><span class="st">&quot;&quot;</span>,<span class="at">fill=</span><span class="st">&quot;&quot;</span>,<span class="at">x=</span><span class="st">&quot;IoU of correct precitions&quot;</span></span>
+<span id="cb289-57"><a href="preds_detect.html#cb289-57" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb289-58"><a href="preds_detect.html#cb289-58" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb289-59"><a href="preds_detect.html#cb289-59" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb289-60"><a href="preds_detect.html#cb289-60" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb289-61"><a href="preds_detect.html#cb289-61" tabindex="-1"></a>    , <span class="at">strip.text =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold&quot;</span>)</span>
+<span id="cb289-62"><a href="preds_detect.html#cb289-62" tabindex="-1"></a>    , <span class="at">axis.text.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>)</span>
+<span id="cb289-63"><a href="preds_detect.html#cb289-63" tabindex="-1"></a>    , <span class="at">axis.text.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb289-64"><a href="preds_detect.html#cb289-64" tabindex="-1"></a>    , <span class="at">axis.ticks.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb289-65"><a href="preds_detect.html#cb289-65" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-324-1.png" alt="" width="1008" /></p>
+<p>the majority of correct predictions had high overlap with the actual, ground truth piles with only a few piles at one site approaching the 45% minimum threshold to determine a match. let’s check out the summary stats</p>
+<div class="sourceCode" id="cb290"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb290-1"><a href="preds_detect.html#cb290-1" tabindex="-1"></a>iou_dta_temp <span class="sc">%&gt;%</span> </span>
+<span id="cb290-2"><a href="preds_detect.html#cb290-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-3"><a href="preds_detect.html#cb290-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb290-4"><a href="preds_detect.html#cb290-4" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb290-5"><a href="preds_detect.html#cb290-5" tabindex="-1"></a>      <span class="fu">c</span>(iou)</span>
+<span id="cb290-6"><a href="preds_detect.html#cb290-6" tabindex="-1"></a>      , <span class="at">.fns =</span> <span class="fu">list</span>(</span>
+<span id="cb290-7"><a href="preds_detect.html#cb290-7" tabindex="-1"></a>        <span class="at">mean =</span> <span class="sc">~</span><span class="fu">mean</span>(.x,<span class="at">na.rm=</span>T)</span>
+<span id="cb290-8"><a href="preds_detect.html#cb290-8" tabindex="-1"></a>        , <span class="at">q50 =</span> <span class="sc">~</span><span class="fu">quantile</span>(.x,<span class="at">na.rm=</span>T,<span class="at">probs=</span><span class="fl">0.5</span>)</span>
+<span id="cb290-9"><a href="preds_detect.html#cb290-9" tabindex="-1"></a>        , <span class="at">sd =</span> <span class="sc">~</span><span class="fu">sd</span>(.x,<span class="at">na.rm=</span>T)</span>
+<span id="cb290-10"><a href="preds_detect.html#cb290-10" tabindex="-1"></a>        <span class="co"># , q10 = ~quantile(.x,na.rm=T,probs=0.1)</span></span>
+<span id="cb290-11"><a href="preds_detect.html#cb290-11" tabindex="-1"></a>        <span class="co"># , q90 = ~quantile(.x,na.rm=T,probs=0.9)</span></span>
+<span id="cb290-12"><a href="preds_detect.html#cb290-12" tabindex="-1"></a>        <span class="co"># , min = ~min(.x,na.rm=T)</span></span>
+<span id="cb290-13"><a href="preds_detect.html#cb290-13" tabindex="-1"></a>        <span class="co"># , max = ~max(.x,na.rm=T)</span></span>
+<span id="cb290-14"><a href="preds_detect.html#cb290-14" tabindex="-1"></a>        , <span class="at">range =</span> <span class="sc">~</span><span class="fu">paste0</span>(</span>
+<span id="cb290-15"><a href="preds_detect.html#cb290-15" tabindex="-1"></a>          scales<span class="sc">::</span><span class="fu">percent</span>(<span class="fu">min</span>(.x,<span class="at">na.rm=</span>T), <span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb290-16"><a href="preds_detect.html#cb290-16" tabindex="-1"></a>          ,<span class="st">&quot;-&quot;</span></span>
+<span id="cb290-17"><a href="preds_detect.html#cb290-17" tabindex="-1"></a>          , scales<span class="sc">::</span><span class="fu">percent</span>(<span class="fu">max</span>(.x,<span class="at">na.rm=</span>T), <span class="at">accuracy =</span> <span class="fl">0.1</span>)</span>
+<span id="cb290-18"><a href="preds_detect.html#cb290-18" tabindex="-1"></a>        )</span>
+<span id="cb290-19"><a href="preds_detect.html#cb290-19" tabindex="-1"></a>      )</span>
+<span id="cb290-20"><a href="preds_detect.html#cb290-20" tabindex="-1"></a>    )</span>
+<span id="cb290-21"><a href="preds_detect.html#cb290-21" tabindex="-1"></a>    , <span class="at">n =</span> dplyr<span class="sc">::</span><span class="fu">n</span>() <span class="sc">%&gt;%</span> scales<span class="sc">::</span><span class="fu">comma</span>(<span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb290-22"><a href="preds_detect.html#cb290-22" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-23"><a href="preds_detect.html#cb290-23" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb290-24"><a href="preds_detect.html#cb290-24" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb290-25"><a href="preds_detect.html#cb290-25" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb290-26"><a href="preds_detect.html#cb290-26" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">where</span>(is.numeric)</span>
+<span id="cb290-27"><a href="preds_detect.html#cb290-27" tabindex="-1"></a>      , <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">percent</span>(.x,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb290-28"><a href="preds_detect.html#cb290-28" tabindex="-1"></a>    )</span>
+<span id="cb290-29"><a href="preds_detect.html#cb290-29" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-30"><a href="preds_detect.html#cb290-30" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">relocate</span>(site,method,n) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-31"><a href="preds_detect.html#cb290-31" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-32"><a href="preds_detect.html#cb290-32" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb290-33"><a href="preds_detect.html#cb290-33" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;IoU of correct predictions (TP)&quot;</span></span>
+<span id="cb290-34"><a href="preds_detect.html#cb290-34" tabindex="-1"></a>    , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb290-35"><a href="preds_detect.html#cb290-35" tabindex="-1"></a>      <span class="st">&quot;site&quot;</span>, <span class="st">&quot;method&quot;</span></span>
+<span id="cb290-36"><a href="preds_detect.html#cb290-36" tabindex="-1"></a>      , <span class="st">&quot;TP predictions&quot;</span></span>
+<span id="cb290-37"><a href="preds_detect.html#cb290-37" tabindex="-1"></a>      , <span class="st">&quot;IoU mean&quot;</span></span>
+<span id="cb290-38"><a href="preds_detect.html#cb290-38" tabindex="-1"></a>      , <span class="st">&quot;IoU median&quot;</span></span>
+<span id="cb290-39"><a href="preds_detect.html#cb290-39" tabindex="-1"></a>      , <span class="st">&quot;IoU sd&quot;</span></span>
+<span id="cb290-40"><a href="preds_detect.html#cb290-40" tabindex="-1"></a>      , <span class="st">&quot;IoU range&quot;</span></span>
+<span id="cb290-41"><a href="preds_detect.html#cb290-41" tabindex="-1"></a>    )</span>
+<span id="cb290-42"><a href="preds_detect.html#cb290-42" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb290-43"><a href="preds_detect.html#cb290-43" tabindex="-1"></a>    <span class="co"># , digits = 2</span></span>
+<span id="cb290-44"><a href="preds_detect.html#cb290-44" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb290-45"><a href="preds_detect.html#cb290-45" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb290-46"><a href="preds_detect.html#cb290-46" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)</span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-325">Table 8.1: </span>IoU of correct predictions (TP)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:left;">
+TP predictions
+</th>
+<th style="text-align:left;">
+IoU mean
+</th>
+<th style="text-align:left;">
+IoU median
+</th>
+<th style="text-align:left;">
+IoU sd
+</th>
+<th style="text-align:left;">
+IoU range
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+ARNF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+18
+</td>
+<td style="text-align:left;">
+92.8%
+</td>
+<td style="text-align:left;">
+93.2%
+</td>
+<td style="text-align:left;">
+1.8%
+</td>
+<td style="text-align:left;">
+88.4%-95.1%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+18
+</td>
+<td style="text-align:left;">
+92.8%
+</td>
+<td style="text-align:left;">
+93.2%
+</td>
+<td style="text-align:left;">
+1.8%
+</td>
+<td style="text-align:left;">
+88.4%-95.1%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+BHEF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+79.1%
+</td>
+<td style="text-align:left;">
+83.3%
+</td>
+<td style="text-align:left;">
+12.3%
+</td>
+<td style="text-align:left;">
+50.5%-93.7%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+79.1%
+</td>
+<td style="text-align:left;">
+83.3%
+</td>
+<td style="text-align:left;">
+12.2%
+</td>
+<td style="text-align:left;">
+50.5%-93.5%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+PSINF Mixed Conifer Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+115
+</td>
+<td style="text-align:left;">
+82.8%
+</td>
+<td style="text-align:left;">
+84.7%
+</td>
+<td style="text-align:left;">
+6.8%
+</td>
+<td style="text-align:left;">
+57.1%-92.5%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+115
+</td>
+<td style="text-align:left;">
+82.8%
+</td>
+<td style="text-align:left;">
+84.6%
+</td>
+<td style="text-align:left;">
+6.8%
+</td>
+<td style="text-align:left;">
+57.1%-92.5%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+TRFO-BLM Pinyon-Juniper Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+245
+</td>
+<td style="text-align:left;">
+81.1%
+</td>
+<td style="text-align:left;">
+82.9%
+</td>
+<td style="text-align:left;">
+8.4%
+</td>
+<td style="text-align:left;">
+49.2%-93.4%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+245
+</td>
+<td style="text-align:left;">
+81.1%
+</td>
+<td style="text-align:left;">
+82.9%
+</td>
+<td style="text-align:left;">
+8.4%
+</td>
+<td style="text-align:left;">
+49.2%-93.4%
+</td>
+</tr>
+</tbody>
+</table>
+<p>let’s look at the results spatially noting that just because a prediction overlaps with a ground truth pile does not mean that it meets the IoU threshold for determining a positive match. in these cases where the IoU was insufficient, a commission (FP) will overlap with an omission (FN).</p>
+<div class="sourceCode" id="cb291"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb291-1"><a href="preds_detect.html#cb291-1" tabindex="-1"></a>plt_fn_temp <span class="ot">&lt;-</span> <span class="cf">function</span>(x, method) {</span>
+<span id="cb291-2"><a href="preds_detect.html#cb291-2" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">tolower</span>(method) <span class="sc">==</span> <span class="st">&quot;dbscan&quot;</span>){</span>
+<span id="cb291-3"><a href="preds_detect.html#cb291-3" tabindex="-1"></a>    preds <span class="ot">&lt;-</span> dbscan_spectral_preds</span>
+<span id="cb291-4"><a href="preds_detect.html#cb291-4" tabindex="-1"></a>    gt_pred_match <span class="ot">&lt;-</span> dbscan_gt_pred_match</span>
+<span id="cb291-5"><a href="preds_detect.html#cb291-5" tabindex="-1"></a>  }<span class="cf">else</span> <span class="cf">if</span>(<span class="fu">tolower</span>(method) <span class="sc">==</span> <span class="st">&quot;watershed&quot;</span>){</span>
+<span id="cb291-6"><a href="preds_detect.html#cb291-6" tabindex="-1"></a>    preds <span class="ot">&lt;-</span> watershed_spectral_preds</span>
+<span id="cb291-7"><a href="preds_detect.html#cb291-7" tabindex="-1"></a>    gt_pred_match <span class="ot">&lt;-</span> watershed_gt_pred_match</span>
+<span id="cb291-8"><a href="preds_detect.html#cb291-8" tabindex="-1"></a>  }<span class="cf">else</span>{<span class="fu">return</span>(<span class="cn">NULL</span>)}</span>
+<span id="cb291-9"><a href="preds_detect.html#cb291-9" tabindex="-1"></a>  <span class="co"># plot it</span></span>
+<span id="cb291-10"><a href="preds_detect.html#cb291-10" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb291-11"><a href="preds_detect.html#cb291-11" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb291-12"><a href="preds_detect.html#cb291-12" tabindex="-1"></a>        <span class="at">data =</span> stand_boundary[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb291-13"><a href="preds_detect.html#cb291-13" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_transform</span>(sf<span class="sc">::</span><span class="fu">st_crs</span>(preds[[x]]))</span>
+<span id="cb291-14"><a href="preds_detect.html#cb291-14" tabindex="-1"></a>        , <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">fill =</span> <span class="cn">NA</span></span>
+<span id="cb291-15"><a href="preds_detect.html#cb291-15" tabindex="-1"></a>      ) <span class="sc">+</span> </span>
+<span id="cb291-16"><a href="preds_detect.html#cb291-16" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb291-17"><a href="preds_detect.html#cb291-17" tabindex="-1"></a>        <span class="at">data =</span> </span>
+<span id="cb291-18"><a href="preds_detect.html#cb291-18" tabindex="-1"></a>          slash_piles_polys[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb291-19"><a href="preds_detect.html#cb291-19" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(is_in_stand) <span class="sc">%&gt;%</span> </span>
+<span id="cb291-20"><a href="preds_detect.html#cb291-20" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb291-21"><a href="preds_detect.html#cb291-21" tabindex="-1"></a>              gt_pred_match[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb291-22"><a href="preds_detect.html#cb291-22" tabindex="-1"></a>                dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id,match_grp)</span>
+<span id="cb291-23"><a href="preds_detect.html#cb291-23" tabindex="-1"></a>              , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb291-24"><a href="preds_detect.html#cb291-24" tabindex="-1"></a>            ) <span class="sc">%&gt;%</span> </span>
+<span id="cb291-25"><a href="preds_detect.html#cb291-25" tabindex="-1"></a>            sf<span class="sc">::</span><span class="fu">st_transform</span>(sf<span class="sc">::</span><span class="fu">st_crs</span>(preds[[x]]))</span>
+<span id="cb291-26"><a href="preds_detect.html#cb291-26" tabindex="-1"></a>        , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">fill =</span> match_grp)</span>
+<span id="cb291-27"><a href="preds_detect.html#cb291-27" tabindex="-1"></a>        , <span class="at">color =</span> <span class="cn">NA</span> ,<span class="at">alpha=</span><span class="fl">0.7</span></span>
+<span id="cb291-28"><a href="preds_detect.html#cb291-28" tabindex="-1"></a>        , <span class="at">show.legend =</span> T</span>
+<span id="cb291-29"><a href="preds_detect.html#cb291-29" tabindex="-1"></a>      ) <span class="sc">+</span> </span>
+<span id="cb291-30"><a href="preds_detect.html#cb291-30" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">geom_sf</span>(</span>
+<span id="cb291-31"><a href="preds_detect.html#cb291-31" tabindex="-1"></a>        <span class="at">data =</span></span>
+<span id="cb291-32"><a href="preds_detect.html#cb291-32" tabindex="-1"></a>          preds[[x]] <span class="sc">%&gt;%</span></span>
+<span id="cb291-33"><a href="preds_detect.html#cb291-33" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(is_in_stand) <span class="sc">%&gt;%</span> </span>
+<span id="cb291-34"><a href="preds_detect.html#cb291-34" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb291-35"><a href="preds_detect.html#cb291-35" tabindex="-1"></a>              gt_pred_match[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb291-36"><a href="preds_detect.html#cb291-36" tabindex="-1"></a>                dplyr<span class="sc">::</span><span class="fu">select</span>(pred_id,match_grp)</span>
+<span id="cb291-37"><a href="preds_detect.html#cb291-37" tabindex="-1"></a>              , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb291-38"><a href="preds_detect.html#cb291-38" tabindex="-1"></a>            )</span>
+<span id="cb291-39"><a href="preds_detect.html#cb291-39" tabindex="-1"></a>        , <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">fill =</span> match_grp, <span class="at">color =</span> match_grp)</span>
+<span id="cb291-40"><a href="preds_detect.html#cb291-40" tabindex="-1"></a>        , <span class="at">alpha =</span> <span class="dv">0</span></span>
+<span id="cb291-41"><a href="preds_detect.html#cb291-41" tabindex="-1"></a>        , <span class="at">lwd =</span> <span class="fl">0.5</span></span>
+<span id="cb291-42"><a href="preds_detect.html#cb291-42" tabindex="-1"></a>        , <span class="at">show.legend =</span> T</span>
+<span id="cb291-43"><a href="preds_detect.html#cb291-43" tabindex="-1"></a>      ) <span class="sc">+</span></span>
+<span id="cb291-44"><a href="preds_detect.html#cb291-44" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> pal_match_grp, <span class="at">drop =</span> F, <span class="at">name =</span> <span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb291-45"><a href="preds_detect.html#cb291-45" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">scale_color_manual</span>(<span class="at">values =</span> pal_match_grp, <span class="at">drop =</span> F, <span class="at">name =</span> <span class="st">&quot;&quot;</span>) <span class="sc">+</span></span>
+<span id="cb291-46"><a href="preds_detect.html#cb291-46" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb291-47"><a href="preds_detect.html#cb291-47" tabindex="-1"></a>        <span class="at">subtitle =</span> <span class="fu">paste0</span>(</span>
+<span id="cb291-48"><a href="preds_detect.html#cb291-48" tabindex="-1"></a>          method</span>
+<span id="cb291-49"><a href="preds_detect.html#cb291-49" tabindex="-1"></a>          , <span class="st">&quot; predictions: &quot;</span></span>
+<span id="cb291-50"><a href="preds_detect.html#cb291-50" tabindex="-1"></a>          , slash_piles_polys[[x]] <span class="sc">%&gt;%</span> </span>
+<span id="cb291-51"><a href="preds_detect.html#cb291-51" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb291-52"><a href="preds_detect.html#cb291-52" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">pull</span>(site)</span>
+<span id="cb291-53"><a href="preds_detect.html#cb291-53" tabindex="-1"></a>        )</span>
+<span id="cb291-54"><a href="preds_detect.html#cb291-54" tabindex="-1"></a>      ) <span class="sc">+</span></span>
+<span id="cb291-55"><a href="preds_detect.html#cb291-55" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb291-56"><a href="preds_detect.html#cb291-56" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb291-57"><a href="preds_detect.html#cb291-57" tabindex="-1"></a>        <span class="at">plot.subtitle =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(</span>
+<span id="cb291-58"><a href="preds_detect.html#cb291-58" tabindex="-1"></a>          <span class="at">size =</span> <span class="dv">7</span>, <span class="at">hjust =</span> <span class="fl">0.5</span></span>
+<span id="cb291-59"><a href="preds_detect.html#cb291-59" tabindex="-1"></a>          , <span class="at">vjust =</span> <span class="dv">1</span></span>
+<span id="cb291-60"><a href="preds_detect.html#cb291-60" tabindex="-1"></a>          , <span class="at">margin =</span> <span class="fu">margin</span>(<span class="at">t =</span> <span class="dv">0</span>, <span class="at">r =</span> <span class="dv">0</span>, <span class="at">b =</span> <span class="sc">-</span><span class="dv">2</span>, <span class="at">l =</span> <span class="dv">0</span>, <span class="at">unit =</span> <span class="st">&quot;pt&quot;</span>)</span>
+<span id="cb291-61"><a href="preds_detect.html#cb291-61" tabindex="-1"></a>        )</span>
+<span id="cb291-62"><a href="preds_detect.html#cb291-62" tabindex="-1"></a>      ) <span class="sc">+</span></span>
+<span id="cb291-63"><a href="preds_detect.html#cb291-63" tabindex="-1"></a>      ggplot2<span class="sc">::</span><span class="fu">guides</span>(</span>
+<span id="cb291-64"><a href="preds_detect.html#cb291-64" tabindex="-1"></a>        <span class="at">fill =</span> ggplot2<span class="sc">::</span><span class="fu">guide_legend</span>(</span>
+<span id="cb291-65"><a href="preds_detect.html#cb291-65" tabindex="-1"></a>          <span class="at">override.aes =</span> <span class="fu">list</span>(</span>
+<span id="cb291-66"><a href="preds_detect.html#cb291-66" tabindex="-1"></a>            <span class="at">color =</span> <span class="fu">c</span>(<span class="cn">NA</span>,pal_match_grp[<span class="st">&quot;commission&quot;</span>],<span class="cn">NA</span>)</span>
+<span id="cb291-67"><a href="preds_detect.html#cb291-67" tabindex="-1"></a>            , <span class="at">fill =</span> <span class="fu">c</span>(pal_match_grp[<span class="st">&quot;omission&quot;</span>],<span class="cn">NA</span>,pal_match_grp[<span class="st">&quot;true positive&quot;</span>])</span>
+<span id="cb291-68"><a href="preds_detect.html#cb291-68" tabindex="-1"></a>          )</span>
+<span id="cb291-69"><a href="preds_detect.html#cb291-69" tabindex="-1"></a>        )</span>
+<span id="cb291-70"><a href="preds_detect.html#cb291-70" tabindex="-1"></a>        , <span class="at">color =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb291-71"><a href="preds_detect.html#cb291-71" tabindex="-1"></a>      )</span>
+<span id="cb291-72"><a href="preds_detect.html#cb291-72" tabindex="-1"></a>}</span>
+<span id="cb291-73"><a href="preds_detect.html#cb291-73" tabindex="-1"></a><span class="co"># do it</span></span>
+<span id="cb291-74"><a href="preds_detect.html#cb291-74" tabindex="-1"></a>dbscan_plt_temp <span class="ot">&lt;-</span> all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb291-75"><a href="preds_detect.html#cb291-75" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb291-76"><a href="preds_detect.html#cb291-76" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb291-77"><a href="preds_detect.html#cb291-77" tabindex="-1"></a>    \(xx)</span>
+<span id="cb291-78"><a href="preds_detect.html#cb291-78" tabindex="-1"></a>    <span class="fu">plt_fn_temp</span>(xx,<span class="at">method =</span> <span class="st">&quot;DBSCAN&quot;</span>)</span>
+<span id="cb291-79"><a href="preds_detect.html#cb291-79" tabindex="-1"></a>  )</span>
+<span id="cb291-80"><a href="preds_detect.html#cb291-80" tabindex="-1"></a><span class="co"># dbscan_plt_temp[[1]]</span></span>
+<span id="cb291-81"><a href="preds_detect.html#cb291-81" tabindex="-1"></a></span>
+<span id="cb291-82"><a href="preds_detect.html#cb291-82" tabindex="-1"></a>watershed_plt_temp <span class="ot">&lt;-</span> all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span> </span>
+<span id="cb291-83"><a href="preds_detect.html#cb291-83" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb291-84"><a href="preds_detect.html#cb291-84" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb291-85"><a href="preds_detect.html#cb291-85" tabindex="-1"></a>    \(xx)</span>
+<span id="cb291-86"><a href="preds_detect.html#cb291-86" tabindex="-1"></a>    <span class="fu">plt_fn_temp</span>(xx,<span class="at">method =</span> <span class="st">&quot;Watershed&quot;</span>)</span>
+<span id="cb291-87"><a href="preds_detect.html#cb291-87" tabindex="-1"></a>  )</span>
+<span id="cb291-88"><a href="preds_detect.html#cb291-88" tabindex="-1"></a><span class="co"># watershed_plt_temp[[1]]</span></span></code></pre></div>
+<p>combine plots with <code>patchwork</code></p>
+<div class="sourceCode" id="cb292"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb292-1"><a href="preds_detect.html#cb292-1" tabindex="-1"></a><span class="co"># c(dbscan_plt_temp, watershed_plt_temp) %&gt;%</span></span>
+<span id="cb292-2"><a href="preds_detect.html#cb292-2" tabindex="-1"></a><span class="co">#   (\(x) x[order(names(x))])() %&gt;% </span></span>
+<span id="cb292-3"><a href="preds_detect.html#cb292-3" tabindex="-1"></a><span class="co">#   names()</span></span>
+<span id="cb292-4"><a href="preds_detect.html#cb292-4" tabindex="-1"></a>patchwork<span class="sc">::</span><span class="fu">wrap_plots</span>(</span>
+<span id="cb292-5"><a href="preds_detect.html#cb292-5" tabindex="-1"></a>  <span class="fu">c</span>(dbscan_plt_temp, watershed_plt_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb292-6"><a href="preds_detect.html#cb292-6" tabindex="-1"></a>    (\(x) x[<span class="fu">order</span>(<span class="fu">names</span>(x))])()</span>
+<span id="cb292-7"><a href="preds_detect.html#cb292-7" tabindex="-1"></a>  , <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">guides =</span> <span class="st">&quot;collect&quot;</span></span>
+<span id="cb292-8"><a href="preds_detect.html#cb292-8" tabindex="-1"></a>  , <span class="at">byrow =</span> T</span>
+<span id="cb292-9"><a href="preds_detect.html#cb292-9" tabindex="-1"></a>) <span class="sc">&amp;</span></span>
+<span id="cb292-10"><a href="preds_detect.html#cb292-10" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span>)</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-329-1.png" alt="" width="672" /></p>
+<p>note the color legend…we like to see a lot of yellow :D</p>
+</div>
+<div id="detection-accuracy-metrics" class="section level2 hasAnchor" number="8.2">
+<h2><span class="header-section-number">8.2</span> Detection Accuracy Metrics<a href="preds_detect.html#detection-accuracy-metrics" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>now we aggregate the pile-level data (TP, FP, FN) into a single record for each study site and segmentation method combination. Detection performance metrics include F-score, precision, and recall.</p>
+<p>because our <code>agg_ground_truth_match()</code> function that we <a href="meth_eval.html#quant_metrics_form">defined earlier</a> includes capabilities to compute quantification metrics as well (e.g. height MAPE, RMSE, etc.), we’ll add the pile sizing metrics to our instance match data so that <code>agg_ground_truth_match()</code> recognizes them.</p>
+<ul>
+<li>“diff_” columns are calculated as the predicted value minus the actual value (e.g. <code>pred_diameter_m - gt_diameter_m</code>)</li>
+<li>“pct_diff_” columns are calculated as the actual value minus the predicted value divided by the actual value (e.g. <code>(gt_diameter_m - pred_diameter_m)/gt_diameter_m</code>)</li>
+</ul>
+<div class="sourceCode" id="cb293"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb293-1"><a href="preds_detect.html#cb293-1" tabindex="-1"></a><span class="co"># add prediction and validation measurements for dbscan</span></span>
+<span id="cb293-2"><a href="preds_detect.html#cb293-2" tabindex="-1"></a>dbscan_gt_pred_match <span class="ot">&lt;-</span> </span>
+<span id="cb293-3"><a href="preds_detect.html#cb293-3" tabindex="-1"></a>  dbscan_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb293-4"><a href="preds_detect.html#cb293-4" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb293-5"><a href="preds_detect.html#cb293-5" tabindex="-1"></a>    \(x,nm)</span>
+<span id="cb293-6"><a href="preds_detect.html#cb293-6" tabindex="-1"></a>    <span class="co"># because psinf has field data but no others do</span></span>
+<span id="cb293-7"><a href="preds_detect.html#cb293-7" tabindex="-1"></a>    <span class="cf">if</span>(nm<span class="sc">==</span><span class="st">&quot;psinf&quot;</span>){</span>
+<span id="cb293-8"><a href="preds_detect.html#cb293-8" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb293-9"><a href="preds_detect.html#cb293-9" tabindex="-1"></a>      <span class="co"># join on gt data</span></span>
+<span id="cb293-10"><a href="preds_detect.html#cb293-10" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-11"><a href="preds_detect.html#cb293-11" tabindex="-1"></a>        slash_piles_polys[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-12"><a href="preds_detect.html#cb293-12" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">field_volume_m3=</span>field_gt_volume_m3) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-13"><a href="preds_detect.html#cb293-13" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id, image_gt_diameter_m, image_gt_area_m2, field_height_m, field_diameter_m, field_volume_m3) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-14"><a href="preds_detect.html#cb293-14" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(<span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_remove</span>(.x, <span class="st">&quot;^image_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-15"><a href="preds_detect.html#cb293-15" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-16"><a href="preds_detect.html#cb293-16" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb293-17"><a href="preds_detect.html#cb293-17" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-18"><a href="preds_detect.html#cb293-18" tabindex="-1"></a>      <span class="co"># join on pred area data</span></span>
+<span id="cb293-19"><a href="preds_detect.html#cb293-19" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-20"><a href="preds_detect.html#cb293-20" tabindex="-1"></a>        dbscan_spectral_preds[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-21"><a href="preds_detect.html#cb293-21" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb293-22"><a href="preds_detect.html#cb293-22" tabindex="-1"></a>            pred_id</span>
+<span id="cb293-23"><a href="preds_detect.html#cb293-23" tabindex="-1"></a>            , diameter_m</span>
+<span id="cb293-24"><a href="preds_detect.html#cb293-24" tabindex="-1"></a>            , area_m2</span>
+<span id="cb293-25"><a href="preds_detect.html#cb293-25" tabindex="-1"></a>            , volume_m3</span>
+<span id="cb293-26"><a href="preds_detect.html#cb293-26" tabindex="-1"></a>            , max_height_m</span>
+<span id="cb293-27"><a href="preds_detect.html#cb293-27" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-28"><a href="preds_detect.html#cb293-28" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">height_m=</span>max_height_m) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-29"><a href="preds_detect.html#cb293-29" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(</span>
+<span id="cb293-30"><a href="preds_detect.html#cb293-30" tabindex="-1"></a>            <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;pred_&quot;</span>, .x, <span class="at">recycle0 =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb293-31"><a href="preds_detect.html#cb293-31" tabindex="-1"></a>            , <span class="at">.cols =</span> <span class="sc">-</span><span class="fu">c</span>(pred_id)</span>
+<span id="cb293-32"><a href="preds_detect.html#cb293-32" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-33"><a href="preds_detect.html#cb293-33" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-34"><a href="preds_detect.html#cb293-34" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb293-35"><a href="preds_detect.html#cb293-35" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-36"><a href="preds_detect.html#cb293-36" tabindex="-1"></a>      <span class="co"># calculate difference columns</span></span>
+<span id="cb293-37"><a href="preds_detect.html#cb293-37" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb293-38"><a href="preds_detect.html#cb293-38" tabindex="-1"></a>        <span class="co"># area_m2</span></span>
+<span id="cb293-39"><a href="preds_detect.html#cb293-39" tabindex="-1"></a>        <span class="at">diff_area_m2 =</span> pred_area_m2<span class="sc">-</span>gt_area_m2</span>
+<span id="cb293-40"><a href="preds_detect.html#cb293-40" tabindex="-1"></a>        , <span class="at">pct_diff_area_m2 =</span> (gt_area_m2<span class="sc">-</span>pred_area_m2)<span class="sc">/</span>gt_area_m2</span>
+<span id="cb293-41"><a href="preds_detect.html#cb293-41" tabindex="-1"></a>        <span class="co"># diameter_m</span></span>
+<span id="cb293-42"><a href="preds_detect.html#cb293-42" tabindex="-1"></a>        , <span class="at">diff_diameter_m =</span> pred_diameter_m<span class="sc">-</span>gt_diameter_m</span>
+<span id="cb293-43"><a href="preds_detect.html#cb293-43" tabindex="-1"></a>        , <span class="at">pct_diff_diameter_m =</span> (gt_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>gt_diameter_m</span>
+<span id="cb293-44"><a href="preds_detect.html#cb293-44" tabindex="-1"></a>        <span class="co"># field diameter_m</span></span>
+<span id="cb293-45"><a href="preds_detect.html#cb293-45" tabindex="-1"></a>        , <span class="at">diff_field_diameter_m =</span> pred_diameter_m<span class="sc">-</span>field_diameter_m</span>
+<span id="cb293-46"><a href="preds_detect.html#cb293-46" tabindex="-1"></a>        , <span class="at">pct_diff_field_diameter_m =</span> (field_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>field_diameter_m</span>
+<span id="cb293-47"><a href="preds_detect.html#cb293-47" tabindex="-1"></a>        <span class="co"># field height_m</span></span>
+<span id="cb293-48"><a href="preds_detect.html#cb293-48" tabindex="-1"></a>        , <span class="at">diff_field_height_m =</span> pred_height_m<span class="sc">-</span>field_height_m</span>
+<span id="cb293-49"><a href="preds_detect.html#cb293-49" tabindex="-1"></a>        , <span class="at">pct_diff_field_height_m =</span> (field_height_m<span class="sc">-</span>pred_height_m)<span class="sc">/</span>field_height_m</span>
+<span id="cb293-50"><a href="preds_detect.html#cb293-50" tabindex="-1"></a>        <span class="co"># # field volume_m3</span></span>
+<span id="cb293-51"><a href="preds_detect.html#cb293-51" tabindex="-1"></a>        <span class="co"># , diff_field_volume_m3 = pred_volume_m3-field_volume_m3</span></span>
+<span id="cb293-52"><a href="preds_detect.html#cb293-52" tabindex="-1"></a>        <span class="co"># , pct_diff_field_volume_m3 = (field_volume_m3-pred_volume_m3)/field_volume_m3</span></span>
+<span id="cb293-53"><a href="preds_detect.html#cb293-53" tabindex="-1"></a>      )  </span>
+<span id="cb293-54"><a href="preds_detect.html#cb293-54" tabindex="-1"></a>    }<span class="cf">else</span>{</span>
+<span id="cb293-55"><a href="preds_detect.html#cb293-55" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb293-56"><a href="preds_detect.html#cb293-56" tabindex="-1"></a>      <span class="co"># join on gt data</span></span>
+<span id="cb293-57"><a href="preds_detect.html#cb293-57" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-58"><a href="preds_detect.html#cb293-58" tabindex="-1"></a>        slash_piles_polys[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-59"><a href="preds_detect.html#cb293-59" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id, image_gt_diameter_m, image_gt_area_m2) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-60"><a href="preds_detect.html#cb293-60" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(<span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_remove</span>(.x, <span class="st">&quot;^image_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-61"><a href="preds_detect.html#cb293-61" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-62"><a href="preds_detect.html#cb293-62" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb293-63"><a href="preds_detect.html#cb293-63" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-64"><a href="preds_detect.html#cb293-64" tabindex="-1"></a>      <span class="co"># join on pred area data</span></span>
+<span id="cb293-65"><a href="preds_detect.html#cb293-65" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-66"><a href="preds_detect.html#cb293-66" tabindex="-1"></a>        dbscan_spectral_preds[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-67"><a href="preds_detect.html#cb293-67" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb293-68"><a href="preds_detect.html#cb293-68" tabindex="-1"></a>            pred_id</span>
+<span id="cb293-69"><a href="preds_detect.html#cb293-69" tabindex="-1"></a>            , diameter_m</span>
+<span id="cb293-70"><a href="preds_detect.html#cb293-70" tabindex="-1"></a>            , area_m2</span>
+<span id="cb293-71"><a href="preds_detect.html#cb293-71" tabindex="-1"></a>            , volume_m3</span>
+<span id="cb293-72"><a href="preds_detect.html#cb293-72" tabindex="-1"></a>            , max_height_m</span>
+<span id="cb293-73"><a href="preds_detect.html#cb293-73" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-74"><a href="preds_detect.html#cb293-74" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">height_m=</span>max_height_m) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-75"><a href="preds_detect.html#cb293-75" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(</span>
+<span id="cb293-76"><a href="preds_detect.html#cb293-76" tabindex="-1"></a>            <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;pred_&quot;</span>, .x, <span class="at">recycle0 =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb293-77"><a href="preds_detect.html#cb293-77" tabindex="-1"></a>            , <span class="at">.cols =</span> <span class="sc">-</span><span class="fu">c</span>(pred_id)</span>
+<span id="cb293-78"><a href="preds_detect.html#cb293-78" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-79"><a href="preds_detect.html#cb293-79" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-80"><a href="preds_detect.html#cb293-80" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb293-81"><a href="preds_detect.html#cb293-81" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-82"><a href="preds_detect.html#cb293-82" tabindex="-1"></a>      <span class="co"># calculate difference columns</span></span>
+<span id="cb293-83"><a href="preds_detect.html#cb293-83" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb293-84"><a href="preds_detect.html#cb293-84" tabindex="-1"></a>        <span class="co"># area_m2</span></span>
+<span id="cb293-85"><a href="preds_detect.html#cb293-85" tabindex="-1"></a>        <span class="at">diff_area_m2 =</span> pred_area_m2<span class="sc">-</span>gt_area_m2</span>
+<span id="cb293-86"><a href="preds_detect.html#cb293-86" tabindex="-1"></a>        , <span class="at">pct_diff_area_m2 =</span> (gt_area_m2<span class="sc">-</span>pred_area_m2)<span class="sc">/</span>gt_area_m2</span>
+<span id="cb293-87"><a href="preds_detect.html#cb293-87" tabindex="-1"></a>        <span class="co"># diameter_m</span></span>
+<span id="cb293-88"><a href="preds_detect.html#cb293-88" tabindex="-1"></a>        , <span class="at">diff_diameter_m =</span> pred_diameter_m<span class="sc">-</span>gt_diameter_m</span>
+<span id="cb293-89"><a href="preds_detect.html#cb293-89" tabindex="-1"></a>        , <span class="at">pct_diff_diameter_m =</span> (gt_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>gt_diameter_m</span>
+<span id="cb293-90"><a href="preds_detect.html#cb293-90" tabindex="-1"></a>      )</span>
+<span id="cb293-91"><a href="preds_detect.html#cb293-91" tabindex="-1"></a>    }</span>
+<span id="cb293-92"><a href="preds_detect.html#cb293-92" tabindex="-1"></a>  )</span>
+<span id="cb293-93"><a href="preds_detect.html#cb293-93" tabindex="-1"></a><span class="co"># dbscan_gt_pred_match %&gt;% dplyr::glimpse()</span></span>
+<span id="cb293-94"><a href="preds_detect.html#cb293-94" tabindex="-1"></a><span class="co"># add prediction and validation measurements for watershed</span></span>
+<span id="cb293-95"><a href="preds_detect.html#cb293-95" tabindex="-1"></a>watershed_gt_pred_match <span class="ot">&lt;-</span> </span>
+<span id="cb293-96"><a href="preds_detect.html#cb293-96" tabindex="-1"></a>  watershed_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb293-97"><a href="preds_detect.html#cb293-97" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb293-98"><a href="preds_detect.html#cb293-98" tabindex="-1"></a>    \(x,nm)</span>
+<span id="cb293-99"><a href="preds_detect.html#cb293-99" tabindex="-1"></a>    <span class="co"># because psinf has field data but no others do</span></span>
+<span id="cb293-100"><a href="preds_detect.html#cb293-100" tabindex="-1"></a>    <span class="cf">if</span>(nm<span class="sc">==</span><span class="st">&quot;psinf&quot;</span>){</span>
+<span id="cb293-101"><a href="preds_detect.html#cb293-101" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb293-102"><a href="preds_detect.html#cb293-102" tabindex="-1"></a>      <span class="co"># join on gt data</span></span>
+<span id="cb293-103"><a href="preds_detect.html#cb293-103" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-104"><a href="preds_detect.html#cb293-104" tabindex="-1"></a>        slash_piles_polys[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-105"><a href="preds_detect.html#cb293-105" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">field_volume_m3=</span>field_gt_volume_m3) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-106"><a href="preds_detect.html#cb293-106" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id, image_gt_diameter_m, image_gt_area_m2, field_height_m, field_diameter_m, field_volume_m3) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-107"><a href="preds_detect.html#cb293-107" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(<span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_remove</span>(.x, <span class="st">&quot;^image_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-108"><a href="preds_detect.html#cb293-108" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-109"><a href="preds_detect.html#cb293-109" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb293-110"><a href="preds_detect.html#cb293-110" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-111"><a href="preds_detect.html#cb293-111" tabindex="-1"></a>      <span class="co"># join on pred area data</span></span>
+<span id="cb293-112"><a href="preds_detect.html#cb293-112" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-113"><a href="preds_detect.html#cb293-113" tabindex="-1"></a>        watershed_spectral_preds[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-114"><a href="preds_detect.html#cb293-114" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb293-115"><a href="preds_detect.html#cb293-115" tabindex="-1"></a>            pred_id</span>
+<span id="cb293-116"><a href="preds_detect.html#cb293-116" tabindex="-1"></a>            , diameter_m</span>
+<span id="cb293-117"><a href="preds_detect.html#cb293-117" tabindex="-1"></a>            , area_m2</span>
+<span id="cb293-118"><a href="preds_detect.html#cb293-118" tabindex="-1"></a>            , volume_m3</span>
+<span id="cb293-119"><a href="preds_detect.html#cb293-119" tabindex="-1"></a>            , max_height_m</span>
+<span id="cb293-120"><a href="preds_detect.html#cb293-120" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-121"><a href="preds_detect.html#cb293-121" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">height_m=</span>max_height_m) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-122"><a href="preds_detect.html#cb293-122" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(</span>
+<span id="cb293-123"><a href="preds_detect.html#cb293-123" tabindex="-1"></a>            <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;pred_&quot;</span>, .x, <span class="at">recycle0 =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb293-124"><a href="preds_detect.html#cb293-124" tabindex="-1"></a>            , <span class="at">.cols =</span> <span class="sc">-</span><span class="fu">c</span>(pred_id)</span>
+<span id="cb293-125"><a href="preds_detect.html#cb293-125" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-126"><a href="preds_detect.html#cb293-126" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-127"><a href="preds_detect.html#cb293-127" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb293-128"><a href="preds_detect.html#cb293-128" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-129"><a href="preds_detect.html#cb293-129" tabindex="-1"></a>      <span class="co"># calculate difference columns</span></span>
+<span id="cb293-130"><a href="preds_detect.html#cb293-130" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb293-131"><a href="preds_detect.html#cb293-131" tabindex="-1"></a>        <span class="co"># area_m2</span></span>
+<span id="cb293-132"><a href="preds_detect.html#cb293-132" tabindex="-1"></a>        <span class="at">diff_area_m2 =</span> pred_area_m2<span class="sc">-</span>gt_area_m2</span>
+<span id="cb293-133"><a href="preds_detect.html#cb293-133" tabindex="-1"></a>        , <span class="at">pct_diff_area_m2 =</span> (gt_area_m2<span class="sc">-</span>pred_area_m2)<span class="sc">/</span>gt_area_m2</span>
+<span id="cb293-134"><a href="preds_detect.html#cb293-134" tabindex="-1"></a>        <span class="co"># diameter_m</span></span>
+<span id="cb293-135"><a href="preds_detect.html#cb293-135" tabindex="-1"></a>        , <span class="at">diff_diameter_m =</span> pred_diameter_m<span class="sc">-</span>gt_diameter_m</span>
+<span id="cb293-136"><a href="preds_detect.html#cb293-136" tabindex="-1"></a>        , <span class="at">pct_diff_diameter_m =</span> (gt_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>gt_diameter_m</span>
+<span id="cb293-137"><a href="preds_detect.html#cb293-137" tabindex="-1"></a>        <span class="co"># field diameter_m</span></span>
+<span id="cb293-138"><a href="preds_detect.html#cb293-138" tabindex="-1"></a>        , <span class="at">diff_field_diameter_m =</span> pred_diameter_m<span class="sc">-</span>field_diameter_m</span>
+<span id="cb293-139"><a href="preds_detect.html#cb293-139" tabindex="-1"></a>        , <span class="at">pct_diff_field_diameter_m =</span> (field_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>field_diameter_m</span>
+<span id="cb293-140"><a href="preds_detect.html#cb293-140" tabindex="-1"></a>        <span class="co"># field height_m</span></span>
+<span id="cb293-141"><a href="preds_detect.html#cb293-141" tabindex="-1"></a>        , <span class="at">diff_field_height_m =</span> pred_height_m<span class="sc">-</span>field_height_m</span>
+<span id="cb293-142"><a href="preds_detect.html#cb293-142" tabindex="-1"></a>        , <span class="at">pct_diff_field_height_m =</span> (field_height_m<span class="sc">-</span>pred_height_m)<span class="sc">/</span>field_height_m</span>
+<span id="cb293-143"><a href="preds_detect.html#cb293-143" tabindex="-1"></a>        <span class="co"># # field volume_m3</span></span>
+<span id="cb293-144"><a href="preds_detect.html#cb293-144" tabindex="-1"></a>        <span class="co"># , diff_field_volume_m3 = pred_volume_m3-field_volume_m3</span></span>
+<span id="cb293-145"><a href="preds_detect.html#cb293-145" tabindex="-1"></a>        <span class="co"># , pct_diff_field_volume_m3 = (field_volume_m3-pred_volume_m3)/field_volume_m3</span></span>
+<span id="cb293-146"><a href="preds_detect.html#cb293-146" tabindex="-1"></a>      )  </span>
+<span id="cb293-147"><a href="preds_detect.html#cb293-147" tabindex="-1"></a>    }<span class="cf">else</span>{</span>
+<span id="cb293-148"><a href="preds_detect.html#cb293-148" tabindex="-1"></a>      x <span class="sc">%&gt;%</span> </span>
+<span id="cb293-149"><a href="preds_detect.html#cb293-149" tabindex="-1"></a>      <span class="co"># join on gt data</span></span>
+<span id="cb293-150"><a href="preds_detect.html#cb293-150" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-151"><a href="preds_detect.html#cb293-151" tabindex="-1"></a>        slash_piles_polys[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-152"><a href="preds_detect.html#cb293-152" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(pile_id, image_gt_diameter_m, image_gt_area_m2) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-153"><a href="preds_detect.html#cb293-153" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(<span class="sc">~</span> stringr<span class="sc">::</span><span class="fu">str_remove</span>(.x, <span class="st">&quot;^image_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-154"><a href="preds_detect.html#cb293-154" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-155"><a href="preds_detect.html#cb293-155" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pile_id&quot;</span></span>
+<span id="cb293-156"><a href="preds_detect.html#cb293-156" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-157"><a href="preds_detect.html#cb293-157" tabindex="-1"></a>      <span class="co"># join on pred area data</span></span>
+<span id="cb293-158"><a href="preds_detect.html#cb293-158" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb293-159"><a href="preds_detect.html#cb293-159" tabindex="-1"></a>        watershed_spectral_preds[[nm]] <span class="sc">%&gt;%</span> </span>
+<span id="cb293-160"><a href="preds_detect.html#cb293-160" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb293-161"><a href="preds_detect.html#cb293-161" tabindex="-1"></a>            pred_id</span>
+<span id="cb293-162"><a href="preds_detect.html#cb293-162" tabindex="-1"></a>            , diameter_m</span>
+<span id="cb293-163"><a href="preds_detect.html#cb293-163" tabindex="-1"></a>            , area_m2</span>
+<span id="cb293-164"><a href="preds_detect.html#cb293-164" tabindex="-1"></a>            , volume_m3</span>
+<span id="cb293-165"><a href="preds_detect.html#cb293-165" tabindex="-1"></a>            , max_height_m</span>
+<span id="cb293-166"><a href="preds_detect.html#cb293-166" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-167"><a href="preds_detect.html#cb293-167" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">height_m=</span>max_height_m) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-168"><a href="preds_detect.html#cb293-168" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">rename_with</span>(</span>
+<span id="cb293-169"><a href="preds_detect.html#cb293-169" tabindex="-1"></a>            <span class="sc">~</span> <span class="fu">paste0</span>(<span class="st">&quot;pred_&quot;</span>, .x, <span class="at">recycle0 =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb293-170"><a href="preds_detect.html#cb293-170" tabindex="-1"></a>            , <span class="at">.cols =</span> <span class="sc">-</span><span class="fu">c</span>(pred_id)</span>
+<span id="cb293-171"><a href="preds_detect.html#cb293-171" tabindex="-1"></a>          ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-172"><a href="preds_detect.html#cb293-172" tabindex="-1"></a>          sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb293-173"><a href="preds_detect.html#cb293-173" tabindex="-1"></a>        , <span class="at">by =</span> <span class="st">&quot;pred_id&quot;</span></span>
+<span id="cb293-174"><a href="preds_detect.html#cb293-174" tabindex="-1"></a>      ) <span class="sc">%&gt;%</span> </span>
+<span id="cb293-175"><a href="preds_detect.html#cb293-175" tabindex="-1"></a>      <span class="co"># calculate difference columns</span></span>
+<span id="cb293-176"><a href="preds_detect.html#cb293-176" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb293-177"><a href="preds_detect.html#cb293-177" tabindex="-1"></a>        <span class="co"># area_m2</span></span>
+<span id="cb293-178"><a href="preds_detect.html#cb293-178" tabindex="-1"></a>        <span class="at">diff_area_m2 =</span> pred_area_m2<span class="sc">-</span>gt_area_m2</span>
+<span id="cb293-179"><a href="preds_detect.html#cb293-179" tabindex="-1"></a>        , <span class="at">pct_diff_area_m2 =</span> (gt_area_m2<span class="sc">-</span>pred_area_m2)<span class="sc">/</span>gt_area_m2</span>
+<span id="cb293-180"><a href="preds_detect.html#cb293-180" tabindex="-1"></a>        <span class="co"># diameter_m</span></span>
+<span id="cb293-181"><a href="preds_detect.html#cb293-181" tabindex="-1"></a>        , <span class="at">diff_diameter_m =</span> pred_diameter_m<span class="sc">-</span>gt_diameter_m</span>
+<span id="cb293-182"><a href="preds_detect.html#cb293-182" tabindex="-1"></a>        , <span class="at">pct_diff_diameter_m =</span> (gt_diameter_m<span class="sc">-</span>pred_diameter_m)<span class="sc">/</span>gt_diameter_m</span>
+<span id="cb293-183"><a href="preds_detect.html#cb293-183" tabindex="-1"></a>      )</span>
+<span id="cb293-184"><a href="preds_detect.html#cb293-184" tabindex="-1"></a>    }</span>
+<span id="cb293-185"><a href="preds_detect.html#cb293-185" tabindex="-1"></a>  )</span>
+<span id="cb293-186"><a href="preds_detect.html#cb293-186" tabindex="-1"></a><span class="co"># watershed_gt_pred_match %&gt;% dplyr::glimpse()</span></span>
+<span id="cb293-187"><a href="preds_detect.html#cb293-187" tabindex="-1"></a><span class="co"># agg_ground_truth_match(watershed_gt_pred_match[[1]]) %&gt;% dplyr::glimpse()</span></span></code></pre></div>
+<p>apply our <code>agg_ground_truth_match()</code> function</p>
+<div class="sourceCode" id="cb294"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb294-1"><a href="preds_detect.html#cb294-1" tabindex="-1"></a>agg_ground_truth_match_ans <span class="ot">&lt;-</span> </span>
+<span id="cb294-2"><a href="preds_detect.html#cb294-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
+<span id="cb294-3"><a href="preds_detect.html#cb294-3" tabindex="-1"></a>    dbscan_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb294-4"><a href="preds_detect.html#cb294-4" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map_dfr</span>(agg_ground_truth_match, <span class="at">.id =</span> <span class="st">&quot;site_data_lab&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-5"><a href="preds_detect.html#cb294-5" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;dbscan&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-6"><a href="preds_detect.html#cb294-6" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb294-7"><a href="preds_detect.html#cb294-7" tabindex="-1"></a>    , watershed_gt_pred_match <span class="sc">%&gt;%</span> </span>
+<span id="cb294-8"><a href="preds_detect.html#cb294-8" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map_dfr</span>(agg_ground_truth_match, <span class="at">.id =</span> <span class="st">&quot;site_data_lab&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-9"><a href="preds_detect.html#cb294-9" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">&quot;watershed&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-10"><a href="preds_detect.html#cb294-10" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb294-11"><a href="preds_detect.html#cb294-11" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-12"><a href="preds_detect.html#cb294-12" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">inner_join</span>(</span>
+<span id="cb294-13"><a href="preds_detect.html#cb294-13" tabindex="-1"></a>    all_stand_boundary <span class="sc">%&gt;%</span> </span>
+<span id="cb294-14"><a href="preds_detect.html#cb294-14" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(site_data_lab, site) <span class="sc">%&gt;%</span> </span>
+<span id="cb294-15"><a href="preds_detect.html#cb294-15" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb294-16"><a href="preds_detect.html#cb294-16" tabindex="-1"></a>    , <span class="at">by =</span> <span class="st">&quot;site_data_lab&quot;</span></span>
+<span id="cb294-17"><a href="preds_detect.html#cb294-17" tabindex="-1"></a>  )</span></code></pre></div>
+<p>what did we get?</p>
+<div class="sourceCode" id="cb295"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb295-1"><a href="preds_detect.html#cb295-1" tabindex="-1"></a>agg_ground_truth_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb295-2"><a href="preds_detect.html#cb295-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 8
+## Columns: 23
+## $ site_data_lab                  &lt;chr&gt; &quot;arnf&quot;, &quot;bhef&quot;, &quot;psinf&quot;, &quot;pj&quot;, &quot;arnf&quot;, …
+## $ tp_n                           &lt;dbl&gt; 18, 24, 115, 246, 18, 24, 115, 246
+## $ fp_n                           &lt;dbl&gt; 5, 0, 5, 85, 8, 1, 8, 84
+## $ fn_n                           &lt;dbl&gt; 1, 2, 6, 31, 1, 2, 6, 31
+## $ omission_rate                  &lt;dbl&gt; 0.05263158, 0.07692308, 0.04958678, 0.1…
+## $ commission_rate                &lt;dbl&gt; 0.21739130, 0.00000000, 0.04166667, 0.2…
+## $ precision                      &lt;dbl&gt; 0.7826087, 1.0000000, 0.9583333, 0.7432…
+## $ recall                         &lt;dbl&gt; 0.9473684, 0.9230769, 0.9504132, 0.8880…
+## $ f_score                        &lt;dbl&gt; 0.8571429, 0.9600000, 0.9543568, 0.8092…
+## $ diff_area_m2_rmse              &lt;dbl&gt; 16.594443, 48.389761, 2.050426, 1.74561…
+## $ diff_diameter_m_rmse           &lt;dbl&gt; 0.6451003, 2.4203931, 0.3832957, 0.3879…
+## $ diff_area_m2_mean              &lt;dbl&gt; 12.7587200, -24.8476306, -0.7831500, -0…
+## $ diff_diameter_m_mean           &lt;dbl&gt; -0.4015052, -1.3737463, -0.2049347, -0.…
+## $ pct_diff_area_m2_mape          &lt;dbl&gt; 0.03548836, 0.14870735, 0.10290712, 0.1…
+## $ pct_diff_diameter_m_mape       &lt;dbl&gt; 0.01779425, 0.08146903, 0.06780040, 0.0…
+## $ diff_field_diameter_m_rmse     &lt;dbl&gt; NA, NA, 0.4664407, NA, NA, NA, 0.471317…
+## $ diff_field_height_m_rmse       &lt;dbl&gt; NA, NA, 0.6679947, NA, NA, NA, 0.667994…
+## $ diff_field_diameter_m_mean     &lt;dbl&gt; NA, NA, 0.1892385, NA, NA, NA, 0.192082…
+## $ diff_field_height_m_mean       &lt;dbl&gt; NA, NA, -0.06963052, NA, NA, NA, -0.069…
+## $ pct_diff_field_diameter_m_mape &lt;dbl&gt; NA, NA, 0.1000518, NA, NA, NA, 0.101088…
+## $ pct_diff_field_height_m_mape   &lt;dbl&gt; NA, NA, 0.1916669, NA, NA, NA, 0.191666…
+## $ method                         &lt;chr&gt; &quot;dbscan&quot;, &quot;dbscan&quot;, &quot;dbscan&quot;, &quot;dbscan&quot;,…
+## $ site                           &lt;chr&gt; &quot;ARNF Ponderosa Pine Site&quot;, &quot;BHEF Ponde…</code></pre>
+<p>let’s make a nice table of the detection accuracy metrics by study site and segmentation method</p>
+<div class="sourceCode" id="cb297"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb297-1"><a href="preds_detect.html#cb297-1" tabindex="-1"></a>agg_ground_truth_match_ans <span class="sc">%&gt;%</span> </span>
+<span id="cb297-2"><a href="preds_detect.html#cb297-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb297-3"><a href="preds_detect.html#cb297-3" tabindex="-1"></a>    site, method</span>
+<span id="cb297-4"><a href="preds_detect.html#cb297-4" tabindex="-1"></a>    , tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_n&quot;</span>)</span>
+<span id="cb297-5"><a href="preds_detect.html#cb297-5" tabindex="-1"></a>    , precision, recall, f_score</span>
+<span id="cb297-6"><a href="preds_detect.html#cb297-6" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb297-7"><a href="preds_detect.html#cb297-7" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb297-8"><a href="preds_detect.html#cb297-8" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb297-9"><a href="preds_detect.html#cb297-9" tabindex="-1"></a>      tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_n&quot;</span>)</span>
+<span id="cb297-10"><a href="preds_detect.html#cb297-10" tabindex="-1"></a>      , <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy=</span><span class="dv">1</span>)</span>
+<span id="cb297-11"><a href="preds_detect.html#cb297-11" tabindex="-1"></a>    )</span>
+<span id="cb297-12"><a href="preds_detect.html#cb297-12" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(</span>
+<span id="cb297-13"><a href="preds_detect.html#cb297-13" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">where</span>(is.numeric)</span>
+<span id="cb297-14"><a href="preds_detect.html#cb297-14" tabindex="-1"></a>      , <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">percent</span>(.x,<span class="at">accuracy=</span><span class="fl">0.1</span>)</span>
+<span id="cb297-15"><a href="preds_detect.html#cb297-15" tabindex="-1"></a>    )</span>
+<span id="cb297-16"><a href="preds_detect.html#cb297-16" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb297-17"><a href="preds_detect.html#cb297-17" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(site,method) <span class="sc">%&gt;%</span> </span>
+<span id="cb297-18"><a href="preds_detect.html#cb297-18" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb297-19"><a href="preds_detect.html#cb297-19" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Detection Accuracy&quot;</span></span>
+<span id="cb297-20"><a href="preds_detect.html#cb297-20" tabindex="-1"></a>    , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb297-21"><a href="preds_detect.html#cb297-21" tabindex="-1"></a>      <span class="st">&quot;site&quot;</span>, <span class="st">&quot;method&quot;</span></span>
+<span id="cb297-22"><a href="preds_detect.html#cb297-22" tabindex="-1"></a>      , <span class="st">&quot;TP predictions&quot;</span>, <span class="st">&quot;FP predictions&quot;</span>, <span class="st">&quot;FN predictions&quot;</span></span>
+<span id="cb297-23"><a href="preds_detect.html#cb297-23" tabindex="-1"></a>      , <span class="st">&quot;Precision&quot;</span>, <span class="st">&quot;Recall&quot;</span>, <span class="st">&quot;F-score&quot;</span></span>
+<span id="cb297-24"><a href="preds_detect.html#cb297-24" tabindex="-1"></a>    )</span>
+<span id="cb297-25"><a href="preds_detect.html#cb297-25" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb297-26"><a href="preds_detect.html#cb297-26" tabindex="-1"></a>    <span class="co"># , digits = 2</span></span>
+<span id="cb297-27"><a href="preds_detect.html#cb297-27" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb297-28"><a href="preds_detect.html#cb297-28" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb297-29"><a href="preds_detect.html#cb297-29" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">collapse_rows</span>(<span class="at">columns =</span> <span class="dv">1</span>, <span class="at">valign =</span> <span class="st">&quot;top&quot;</span>)  </span></code></pre></div>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-334">Table 8.2: </span>Detection Accuracy
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:left;">
+TP predictions
+</th>
+<th style="text-align:left;">
+FP predictions
+</th>
+<th style="text-align:left;">
+FN predictions
+</th>
+<th style="text-align:left;">
+Precision
+</th>
+<th style="text-align:left;">
+Recall
+</th>
+<th style="text-align:left;">
+F-score
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+ARNF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+18
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+78.3%
+</td>
+<td style="text-align:left;">
+94.7%
+</td>
+<td style="text-align:left;">
+85.7%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+18
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+69.2%
+</td>
+<td style="text-align:left;">
+94.7%
+</td>
+<td style="text-align:left;">
+80.0%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+BHEF Ponderosa Pine Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+100.0%
+</td>
+<td style="text-align:left;">
+92.3%
+</td>
+<td style="text-align:left;">
+96.0%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+24
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+96.0%
+</td>
+<td style="text-align:left;">
+92.3%
+</td>
+<td style="text-align:left;">
+94.1%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+PSINF Mixed Conifer Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+115
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+95.8%
+</td>
+<td style="text-align:left;">
+95.0%
+</td>
+<td style="text-align:left;">
+95.4%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+115
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+93.5%
+</td>
+<td style="text-align:left;">
+95.0%
+</td>
+<td style="text-align:left;">
+94.3%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;vertical-align: top !important;" rowspan="2">
+TRFO-BLM Pinyon-Juniper Site
+</td>
+<td style="text-align:left;">
+dbscan
+</td>
+<td style="text-align:left;">
+246
+</td>
+<td style="text-align:left;">
+85
+</td>
+<td style="text-align:left;">
+31
+</td>
+<td style="text-align:left;">
+74.3%
+</td>
+<td style="text-align:left;">
+88.8%
+</td>
+<td style="text-align:left;">
+80.9%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+watershed
+</td>
+<td style="text-align:left;">
+246
+</td>
+<td style="text-align:left;">
+84
+</td>
+<td style="text-align:left;">
+31
+</td>
+<td style="text-align:left;">
+74.5%
+</td>
+<td style="text-align:left;">
+88.8%
+</td>
+<td style="text-align:left;">
+81.1%
+</td>
+</tr>
+</tbody>
+</table>
+<p>check those recall rates :)</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="meth_preds.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

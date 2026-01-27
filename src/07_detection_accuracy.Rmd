@@ -73,7 +73,7 @@ dbscan_gt_pred_match[[1]] %>%
 
 let's quickly look at the distribution of IoU for the TP matches
 
-```{r}
+```{r, fig.height=9.7}
 # palette
 pal_match_grp = c(
   "omission"=viridis::cividis(3)[1]
@@ -134,8 +134,8 @@ iou_dta_temp %>%
   ggplot2::theme_light() +
   ggplot2::theme(
     legend.position = "none"
-    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
-    , axis.text.x = ggplot2::element_text(size = 10)
+    , strip.text = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , axis.text.x = ggplot2::element_text(size = 9)
     , axis.text.y = ggplot2::element_blank()
     , axis.ticks.y = ggplot2::element_blank()
   )
