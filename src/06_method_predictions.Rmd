@@ -455,8 +455,15 @@ dplyr::bind_rows(
         sf::st_drop_geometry() %>% 
         dplyr::ungroup() %>% 
         dplyr::summarise(
-          n = dplyr::n()
-          , area_m2 = sum(area_m2)
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
         ) %>% 
         dplyr::mutate(
           site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
@@ -472,8 +479,15 @@ dplyr::bind_rows(
         sf::st_drop_geometry() %>% 
         dplyr::ungroup() %>% 
         dplyr::summarise(
-          n = dplyr::n()
-          , area_m2 = sum(area_m2)
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
         ) %>% 
         dplyr::mutate(
           site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
@@ -483,26 +497,39 @@ dplyr::bind_rows(
     dplyr::mutate(method = "dbscan")
 ) %>% 
 dplyr::mutate(
-  avg_size = scales::comma(area_m2/n, accuracy = 0.1)
-  , dplyr::across(
-    dplyr::where(is.numeric)
+  dplyr::across(
+    c(tidyselect::ends_with("_sum"),n) # dplyr::where(is.numeric)
     , ~scales::comma(.x,accuracy = 1)
   )
+  , dplyr::across(
+    dplyr::where(is.numeric)
+    , ~scales::comma(.x,accuracy = .1)
+  )
+  , area_m2_mean = paste0(area_m2_mean, "<br>(",area_m2_sd,")")
+  , volume_m3_mean = paste0(volume_m3_mean, "<br>(",volume_m3_sd,")")
+  , max_height_m_mean = paste0(max_height_m_mean, "<br>(",max_height_m_sd,")")
 ) %>% 
-dplyr::relocate(site,method) %>% 
+dplyr::select(
+  -tidyselect::ends_with("_sd")
+  , -max_height_m_sum
+) %>% 
+dplyr::relocate(site,method,n) %>% 
 dplyr::arrange(site,method) %>% 
 kableExtra::kbl(
   caption = "Structurally detected candidate segments by method and study site"
   , col.names = c(
     "site", "method"
     , "# candidates"
-    , "total<br>candidate area (m<sup>2</sup>)"
-    , "mean<br>candidate area (m<sup>2</sup>)"
+    , "area m<sup>2</sup><br>mean (sd)"
+    , "area m<sup>2</sup><br>total"
+    , "volume m<sup>3</sup><br>mean (sd)"
+    , "volume m<sup>3</sup><br>total"
+    , "height m<br>mean (sd)"
   )
   , escape = F
   # , digits = 2
 ) %>% 
-kableExtra::kable_styling() %>% 
+kableExtra::kable_styling(font_size = 11.5) %>% 
 kableExtra::collapse_rows(columns = 1, valign = "top")
 ```
 
@@ -986,8 +1013,15 @@ dplyr::bind_rows(
         sf::st_drop_geometry() %>% 
         dplyr::ungroup() %>% 
         dplyr::summarise(
-          n = dplyr::n()
-          , area_m2 = sum(area_m2)
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
         ) %>% 
         dplyr::mutate(
           site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
@@ -1003,8 +1037,15 @@ dplyr::bind_rows(
         sf::st_drop_geometry() %>% 
         dplyr::ungroup() %>% 
         dplyr::summarise(
-          n = dplyr::n()
-          , area_m2 = sum(area_m2)
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
         ) %>% 
         dplyr::mutate(
           site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
@@ -1014,28 +1055,40 @@ dplyr::bind_rows(
     dplyr::mutate(method = "dbscan")
 ) %>% 
 dplyr::mutate(
-  avg_size = scales::comma(area_m2/n, accuracy = 0.1)
-  , dplyr::across(
-    dplyr::where(is.numeric)
+  dplyr::across(
+    c(tidyselect::ends_with("_sum"),n) # dplyr::where(is.numeric)
     , ~scales::comma(.x,accuracy = 1)
   )
+  , dplyr::across(
+    dplyr::where(is.numeric)
+    , ~scales::comma(.x,accuracy = .1)
+  )
+  , area_m2_mean = paste0(area_m2_mean, "<br>(",area_m2_sd,")")
+  , volume_m3_mean = paste0(volume_m3_mean, "<br>(",volume_m3_sd,")")
+  , max_height_m_mean = paste0(max_height_m_mean, "<br>(",max_height_m_sd,")")
 ) %>% 
-dplyr::relocate(site,method) %>% 
+dplyr::select(
+  -tidyselect::ends_with("_sd")
+  , -max_height_m_sum
+) %>% 
+dplyr::relocate(site,method,n) %>% 
 dplyr::arrange(site,method) %>% 
 kableExtra::kbl(
   caption = "Final, spectrally filtered candidate segments by method and study site"
   , col.names = c(
     "site", "method"
     , "# candidates"
-    , "total<br>candidate area (m<sup>2</sup>)"
-    , "mean<br>candidate area (m<sup>2</sup>)"
+    , "area m<sup>2</sup><br>mean (sd)"
+    , "area m<sup>2</sup><br>total"
+    , "volume m<sup>3</sup><br>mean (sd)"
+    , "volume m<sup>3</sup><br>total"
+    , "height m<br>mean (sd)"
   )
   , escape = F
   # , digits = 2
 ) %>% 
-kableExtra::kable_styling() %>% 
+kableExtra::kable_styling(font_size = 11.5) %>% 
 kableExtra::collapse_rows(columns = 1, valign = "top")
-
 ```
 
 ### DBSCAN Predictions
@@ -1086,4 +1139,3 @@ all_stand_boundary$site_data_lab %>%
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
-

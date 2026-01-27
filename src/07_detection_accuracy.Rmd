@@ -334,10 +334,280 @@ patchwork::wrap_plots(
   , byrow = T
 ) &
 ggplot2::theme(legend.position = "bottom")
-ggplot2::ggsave(filename = "c:/users/georg/Downloads/asefwer.jpg", height = 10.5, width = 7, dpi = 300)
 ```
+
+note the color legend...we like to see a lot of yellow :D
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
+
+## Detection Accuracy Metrics
+
+now we aggregate the pile-level data (TP, FP, FN) into a single record for each study site and segmentation method combination. Detection performance metrics include F-score, precision, and recall.
+
+because our `agg_ground_truth_match()` function that we [defined earlier](#quant_metrics_form) includes capabilities to compute quantification metrics as well (e.g. height MAPE, RMSE, etc.), we'll add the pile sizing metrics to our instance match data so that `agg_ground_truth_match()` recognizes them.
+
+* "diff_" columns are calculated as the predicted value minus the actual value (e.g. `pred_diameter_m - gt_diameter_m`) 
+* "pct_diff_" columns are calculated as the actual value minus the predicted value divided by the actual value (e.g. `(gt_diameter_m - pred_diameter_m)/gt_diameter_m`)
+
+```{r}
+# add prediction and validation measurements for dbscan
+dbscan_gt_pred_match <- 
+  dbscan_gt_pred_match %>% 
+  purrr::imap(
+    \(x,nm)
+    # because psinf has field data but no others do
+    if(nm=="psinf"){
+      x %>% 
+      # join on gt data
+      dplyr::left_join(
+        slash_piles_polys[[nm]] %>% 
+          dplyr::rename(field_volume_m3=field_gt_volume_m3) %>% 
+          dplyr::select(pile_id, image_gt_diameter_m, image_gt_area_m2, field_height_m, field_diameter_m, field_volume_m3) %>% 
+          dplyr::rename_with(~ stringr::str_remove(.x, "^image_")) %>% 
+          sf::st_drop_geometry()
+        , by = "pile_id"
+      ) %>% 
+      # join on pred area data
+      dplyr::left_join(
+        dbscan_spectral_preds[[nm]] %>% 
+          dplyr::select(
+            pred_id
+            , diameter_m
+            , area_m2
+            , volume_m3
+            , max_height_m
+          ) %>% 
+          dplyr::rename(height_m=max_height_m) %>% 
+          dplyr::rename_with(
+            ~ paste0("pred_", .x, recycle0 = TRUE)
+            , .cols = -c(pred_id)
+          ) %>% 
+          sf::st_drop_geometry()
+        , by = "pred_id"
+      ) %>% 
+      # calculate difference columns
+      dplyr::mutate(
+        # area_m2
+        diff_area_m2 = pred_area_m2-gt_area_m2
+        , pct_diff_area_m2 = (gt_area_m2-pred_area_m2)/gt_area_m2
+        # diameter_m
+        , diff_diameter_m = pred_diameter_m-gt_diameter_m
+        , pct_diff_diameter_m = (gt_diameter_m-pred_diameter_m)/gt_diameter_m
+        # field diameter_m
+        , diff_field_diameter_m = pred_diameter_m-field_diameter_m
+        , pct_diff_field_diameter_m = (field_diameter_m-pred_diameter_m)/field_diameter_m
+        # field height_m
+        , diff_field_height_m = pred_height_m-field_height_m
+        , pct_diff_field_height_m = (field_height_m-pred_height_m)/field_height_m
+        # # field volume_m3
+        # , diff_field_volume_m3 = pred_volume_m3-field_volume_m3
+        # , pct_diff_field_volume_m3 = (field_volume_m3-pred_volume_m3)/field_volume_m3
+      )  
+    }else{
+      x %>% 
+      # join on gt data
+      dplyr::left_join(
+        slash_piles_polys[[nm]] %>% 
+          dplyr::select(pile_id, image_gt_diameter_m, image_gt_area_m2) %>% 
+          dplyr::rename_with(~ stringr::str_remove(.x, "^image_")) %>% 
+          sf::st_drop_geometry()
+        , by = "pile_id"
+      ) %>% 
+      # join on pred area data
+      dplyr::left_join(
+        dbscan_spectral_preds[[nm]] %>% 
+          dplyr::select(
+            pred_id
+            , diameter_m
+            , area_m2
+            , volume_m3
+            , max_height_m
+          ) %>% 
+          dplyr::rename(height_m=max_height_m) %>% 
+          dplyr::rename_with(
+            ~ paste0("pred_", .x, recycle0 = TRUE)
+            , .cols = -c(pred_id)
+          ) %>% 
+          sf::st_drop_geometry()
+        , by = "pred_id"
+      ) %>% 
+      # calculate difference columns
+      dplyr::mutate(
+        # area_m2
+        diff_area_m2 = pred_area_m2-gt_area_m2
+        , pct_diff_area_m2 = (gt_area_m2-pred_area_m2)/gt_area_m2
+        # diameter_m
+        , diff_diameter_m = pred_diameter_m-gt_diameter_m
+        , pct_diff_diameter_m = (gt_diameter_m-pred_diameter_m)/gt_diameter_m
+      )
+    }
+  )
+# dbscan_gt_pred_match %>% dplyr::glimpse()
+# add prediction and validation measurements for watershed
+watershed_gt_pred_match <- 
+  watershed_gt_pred_match %>% 
+  purrr::imap(
+    \(x,nm)
+    # because psinf has field data but no others do
+    if(nm=="psinf"){
+      x %>% 
+      # join on gt data
+      dplyr::left_join(
+        slash_piles_polys[[nm]] %>% 
+          dplyr::rename(field_volume_m3=field_gt_volume_m3) %>% 
+          dplyr::select(pile_id, image_gt_diameter_m, image_gt_area_m2, field_height_m, field_diameter_m, field_volume_m3) %>% 
+          dplyr::rename_with(~ stringr::str_remove(.x, "^image_")) %>% 
+          sf::st_drop_geometry()
+        , by = "pile_id"
+      ) %>% 
+      # join on pred area data
+      dplyr::left_join(
+        watershed_spectral_preds[[nm]] %>% 
+          dplyr::select(
+            pred_id
+            , diameter_m
+            , area_m2
+            , volume_m3
+            , max_height_m
+          ) %>% 
+          dplyr::rename(height_m=max_height_m) %>% 
+          dplyr::rename_with(
+            ~ paste0("pred_", .x, recycle0 = TRUE)
+            , .cols = -c(pred_id)
+          ) %>% 
+          sf::st_drop_geometry()
+        , by = "pred_id"
+      ) %>% 
+      # calculate difference columns
+      dplyr::mutate(
+        # area_m2
+        diff_area_m2 = pred_area_m2-gt_area_m2
+        , pct_diff_area_m2 = (gt_area_m2-pred_area_m2)/gt_area_m2
+        # diameter_m
+        , diff_diameter_m = pred_diameter_m-gt_diameter_m
+        , pct_diff_diameter_m = (gt_diameter_m-pred_diameter_m)/gt_diameter_m
+        # field diameter_m
+        , diff_field_diameter_m = pred_diameter_m-field_diameter_m
+        , pct_diff_field_diameter_m = (field_diameter_m-pred_diameter_m)/field_diameter_m
+        # field height_m
+        , diff_field_height_m = pred_height_m-field_height_m
+        , pct_diff_field_height_m = (field_height_m-pred_height_m)/field_height_m
+        # # field volume_m3
+        # , diff_field_volume_m3 = pred_volume_m3-field_volume_m3
+        # , pct_diff_field_volume_m3 = (field_volume_m3-pred_volume_m3)/field_volume_m3
+      )  
+    }else{
+      x %>% 
+      # join on gt data
+      dplyr::left_join(
+        slash_piles_polys[[nm]] %>% 
+          dplyr::select(pile_id, image_gt_diameter_m, image_gt_area_m2) %>% 
+          dplyr::rename_with(~ stringr::str_remove(.x, "^image_")) %>% 
+          sf::st_drop_geometry()
+        , by = "pile_id"
+      ) %>% 
+      # join on pred area data
+      dplyr::left_join(
+        watershed_spectral_preds[[nm]] %>% 
+          dplyr::select(
+            pred_id
+            , diameter_m
+            , area_m2
+            , volume_m3
+            , max_height_m
+          ) %>% 
+          dplyr::rename(height_m=max_height_m) %>% 
+          dplyr::rename_with(
+            ~ paste0("pred_", .x, recycle0 = TRUE)
+            , .cols = -c(pred_id)
+          ) %>% 
+          sf::st_drop_geometry()
+        , by = "pred_id"
+      ) %>% 
+      # calculate difference columns
+      dplyr::mutate(
+        # area_m2
+        diff_area_m2 = pred_area_m2-gt_area_m2
+        , pct_diff_area_m2 = (gt_area_m2-pred_area_m2)/gt_area_m2
+        # diameter_m
+        , diff_diameter_m = pred_diameter_m-gt_diameter_m
+        , pct_diff_diameter_m = (gt_diameter_m-pred_diameter_m)/gt_diameter_m
+      )
+    }
+  )
+# watershed_gt_pred_match %>% dplyr::glimpse()
+# agg_ground_truth_match(watershed_gt_pred_match[[1]]) %>% dplyr::glimpse()
+```
+
+apply our `agg_ground_truth_match()` function
+
+```{r}
+agg_ground_truth_match_ans <- 
+  dplyr::bind_rows(
+    dbscan_gt_pred_match %>% 
+      purrr::map_dfr(agg_ground_truth_match, .id = "site_data_lab") %>% 
+      dplyr::mutate(method = "dbscan") %>% 
+      dplyr::bind_rows()
+    , watershed_gt_pred_match %>% 
+      purrr::map_dfr(agg_ground_truth_match, .id = "site_data_lab") %>% 
+      dplyr::mutate(method = "watershed") %>% 
+      dplyr::bind_rows()
+  ) %>% 
+  dplyr::inner_join(
+    all_stand_boundary %>% 
+      dplyr::select(site_data_lab, site) %>% 
+      sf::st_drop_geometry()
+    , by = "site_data_lab"
+  )
+```
+
+what did we get?
+
+```{r}
+agg_ground_truth_match_ans %>% 
+  dplyr::glimpse()
+```
+
+let's make a nice table of the detection accuracy metrics by study site and segmentation method
+
+```{r}
+agg_ground_truth_match_ans %>% 
+  dplyr::select(
+    site, method
+    , tidyselect::ends_with("_n")
+    , precision, recall, f_score
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(
+      tidyselect::ends_with("_n")
+      , ~scales::comma(.x,accuracy=1)
+    )
+    , dplyr::across(
+      dplyr::where(is.numeric)
+      , ~scales::percent(.x,accuracy=0.1)
+    )
+  ) %>% 
+  dplyr::arrange(site,method) %>% 
+  kableExtra::kbl(
+    caption = "Detection Accuracy"
+    , col.names = c(
+      "site", "method"
+      , "TP predictions", "FP predictions", "FN predictions"
+      , "Precision", "Recall", "F-score"
+    )
+    , escape = F
+    # , digits = 2
+  ) %>% 
+  kableExtra::kable_styling() %>% 
+  kableExtra::collapse_rows(columns = 1, valign = "top")  
+```
+
+check those recall rates :)
+
+```{r}
+
+```
+
