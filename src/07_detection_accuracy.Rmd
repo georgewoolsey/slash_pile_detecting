@@ -7,11 +7,11 @@ To this point we have:
 3. [Demonstrated our geometry-based slash pile detection methodology](#geom_detect)
 4. [Demonstrated our spectral refinement (i.e. data fusion) methodology](#data_fusion)
 5. [Reviewed how we will evaluate our method](#meth_eval)
-5. and [Made predictions using our method on our experimental sites](#meth_preds)
+5. and [Made predictions using our method on four experimental sites](#meth_preds)
 
 In this section, we'll evaluate the effectiveness of the proposed geometric, rules-based slash pile detection methodology by assessing its detection accuracy performance. We fully reviewed the detection accuracy assessment [workflow here](#detect_metrics_form), but here is a quick overview:
 
-Detection accuracy metrics are calculated by aggregating raw TP (true positive), FP (false positive; commission), and FN (false negative; omission) counts to quantify the method's ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (TP) instances correctly match ground truth instances with a prediction, commission tree predictions do not match a ground truth tree (false positive; FP), and omissions are ground truth instances for which no predictions match (FN)
+Detection accuracy metrics are calculated by aggregating raw TP (true positive), FP (false positive; commission), and FN (false negative; omission) counts to quantify the method's ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (TP) instances correctly match ground truth instances with a prediction, commission predictions do not match a ground truth instance (false positive; FP), and omissions are ground truth instances for which no predictions match (FN)
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
@@ -347,6 +347,8 @@ gc()
 
 now we aggregate the pile-level data (TP, FP, FN) into a single record for each study site and segmentation method combination. Detection performance metrics include F-score, precision, and recall.
 
+### Aggregate Instance Match Results
+
 because our `agg_ground_truth_match()` function that we [defined earlier](#quant_metrics_form) includes capabilities to compute quantification metrics as well (e.g. height MAPE, RMSE, etc.), we'll add the pile sizing metrics to our instance match data so that `agg_ground_truth_match()` recognizes them.
 
 * "diff_" columns are calculated as the predicted value minus the actual value (e.g. `pred_diameter_m - gt_diameter_m`) 
@@ -561,6 +563,13 @@ agg_ground_truth_match_ans <-
       dplyr::select(site_data_lab, site) %>% 
       sf::st_drop_geometry()
     , by = "site_data_lab"
+  ) %>% 
+  # make factor
+  dplyr::mutate(
+    site = ordered(site)
+    , method = method %>%
+      factor(ordered = T) %>% 
+      forcats::fct_recode("DBSCAN" = "dbscan", "Watershed" = "watershed")
   )
 ```
 
@@ -570,6 +579,8 @@ what did we get?
 agg_ground_truth_match_ans %>% 
   dplyr::glimpse()
 ```
+
+### Detection Accuracy Results
 
 let's make a nice table of the detection accuracy metrics by study site and segmentation method
 
@@ -605,9 +616,408 @@ agg_ground_truth_match_ans %>%
   kableExtra::collapse_rows(columns = 1, valign = "top")  
 ```
 
-check those recall rates :)
+## Segmentation Method Accuracy Comparison
+
+Our slash pile detection methodology implements and tests two different segmentation approaches to identify candidate slash piles from the CHM. We fully reviewed these two approaches [here](#seg_methods) but we'll present a quick review. First, the watershed segmentation method is a raster-based technique that treats the inverted height surface as a topographic landscape where local maxima serve as initial seeds to define the boundaries of individual basins. Second, DBSCAN segmentation is traditionally a point-based clustering method that we adapted for raster data by treating the cell centroids as points. To maintain consistency across varying datasets and limit the amount of effort required by users, we developed a dynamic parameterization logic that automatically calibrates both algorithms by translating user-defined physical dimensions into data-specific values. This dynamic parameterization uses the target pile size and input data resolution to calculate geometry-based search windows and density thresholds to ensure that the algorithm settings are proportional to the target object regardless of changes in input data resolution.
+
+let's make some plots to visualize this information
 
 ```{r}
+agg_ground_truth_match_ans %>% 
+  dplyr::select(
+    site, method
+    , precision, recall, f_score
+  ) %>% 
+  tidyr::pivot_longer(
+    cols = c(precision,recall,f_score)
+    , names_to = "metric"
+    , values_to = "value"
+  ) %>% 
+  dplyr::mutate(
+    metric = metric %>%
+      forcats::fct_relevel("f_score", "recall", "precision") %>%
+      forcats::fct_recode("F-score" = "f_score", "Recall" = "recall", "Precision" = "precision")
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::where(is.numeric)
+      , list(lab = ~scales::percent(.x,accuracy=0.1))
+    )
+  ) %>% 
+  # dplyr::pull(metric) %>% levels()
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      y = value, x = method
+      , color = metric, group = metric
+    )
+  ) +
+  ggplot2::geom_line(alpha = 0.8, lwd = 2) +
+   # lhs labs
+  ggrepel::geom_text_repel(
+    data = function(x){dplyr::filter(x,method == "DBSCAN")}
+    , mapping = ggplot2::aes(label = value_lab, fontface = "bold")
+    # , color = "black"
+    , size = 3
+    # , min.segment.length = 0
+    , nudge_x = -0.1
+    , direction = "y"
+    , hjust = 1
+  ) +
+  # rhs labs
+  ggrepel::geom_text_repel(
+    data = function(x){dplyr::filter(x,method == "Watershed")}
+    , mapping = ggplot2::aes(label = value_lab, fontface = "bold")
+    # , color = "black"
+    , size = 3
+    # , min.segment.length = 0
+    , nudge_x = 0.1
+    , direction = "y"
+    , hjust = 0
+  ) +
+  ggplot2::geom_point(size = 3) +
+  ggplot2::scale_color_manual(values=pal_eval_metric2) +
+  ggplot2::scale_y_continuous(
+    limits = c(0,1)
+    , labels=scales::percent
+    , breaks = scales::breaks_extended(n=6)
+    , expand = ggplot2::expansion(mult = c(0,0.03))
+  ) +
+  ggplot2::facet_grid(
+    cols = dplyr::vars(site)
+    , axes = "all"
+  ) +
+  ggplot2::labs(
+    color="",x="Segmentation Method",y=""
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "top"
+    , strip.text = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , axis.text.x = ggplot2::element_text(size = 10)
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(override.aes = list(shape = 15, linetype = 0, size = 6, alpha = 1))
+  )
+```
 
+```{r, include=F, eval = F}
+# radar plot?
+agg_ground_truth_match_ans %>% 
+  dplyr::select(
+    site, method
+    , precision, recall, f_score
+  ) %>% 
+  tidyr::pivot_longer(
+    cols = c(precision,recall,f_score)
+    , names_to = "metric"
+    , values_to = "value"
+  ) %>% 
+  dplyr::mutate(
+    metric = metric %>%
+      forcats::fct_relevel("f_score", "recall", "precision") %>%
+      forcats::fct_recode("F-score" = "f_score", "Recall" = "recall", "Precision" = "precision")
+    , site_sht = stringr::word(site) %>% ordered()
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::where(is.numeric)
+      , list(lab = ~scales::percent(.x,accuracy=0.1))
+    )
+  ) %>% 
+  # radar plot? 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(x = site_sht, y = value, group = method, color = method, fill = method)
+  ) +
+  ggplot2::geom_area(alpha = 0.5, position = "identity") +
+  ggplot2::geom_point(
+    data = agg_temp
+    , size = 3
+  ) +
+  ggplot2::coord_radial(clip = "off") + 
+  ggplot2::scale_y_continuous(limits=c(0,1)) +
+  ggplot2::facet_grid(
+    cols = dplyr::vars(metric)
+    # , axes = "all"
+  ) +
+  ggplot2::theme_minimal()
+  
+
+# # Reshape your data for ggradar
+# df_wide <- df %>%
+#   pivot_wider(names_from = my_factor, values_from = value) %>%
+#   rename(group = my_other_factor) # ggradar looks for a 'group' column
+# 
+# # Create the plot
+# ggradar(df_wide, 
+#         values.radar = c("0", "0.5", "1"), # Labels for the grid
+#         grid.min = 0, grid.mid = 0.5, grid.max = 1,
+#         fill = TRUE,         # This enables the origin-to-point fill
+#         fill.alpha = 0.3) +  # Transparency for overlapping areas
+#   theme(legend.position = "bottom")  
+```
+
+recall never changes, the changes in F-score are entirely due to changes in precision
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
+
+### Paired T-Test
+
+To compare the detection performance of two algorithms across our set of four study sites, we can quickly use a paired t-test to check if the average of the differences in F-score between the two methods is significantly different from zero. If the p-value is less than 0.05, you can say the difference is statistically significant. However, with only four sites this test may not be robust enough to detect differences in detection accuracy across the methods unless one method is a lot better...
+
+```{r}
+# get scores for each method since t.test needs the sites to be ORDERED the same for proper "paired" comparison
+dbscan_temp <- agg_ground_truth_match_ans %>% 
+  dplyr::arrange(site) %>% 
+  dplyr::filter(tolower(method) == "dbscan") %>% 
+  dplyr::pull(f_score)
+watershed_temp <- agg_ground_truth_match_ans %>% 
+  dplyr::arrange(site) %>% 
+  dplyr::filter(tolower(method) == "watershed") %>% 
+  dplyr::pull(f_score)
+# t.test
+ttest_temp <- t.test(dbscan_temp, watershed_temp, paired = T)
+```
+
+let's see what we got
+
+```{r}
+ttest_temp
+```
+
+the `t.test()` computed the mean difference (MD) between the DBSCAN and Watershed F-score to determine if the difference is statistically significant (i.e. significantly different from zero). the mean difference (MD) is `r scales::percent(ttest_temp$estimate, accuracy = 0.01)` (DBSCAN F-Score minus Watershed F-Score). the p-value of `r scales::comma(ifelse(ttest_temp$p.value<0.00001,0.00001,ttest_temp$p.value), accuracy = 0.0001)` is greater than 0.05, meaning we fail to reject the null hypothesis that the true mean difference is zero. this implies that neither the DBSCAN nor the Watershed method was statistically significantly better (or worse) than the other segmentation method at correctly identifying the location of actual slash piles while minimizing incorrect predictions at locations where no actual pile was present.
+
+### Bayesian Approach
+
+The paired t-test above failed to detect a difference in detection accuracy (F-score) by segmentation method (DBSCAN vs Watershed). With only four sites the paired t-test may not be robust enough to detect differences in detection accuracy across the methods. An alternative is a quick Bayesian model which may provide a more robust alternative to the paired t-test by estimating the full probability distribution of the difference between methods rather than relying on a single p-value. While a paired t-test simply evaluates the average difference within sites, a Bayesian model can account for the nested structure of the data by allowing the intercept to vary by study site (`(1|site)` in the model) while keeping the slope constant across locations (`f_score ~ method` in the model). The slope of the model represents the effect of the segmentation method. This approach allows the model to adjust for the unique baseline difficulty of pile detection at each study site and isolates the detection accuracy change caused by using a different segmentation method. Since F-score is bound between zero and one, we use a Beta regression family to ensure predictions are not made outside of these bounds.
+
+```{r}
+# brms::brm
+fscore_mod_method_temp <- brms::brm(
+  f_score ~ method + (1|site)
+  , data = agg_ground_truth_match_ans
+  # family
+  , family = brms::Beta(link = "logit")
+  # mcmc
+  , iter = 6000, warmup = 3000
+  , chains = 4
+  , cores = lasR::half_cores()
+  , file = paste0("../data/", "fscore_mod_method")
+)
+# look at results
+# plot(fscore_mod_method_temp)
+```
+
+quickly look at the model estimates of the effect of segmentation method
+
+```{r}
+brms::fixef(fscore_mod_method_temp)
+# stats::coef(fscore_mod_method_temp)
+```
+
+plot the posterior predictive distributions of the conditional mean F-score by segmentation method with the 95% highest posterior density interval (HDI)
+
+```{r}
+# get posterior draws
+draws_temp <- agg_ground_truth_match_ans %>%
+  dplyr::distinct(method) %>% 
+  # re_formula = NA gives population average (average across site)
+  tidybayes::add_epred_draws(fscore_mod_method_temp, re_formula = NA) %>% 
+  dplyr::mutate(value = .epred) %>% 
+  dplyr::ungroup()
+# plot
+draws_temp %>% 
+  ggplot(
+    mapping = aes(
+      x = value
+      , y = method
+      , fill = method
+    )
+  ) +
+  tidybayes::stat_halfeye(
+    point_interval = tidybayes::median_hdci, .width = .95
+    , interval_color = "gray66"
+    , shape = 21, point_color = "gray66", point_fill = "black"
+    , justification = -0.01
+  ) +
+  harrypotter::scale_fill_hp_d(option = "dracomalfoy", drop = F) +
+  ggplot2::scale_x_continuous(limits = c(0,1), labels=scales::percent, breaks = scales::breaks_extended(n=6)) +
+  ggplot2::labs(
+    subtitle = "posterior distribution of F-score by segmentation method\nand the 95% highest posterior density interval (HDI)"
+    , x = "F-score", y = ""
+  ) +
+  theme_light() +
+  theme(legend.position = "none")
+```
+
+summary table of the posterior distribution and 95% HDI using `tidybayes::median_hdci()` to avoid potential for returning multiple rows by group if our data is grouped. See the [documentation](https://mjskay.github.io/ggdist/reference/point_interval.html) for the `ggdist` package which notes that "If the distribution is multimodal, hdi may return multiple intervals for each probability level (these will be spread over rows)."
+
+```{r}
+draws_temp %>%
+  dplyr::group_by(method) %>% 
+  tidybayes::median_hdci(value) %>% 
+  dplyr::select(-c(.point,.interval, .width)) %>% 
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::where(is.numeric)
+      , ~scales::percent(.x,accuracy=0.1)
+    )
+  ) %>% 
+  kableExtra::kbl(
+    digits = 2
+    , caption = "F-score<br>95% HDI of the posterior predictive distribution"
+    , col.names = c(
+      "method"
+      , "F-score<br>median"
+      , "HDI low", "HDI high"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+we can also make pairwise comparisons using the posterior draws with `tidybayes::compare_levels()` to determine the difference in F-score between the two methods, but now, instead of one mean difference value as in the paired t-test, we get a distribution of the difference which presents a much more detailed view of the difference in detection accuracy between the two segmentation methods
+
+```{r}
+comp_temp <- draws_temp %>%
+  tidybayes::compare_levels(
+    value
+    , by = method
+    # make the comparison the same as t.test: dbscan-watershed
+    , comparison = list(c("DBSCAN","Watershed"))
+  )
+  # dplyr::glimpse()
+med_comp_temp <- tidybayes::median_hdci(comp_temp$value)
+# plot
+comp_temp %>% 
+  ggplot2::ggplot(aes(x = value, y = 0)) +
+  ggplot2::geom_vline(
+    xintercept = 0
+    # , linetype = "dashed"
+    , color = "black"
+    , lwd = 1.5
+  ) +
+  tidybayes::stat_halfeye(
+    point_interval = tidybayes::median_hdci, .width = .95
+    , fill = "navy", alpha = 0.8
+    , interval_color = "gray66"
+    , shape = 21, point_color = "gray66", point_fill = "black"
+    , justification = -0.01
+  ) +
+  ggplot2::annotate(
+    "text"
+    , x = (med_comp_temp %>% dplyr::select(y,ymin,ymax) %>% base::unlist(use.names = F))
+    , y = -0.01
+    , label = (
+      med_comp_temp %>% 
+        dplyr::select(y,ymin,ymax) %>% 
+        base::unlist(use.names = F) %>% 
+        scales::percent(accuracy = 0.1)
+    )
+  ) +
+  ggplot2::scale_y_continuous(breaks=NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent, breaks = scales::breaks_extended(n=8), expand = ggplot2::expansion(mult = 0.05)) +
+  ggplot2::labs(
+    subtitle = "difference in F-score between segmentation methods"
+    , x = "difference in F-score"
+    , y = "difference (DBSCAN - Watershed)"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5)
+  )
+```
+
+finally, we can use the posterior draws of the difference in F-score (calculated with `tidybayes::compare_levels()`) to determine the probability that one method is better than the other
+
+```{r}
+comp_temp <- comp_temp %>% 
+  dplyr::mutate(
+    diff_gt_0 = as.numeric(value>0)
+  ) 
+# simply calculate the proportion of posterior draws where the difference is greater than zero
+mean(comp_temp$diff_gt_0) %>% scales::percent(accuracy = 0.1)
+```
+
+There is a `mean(comp_temp$diff_gt_0) %>% scales::percent(accuracy = 0.1)` probability that the DBSCAN method results in better slash pile detection accuracy as measured by F-score than the Watershed method
+
+## Individual Pile Evaluation
+
+let's visually inspect the TP, FP, and FN predictions to see if we can get some insight into why actual piles were missed (omissions) or correctly predicted (TP) and why the method may have made incorrect predictions (commissions)
+
+```{r, include=F, eval=FALSE}
+plts_temp <-
+  which(ground_truth_prediction_match_ans$match_grp %in% c("true positive")) %>% 
+  sample( min(20,agg_ground_truth_match_ans$tp_n) ) %>% 
+  purrr::map(function(x){
+    dta <- ground_truth_prediction_match_ans %>% dplyr::slice(x)
+    gt <- bhef_slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
+    pr <- final_predicted_slash_piles %>% dplyr::filter(pred_id==dta$pred_id)
+    #plt
+    ortho_plt_fn(my_ortho_rast=bhef_rgb_rast, stand=sf::st_union(gt,pr), buffer=6) +
+      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
+      ggplot2::geom_sf(data = pr, fill = NA, color = "brown", lwd = 0.5)
+  })
+# combine
+patchwork::wrap_plots(
+  plts_temp
+  , ncol = 4
+)
+```
+
+add chm
+
+```{r, include=F, eval=FALSE}
+# plot RGB + CHM
+plts_temp <-
+  which(ground_truth_prediction_match_ans$match_grp %in% c("omission")) %>% 
+  # sample(1) %>%
+  purrr::map(function(x){
+    dta <- ground_truth_prediction_match_ans %>% dplyr::slice(x)
+    gt <- bhef_slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
+    #plt
+    ortho_plt_fn(my_ortho_rast=bhef_rgb_rast, stand=sf::st_union(gt), buffer=6) +
+      ggnewscale::new_scale_fill() +
+      ggplot2::geom_tile(
+        data = chm_rast_stand %>% 
+          terra::crop(
+            sf::st_union(gt) %>% 
+              sf::st_transform(terra::crs(chm_rast_stand)) %>% 
+              terra::vect()
+          ) %>% 
+          terra::mask(
+            sf::st_union(gt) %>% 
+              sf::st_transform(terra::crs(chm_rast_stand)) %>% 
+              terra::vect()
+          ) %>% 
+          # slice the chm below our desired height
+          # this is what slash_pile_detect_watershed() does
+          # terra::clamp(upper = 2.3, lower = 0, values = F) %>%
+          terra::as.data.frame(xy=T) %>% 
+          dplyr::rename(f=3)
+        , mapping = ggplot2::aes(x=x,y=y,fill=f)
+        , alpha = 0.5
+      ) +
+      ggplot2::scale_fill_viridis_c(option = "plasma", na.value = "gray",name = "CHM (m)") +
+      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
+      ggplot2::labs(
+        subtitle = paste0(
+          "pile ID: ", dta$pile_id
+          , "\nGT area: ", round(dta$gt_area_m2,1)
+          # , " | Pred ht: ", round(dta$pred_height_m,1)
+          , "\nGT dia: ", round(dta$gt_diameter_m,1)
+          # , " | Pred dia: ", round(dta$pred_diameter_m,1)
+        )
+      ) +
+      ggplot2::theme(legend.text = ggplot2::element_text(size = 6),legend.title = ggplot2::element_text(size = 6))
+  })
+# plts_temp
+# combine
+patchwork::wrap_plots(
+  plts_temp
+  , ncol = 2
+)
 ```
 

@@ -411,7 +411,7 @@ ggplot2::ggplot() +
 
 ## Detection Accuracy Metrics{#detect_metrics_form}
 
-Detection accuracy metrics are calculated by aggregating raw TP, FP, and FN counts to quantify the method's ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (TP) instances correctly match ground truth instances with a prediction, commission tree predictions do not match a ground truth tree (false positive; FP), and omissions are ground truth instances for which no predictions match (false negative; FN)
+Detection accuracy metrics are calculated by aggregating raw TP, FP, and FN counts to quantify the method's ability to find the piles. Aggregation of the instance matching allows us to evaluate omission rate (false negative rate or miss rate), commission rate (false positive rate), precision, recall (detection rate), and the F-score metric. As a reminder, true positive (TP) instances correctly match ground truth instances with a prediction, commission predictions do not match a ground truth instance (false positive; FP), and omissions are ground truth instances for which no predictions match (false negative; FN)
 
 $$\textrm{omission rate} = \frac{FN}{TP+FN}$$
 
