@@ -126,3 +126,41 @@ knitr::write_bib(c(
   , "cloud2trees"
 ), 'packages.bib')
 ```
+
+```{r,include=F,eval=FALSE}
+# # 1. Get a list of .Rmd files that DO NOT start with "_"
+# # Pattern breakdown:
+# # ^      = starts at the beginning of the filename
+# # [^_]   = first character is NOT an underscore
+# # .*     = followed by any number of characters
+# # \\.Rmd$ = ends with the .Rmd extension
+# rmd_files <- list.files(pattern = "^[^_].*\\.Rmd$", full.names = TRUE)
+# 
+# # 2. Execute as before
+# lapply(rmd_files, function(rmd_file) {
+#   temp_r_script <- tempfile(fileext = ".R")
+#   knitr::purl(rmd_file, output = temp_r_script, quiet = TRUE, documentation = 0)
+#   sys.source(temp_r_script, envir = globalenv())
+#   unlink(temp_r_script)
+# })
+# 
+# 1. List .Rmd files, excluding those starting with "_"
+rmd_files <- list.files(pattern = "^[^_].*\\.Rmd$", full.names = TRUE)
+
+# 2. Iterate using walk() for side effects
+# Uses the ~ shorthand for an anonymous function where .x is each file
+purrr::walk(rmd_files, ~ {
+  temp_r_script <- tempfile(fileext = ".R")
+  
+  # Extract code (purl) and execute (sys.source)
+  knitr::purl(.x, output = temp_r_script, quiet = TRUE, documentation = 0)
+  sys.source(temp_r_script, envir = globalenv())
+  
+  # Cleanup
+  unlink(temp_r_script)
+})
+
+
+
+```
+

@@ -765,7 +765,7 @@ gc()
 
 ### Paired T-Test
 
-To compare the detection performance of two algorithms across our set of four study sites, we can quickly use a paired t-test to check if the average of the differences in F-score between the two methods is significantly different from zero. If the p-value is less than 0.05, you can say the difference is statistically significant. However, with only four sites this test may not be robust enough to detect differences in detection accuracy across the methods unless one method is a lot better...
+To compare the detection performance of the two algorithms across our set of four study sites, we can quickly use a paired t-test to check if the average of the differences in F-score between the two methods is significantly different from zero. If the p-value is less than 0.05, you can say the difference is statistically significant. However, with only four sites this test may not be robust enough to detect differences in detection accuracy across the methods unless one method is a lot better...
 
 ```{r}
 # get scores for each method since t.test needs the sites to be ORDERED the same for proper "paired" comparison
@@ -878,7 +878,7 @@ draws_temp %>%
   kableExtra::kable_styling()
 ```
 
-we can also make pairwise comparisons using the posterior draws with `tidybayes::compare_levels()` to determine the difference in F-score between the two methods, but now, instead of one mean difference value as in the paired t-test, we get a distribution of the difference which presents a much more detailed view of the difference in detection accuracy between the two segmentation methods
+we can also make pairwise comparisons using the posterior draws with `tidybayes::compare_levels()` to determine the difference in F-score between the two methods, but now, instead of one mean difference value as in the paired t-test, we get a distribution of the difference which provides much more detailed insight to the difference in detection accuracy between the two segmentation methods
 
 ```{r}
 comp_temp <- draws_temp %>%
@@ -888,8 +888,9 @@ comp_temp <- draws_temp %>%
     # make the comparison the same as t.test: dbscan-watershed
     , comparison = list(c("DBSCAN","Watershed"))
   )
-  # dplyr::glimpse()
+# dplyr::glimpse(comp_temp)
 med_comp_temp <- tidybayes::median_hdci(comp_temp$value)
+mean_comp_temp <- tidybayes::mean_hdci(comp_temp$value)
 # plot
 comp_temp %>% 
   ggplot2::ggplot(aes(x = value, y = 0)) +
@@ -928,6 +929,35 @@ comp_temp %>%
   ggplot2::theme(
     axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5)
   )
+# scales::percent(mean_comp_temp$y,accuracy=0.1)
+# scales::percent(ttest_temp$estimate, accuracy = 0.1)
+```
+
+the 95% HDI shown as the gray line below the posterior distribution summarizes the posterior draws to represent a density interval with a value of central tendency. We plot the median (`scales::percent(med_comp_temp$y,accuracy=0.1)`) as the value of central tendency of the difference in F-score between the two methods but we could also determine the mean difference which we calculated above using `tidybayes::mean_hdci()`. Our Bayesian approach estimates the mean difference in F-score between the two methods as `scales::percent(mean_comp_temp$y,accuracy=0.1)` which we can directly compare to the mean difference tested using the paired t-test above of `scales::percent(ttest_temp$estimate, accuracy = 0.1)`.
+
+table the 95% HDI of the difference in F-score between the two methods
+
+```{r}
+med_comp_temp %>% 
+  dplyr::mutate(
+    dplyr::across(
+      dplyr::where(is.numeric)
+      , ~scales::percent(.x,accuracy=0.1)
+    )
+  ) %>% 
+  dplyr::select(tidyselect::starts_with("y")) %>% 
+  dplyr::mutate(d = "difference (DBSCAN - Watershed)") %>% 
+  dplyr::relocate(d) %>% 
+  kableExtra::kbl(
+    caption = "difference in F-score between the two methods<br>95% HDI of the posterior predictive distribution"
+    , col.names = c(
+      ""
+      , "difference F-score<br>median"
+      , "HDI low", "HDI high"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
 ```
 
 finally, we can use the posterior draws of the difference in F-score (calculated with `tidybayes::compare_levels()`) to determine the probability that one method is better than the other
@@ -941,83 +971,556 @@ comp_temp <- comp_temp %>%
 mean(comp_temp$diff_gt_0) %>% scales::percent(accuracy = 0.1)
 ```
 
-There is a `mean(comp_temp$diff_gt_0) %>% scales::percent(accuracy = 0.1)` probability that the DBSCAN method results in better slash pile detection accuracy as measured by F-score than the Watershed method
+There is a `scales::percent(mean(comp_temp$diff_gt_0),accuracy = 0.1)` probability that the DBSCAN method results in better slash pile detection accuracy (i.e. higher F-score) than the Watershed method
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```
 
 ## Individual Pile Evaluation
 
 let's visually inspect the TP, FP, and FN predictions to see if we can get some insight into why actual piles were missed (omissions) or correctly predicted (TP) and why the method may have made incorrect predictions (commissions)
 
-```{r, include=F, eval=FALSE}
-plts_temp <-
-  which(ground_truth_prediction_match_ans$match_grp %in% c("true positive")) %>% 
-  sample( min(20,agg_ground_truth_match_ans$tp_n) ) %>% 
-  purrr::map(function(x){
-    dta <- ground_truth_prediction_match_ans %>% dplyr::slice(x)
-    gt <- bhef_slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
-    pr <- final_predicted_slash_piles %>% dplyr::filter(pred_id==dta$pred_id)
-    #plt
-    ortho_plt_fn(my_ortho_rast=bhef_rgb_rast, stand=sf::st_union(gt,pr), buffer=6) +
-      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
-      ggplot2::geom_sf(data = pr, fill = NA, color = "brown", lwd = 0.5)
-  })
-# combine
-patchwork::wrap_plots(
-  plts_temp
-  , ncol = 4
-)
+```{r}
+p_fn_temp <- function(row_n = 1, site, method = "dbscan", mtchgrp = "true positive") {
+  if(tolower(method) == "dbscan"){
+    w_dta <- dbscan_gt_pred_match[[site]] %>% 
+      dplyr::filter(match_grp == mtchgrp)
+    p_dta <- dbscan_spectral_preds[[site]]
+  }else{
+    w_dta <- watershed_gt_pred_match[[site]] %>% 
+      dplyr::filter(match_grp == mtchgrp)
+    p_dta <- watershed_spectral_preds[[site]]
+  }
+  # get area of largest with buffer so all plots are same size
+  if(site %in% c("bhef")){
+    b <- 8.5
+  }else if(site %in% c("arnf")){
+    b <- 6
+  }else{
+    b <- 4
+  }
+  
+  if(
+    mtchgrp %in%  c("true positive", "omission")
+  ){
+    area_temp <- slash_piles_polys[[site]] %>% 
+      dplyr::inner_join(
+        w_dta %>% 
+          dplyr::slice_max(order_by = gt_area_m2, n = 1) 
+        , by = "pile_id"
+      ) %>% 
+      sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
+      sf::st_buffer(b) %>% 
+      sf::st_area() %>% 
+      as.numeric() %>% 
+      ceiling() 
+  }else{
+    area_temp <- p_dta %>% 
+      dplyr::inner_join(
+        w_dta %>% 
+          dplyr::slice_max(order_by = pred_area_m2, n = 1) 
+        , by = "pred_id"
+      ) %>% 
+      sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
+      sf::st_buffer(b) %>% 
+      sf::st_area() %>% 
+      as.numeric() %>% 
+      ceiling()
+  }
+  # tp
+  tp <- w_dta %>% dplyr::slice(row_n) 
+  # gt pile
+  gt_pile <- slash_piles_polys[[site]] %>% 
+    dplyr::filter(pile_id == tp$pile_id)
+  # pred pile
+  pred_pile <- p_dta %>% 
+    dplyr::filter(pred_id == tp$pred_id)
+  
+  # ortho area
+  if(nrow(gt_pile) == 1 && nrow(pred_pile) == 1){
+    ortho_st <- 
+      sf::st_union(
+        gt_pile %>% sf::st_transform(crs=terra::crs(rgb_rast[[site]])) 
+        , pred_pile %>% sf::st_transform(crs=terra::crs(rgb_rast[[site]])) 
+      ) %>% 
+      sf::st_centroid() %>% 
+      sf::st_buffer(
+        sqrt(area_temp/4) ## numerator = desired plot size in m2
+        , endCapStyle = "SQUARE"
+      ) %>%
+      dplyr::mutate(dummy=1)  
+  }else if(nrow(gt_pile) == 1){
+    ortho_st <- 
+      gt_pile %>% 
+      sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
+      sf::st_centroid() %>% 
+      sf::st_buffer(
+        sqrt(area_temp/4) ## numerator = desired plot size in m2
+        , endCapStyle = "SQUARE"
+      ) %>%
+      dplyr::mutate(dummy=1)  
+  }else if(nrow(pred_pile) == 1){
+    ortho_st <- 
+      pred_pile %>% 
+      sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
+      sf::st_centroid() %>% 
+      sf::st_buffer(
+        sqrt(area_temp/4) ## numerator = desired plot size in m2
+        , endCapStyle = "SQUARE"
+      ) %>%
+      dplyr::mutate(dummy=1)  
+  }
+  
+  # get plt
+  rp <- ortho_plt_fn(
+    rgb_rast = rgb_rast[[site]]
+    , stand = ortho_st
+    , add_stand = F
+    , buffer = 0
+  ) 
+  
+  # #### add chm?
+  # if(addchm){
+  #   # get max ht
+  #   maxh <- all_stand_boundary %>% 
+  #     dplyr::filter(site_data_lab == site) %>% 
+  #     dplyr::slice(1) %>% 
+  #     dplyr::pull(max_ht_m)
+  #   # ff <- tempfile(fileext = ".tif")
+  #   # crop, slice rast
+  #   ##### ???????????????????????? this kills your computer every time :\
+  #   crp_chm_rast_temp <- chm_rast[[site]] %>% 
+  #     terra::crop(
+  #       ortho_st %>% 
+  #         dplyr::ungroup() %>% 
+  #         sf::st_union() %>% 
+  #         sf::st_bbox() %>% 
+  #         sf::st_as_sfc() %>% 
+  #         sf::st_transform(terra::crs(chm_rast[[site]])) %>% 
+  #         terra::vect()
+  #       , mask = T
+  #       # , filename = ff
+  #     )
+  #   crp_chm_rast_temp <- 
+  #     # slice
+  #     terra::clamp(
+  #       crp_chm_rast_temp
+  #       , upper = maxh
+  #       , lower = 0
+  #       , values = F
+  #     )
+  #   rp <- rp +
+  #     ggnewscale::new_scale_fill() +
+  #     ggplot2::geom_tile(
+  #       data = crp_chm_rast_temp %>%
+  #         terra::as.data.frame(xy=T) %>%
+  #         dplyr::rename(f=3)
+  #       , mapping = ggplot2::aes(x=x,y=y,fill=f)
+  #       , alpha = 0.5
+  #       , inherit.aes = F
+  #     ) +
+  #     ggplot2::scale_fill_viridis_c(
+  #       option = "plasma", na.value = "gray",name = "CHM (m)"
+  #       , limits = c(0,ceiling(maxh))
+  #     )
+  # }
+  
+  #### add piles
+  if(nrow(gt_pile) == 1){
+    rp <- rp +
+      ggplot2::geom_sf(data = gt_pile, fill = NA, color = "cyan", lwd = 0.6)
+  }
+  if(nrow(pred_pile) == 1){
+    rp <- rp +
+      ggplot2::geom_sf(data = pred_pile, fill = NA, color = "magenta", lwd = 0.5)
+  }
+  
+  
+  
+  return(
+    rp
+    # list(rp,ortho_st)
+  )
+}
 ```
 
-add chm
-
-```{r, include=F, eval=FALSE}
-# plot RGB + CHM
-plts_temp <-
-  which(ground_truth_prediction_match_ans$match_grp %in% c("omission")) %>% 
-  # sample(1) %>%
-  purrr::map(function(x){
-    dta <- ground_truth_prediction_match_ans %>% dplyr::slice(x)
-    gt <- bhef_slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
-    #plt
-    ortho_plt_fn(my_ortho_rast=bhef_rgb_rast, stand=sf::st_union(gt), buffer=6) +
+```{r,include=FALSE,eval=FALSE}
+xxx <- p_fn_temp(row_n = 2, site = "pj", method = "dbscan", mtchgrp = "commission")
+xxx[[1]]
+# xxx
+# get max ht
+    (maxh <- all_stand_boundary %>% 
+      dplyr::filter(site_data_lab == "pj") %>% 
+      dplyr::slice(1) %>% 
+      dplyr::pull(max_ht_m))
+    # crop, slice rast
+    crp_chm_rast_temp <- chm_rast[["pj"]] %>% 
+      terra::crop(
+          xxx[[2]] %>% 
+          dplyr::ungroup() %>% 
+          sf::st_union() %>% 
+          sf::st_bbox() %>% 
+          sf::st_as_sfc() %>% 
+          sf::st_transform(terra::crs(chm_rast[["pj"]])) %>% 
+          terra::vect()
+      )
+    
+    crp_chm_rast_temp <- crp_chm_rast_temp %>% 
+      # slice
+      terra::clamp(
+        upper = maxh
+        , lower = 0
+        , values = F
+      )
+    # terra::plot(crp_chm_rast_temp)
+    xxx[[1]] +
       ggnewscale::new_scale_fill() +
       ggplot2::geom_tile(
-        data = chm_rast_stand %>% 
-          terra::crop(
-            sf::st_union(gt) %>% 
-              sf::st_transform(terra::crs(chm_rast_stand)) %>% 
-              terra::vect()
-          ) %>% 
-          terra::mask(
-            sf::st_union(gt) %>% 
-              sf::st_transform(terra::crs(chm_rast_stand)) %>% 
-              terra::vect()
-          ) %>% 
-          # slice the chm below our desired height
-          # this is what slash_pile_detect_watershed() does
-          # terra::clamp(upper = 2.3, lower = 0, values = F) %>%
+        data = crp_chm_rast_temp %>% 
           terra::as.data.frame(xy=T) %>% 
           dplyr::rename(f=3)
         , mapping = ggplot2::aes(x=x,y=y,fill=f)
         , alpha = 0.5
+        , inherit.aes = F
       ) +
-      ggplot2::scale_fill_viridis_c(option = "plasma", na.value = "gray",name = "CHM (m)") +
-      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
-      ggplot2::labs(
-        subtitle = paste0(
-          "pile ID: ", dta$pile_id
-          , "\nGT area: ", round(dta$gt_area_m2,1)
-          # , " | Pred ht: ", round(dta$pred_height_m,1)
-          , "\nGT dia: ", round(dta$gt_diameter_m,1)
-          # , " | Pred dia: ", round(dta$pred_diameter_m,1)
+      ggplot2::scale_fill_viridis_c(
+        option = "plasma", na.value = "gray",name = "CHM (m)"
+        , limits = c(0,ceiling(maxh))
+      )
+
+remove(xxx,maxh, crp_chm_rast_temp)
+gc()
+
+dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "true positive") %>% 
+        nrow()
+      pl <- 
+        1:min(nn,2) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "dbscan", mtchgrp = "true positive")  
         )
-      ) +
-      ggplot2::theme(legend.text = ggplot2::element_text(size = 6),legend.title = ggplot2::element_text(size = 6))
-  })
-# plts_temp
-# combine
-patchwork::wrap_plots(
-  plts_temp
-  , ncol = 2
+      
+      # return(pl)
+      
+      pl2 <- pl %>% 
+        purrr::map(
+          function(wtfchm, site = x){
+             # get max ht
+            maxh <- all_stand_boundary %>% 
+              dplyr::filter(site_data_lab == site) %>% 
+              dplyr::slice(1) %>% 
+              dplyr::pull(max_ht_m)
+            # crop, slice rast
+            crp_chm_rast_temp <- chm_rast[[site]] %>% 
+              terra::crop(
+                  wtfchm[[2]] %>% 
+                  dplyr::ungroup() %>% 
+                  sf::st_union() %>% 
+                  sf::st_bbox() %>% 
+                  sf::st_as_sfc() %>% 
+                  sf::st_transform(terra::crs(chm_rast[[site]])) %>% 
+                  terra::vect()
+              )
+            
+            crp_chm_rast_temp <- crp_chm_rast_temp %>% 
+              # slice
+              terra::clamp(
+                upper = maxh
+                , lower = 0
+                , values = F
+              )
+            # terra::plot(crp_chm_rast_temp)
+            wtfchm[[1]] +
+              ggnewscale::new_scale_fill() +
+              ggplot2::geom_tile(
+                data = crp_chm_rast_temp %>% 
+                  terra::as.data.frame(xy=T) %>% 
+                  dplyr::rename(f=3)
+                , mapping = ggplot2::aes(x=x,y=y,fill=f)
+                , alpha = 0.5
+                , inherit.aes = F
+              ) +
+              ggplot2::scale_fill_viridis_c(
+                option = "plasma", na.value = "gray",name = "CHM (m)"
+                , limits = c(0,ceiling(maxh))
+              )
+          }
+        )
+      return(pl2)
+    }
+  )
+
+```
+
+### True Positives
+
+Check out the plots for the TP matches
+
+```{r,eval=F, results=F}
+# max piles per site
+nplts_temp <- 12
+# dbscan
+dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "true positive") %>% 
+        nrow()
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "dbscan", mtchgrp = "true positive")
+        )
+      return(pl)
+    }
+  )
+# watershed
+watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        watershed_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "true positive") %>% 
+        nrow()
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "watershed", mtchgrp = "true positive")  
+        )
+      return(pl)
+    }
+  )
+```
+
+#### DBSCAN
+
+plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
+
+```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  \(x)
+  dbscan_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = 4) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
 )
+  
+```
+
+#### Watershed
+
+plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
+
+```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  \(x)
+  watershed_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  patchwork::wrap_plots(ncol = 4) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
+)
+  
+```
+
+### Omissions (False Negatives)
+
+Check out the plots for the omissions (FN)
+
+```{r,eval=F, results=F}
+# dbscan
+dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "omission") %>% 
+        nrow()
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "dbscan", mtchgrp = "omission")  
+        )
+      return(pl)
+    }
+  )
+# watershed
+watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        watershed_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "omission") %>% 
+        nrow()
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "watershed", mtchgrp = "omission")  
+        )
+      return(pl)
+    }
+  )
+```
+
+#### DBSCAN
+
+plot example omissions on the RGB with the actual pile (cyan) pile outlined
+
+```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  \(x)
+  dbscan_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = 4) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
+)
+  
+```
+
+why are these missing?
+
+```{r}
+# function to plot ortho
+terra_plt_ortho <- function(
+  ortho
+  , gt_piles = NA
+  , pred_piles = NA
+  , boundary
+  , title
+  , chm = NA
+  , maxh = 99
+) {
+  terra::plotRGB(ortho, stretch = "lin")
+  terra::plot(
+    boundary %>% 
+      sf::st_transform(terra::crs(ortho)) %>% 
+      terra::vect()
+    , add = T, border = "black", col = NA
+    , main = title
+  )
+  if(inherits(chm,"SpatRaster")){
+    terra::plot(
+      chm
+      , add = T, col = viridis::plasma(n=100), alpha = 0.5
+      , legend = F
+      , range = c(0,maxh), fill_range = T
+    )
+  }
+  if(!all(is.na(gt_piles))){
+    terra::plot(
+      gt_piles %>% 
+        dplyr::filter(is_in_stand) %>% 
+        sf::st_transform(terra::crs(ortho)) %>% 
+        terra::vect()
+      , add = T, border = "cyan", col = NA, lwd = 1.2
+    )
+  }
+  if(!all(is.na(pred_piles))){
+    terra::plot(
+      pred_piles %>% 
+        sf::st_transform(terra::crs(ortho)) %>% 
+        terra::vect()
+      , add = T, border = "magenta", col = NA, lwd = 1.2
+    )
+  }
+}
+# map over it 
+all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    function(x){
+    piles <- slash_piles_polys[[x]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      dplyr::inner_join(
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "omission") %>% 
+        dplyr::select(pile_id)
+        , by = "pile_id"
+      )
+    maxh <- all_stand_boundary %>% 
+      dplyr::filter(site_data_lab == x) %>% 
+      dplyr::slice(1) %>% 
+      dplyr::pull(max_ht_m)
+    # crop, slice rast
+    crp_chm_rast_temp <- chm_rast[[x]] %>% 
+      terra::crop(
+          piles %>% 
+          sf::st_transform(terra::crs(chm_rast[[x]])) %>% 
+          terra::vect()
+          , mask = T
+      )
+    
+    crp_chm_rast_temp <- crp_chm_rast_temp %>% 
+      # slice
+      terra::clamp(
+        upper = maxh
+        , lower = 0
+        , values = F
+      )
+    
+    terra_plt_ortho(
+      ortho = rgb_rast[[x]]
+      , gt_piles = piles
+      , pred_piles = NA
+      , boundary = stand_boundary[[x]]
+      , chm = crp_chm_rast_temp
+      , maxh = maxh
+      , title = paste0(
+        "DBSCAN: "
+        , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+      )
+    )
+  })
+
+```
+
+
+#### Watershed
+
+plot example omissions on the RGB with the actual pile (cyan) pile outlined
+
+```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  \(x)
+  watershed_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = 4) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
+)
+  
 ```
 
