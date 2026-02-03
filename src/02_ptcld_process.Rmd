@@ -19,7 +19,7 @@ We'll use `cloud2trees::cloud2raster()` to process the raw point cloud data. For
 my_chm_res_m <- 0.1
 ```
 
-### PSINF Mixed Conifer Site
+### PSINF Mixed Conifer Site{#ptcld_process_psinf}
 
 look at the summary of the point cloud data we'll be processing
 

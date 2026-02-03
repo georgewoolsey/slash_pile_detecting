@@ -135,6 +135,186 @@ df_temp %>%
 
 These results demonstrate that the two segmentation methods, DBSCAN and Watershed, show no significant difference in their ability to represent the physical form of correctly identified piles. Because the quantification of pile form is derived directly from the underlying structural CHM data, the two methods naturally yield similar results once a pile is successfully detected. Since both algorithms operate on the same input data to generate measurements for a given location, major differences in quantification accuracy are only expected if there are significant disparities in detection performance. Our detection accuracy evaluation confirmed that both methods performed similarly, and as a result, they produced ~~nearly~~ identical representations of physical pile attributes.
 
+### Stand-level Aggregation
+
+Let’s summarize the measurement values of the predictions (true positive and false positive) and the ground truth data (true positive and false negative) over the entire stand (this is similar to a basal area comparison in a forest inventory). Summarizing the predicted and ground truth pile height and diameter form measurements for all instances across the entire study area, regardless of whether individual piles were successfully matched between datasets, for comparison provides insight into the method’s aggregated performance in predicting total pile size in an area. Such totals are often required for administrative needs like submitting burn permits which do not typically focus on individual pile quantification differences.
+
+```{r}
+# sum_df_temp <- 
+stand_agg_fn <- function(
+    df
+    ,which_comp = "field" # or "gt"
+) {
+  df %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(-c(pred_id)) %>% 
+  dplyr::summarise(
+    dplyr::across(
+      .cols = tidyselect::starts_with( paste0(which_comp,"_") ) | tidyselect::starts_with("pred_")
+      , ~sum(.x,na.rm=T)
+    )
+  ) %>% 
+  tidyr::pivot_longer(
+    cols = dplyr::everything()
+    , names_to = "metric"
+    , values_to = "value"
+  ) %>% 
+  dplyr::mutate(
+    which_data = dplyr::case_when(
+        stringr::str_starts(metric,"field_") ~ "field"
+        , stringr::str_starts(metric,"gt_") ~ "image-annotated"
+        , stringr::str_starts(metric,"pred_") ~ "prediction"
+        , T ~ "error"
+      ) %>% 
+      ordered()
+    , pile_metric = metric %>% 
+      stringr::str_remove("(_rmse|_rrmse|_mean|_mape)$") %>% 
+      stringr::str_extract("(allom_volume|volume|area|height|diameter)") %>% 
+      factor(
+        ordered = T
+        , levels = c(
+          "height"
+          , "diameter"
+          , "area"
+          , "volume"
+        )
+        , labels = c(
+          "Height (m)"
+          , "Diameter (m)"
+          , "Area (m2)"
+          , "Volume (m3)"
+        )
+      )
+  ) %>% 
+  dplyr::group_by(pile_metric) %>% 
+  dplyr::arrange(pile_metric,which_data) %>% 
+  dplyr::mutate(
+    pct_diff = (value-dplyr::lag(value))/dplyr::lag(value) 
+  ) %>% 
+  dplyr::ungroup()
+}
+# do it
+sum_df_temp <- 
+  dplyr::bind_rows(
+    dbscan_gt_pred_match[["psinf"]] %>% stand_agg_fn() %>% dplyr::mutate(method = "dbscan")
+    , watershed_gt_pred_match[["psinf"]] %>% stand_agg_fn() %>% dplyr::mutate(method = "watershed")
+  ) %>% 
+  dplyr::filter(
+    !stringr::str_detect(metric,"volume")
+    , !stringr::str_detect(metric,"area")
+  )
+# sum_df_temp %>% dplyr::glimpse()
+```
+
+plot the aggregated, stand-level height and diameter comparison between field-measured and predicted piles
+
+```{r}
+# plot it
+sum_df_temp %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    stand_id=1
+    , lab = paste0(
+      scales::comma(value,accuracy=0.1)
+      , dplyr::case_when(
+        is.na(pct_diff) ~ ""
+        , T ~ paste0(
+          "\n"
+          , ifelse(pct_diff<0,"-","+")
+          ,scales::percent(abs(pct_diff),accuracy=0.1)
+        )
+      )
+    )
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = which_data
+      , y = value
+      , label = lab
+      , group = stand_id
+    )
+  ) +
+  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
+  ggplot2::geom_col(mapping = ggplot2::aes(fill = which_data), alpha = 1, width = 0.4) +
+  harrypotter::scale_color_hp_d(option = "lunalovegood") +
+  harrypotter::scale_fill_hp_d(option = "lunalovegood") +
+  ggplot2::geom_text(
+    vjust = -0.25
+  ) +
+  ggplot2::facet_grid(
+    rows = dplyr::vars(pile_metric)
+    , cols = dplyr::vars(method)
+    , scales = "free_y", axes = "all_x"
+    , switch = "y"
+  ) +
+  ggplot2::scale_y_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0,.3)), breaks = NULL) +
+  ggplot2::labs(
+    x = "", y = ""
+    , subtitle = "Comparison of aggregated measurements at the PSINF site"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , axis.text.x = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , panel.grid = ggplot2::element_blank()
+  ) 
+  
+```
+
+table the aggregated, stand-level height and diameter comparison between field-measured and predicted piles
+
+```{r}
+sum_df_temp %>% 
+  dplyr::mutate(
+    pile_metric=stringr::word(pile_metric)
+    , value = scales::comma(value,accuracy=0.1)
+    , pct_diff = scales::percent(pct_diff,accuracy=0.1)
+  ) %>% 
+  tidyr::pivot_wider(
+    id_cols = method
+    , values_from = c(value,pct_diff)
+    , names_from = c(pile_metric,which_data)
+  ) %>% 
+  dplyr::select(dplyr::where(~ !all(is.na(.x)))) %>% 
+  dplyr::rename_with(
+    .cols = dplyr::everything()
+    , .fn = ~ dplyr::case_when(
+      stringr::str_starts(.x,"value_") ~ stringr::str_remove(.x,"^value_") %>% stringr::str_c("_value")
+      , stringr::str_starts(.x,"pct_diff_") ~ stringr::str_remove(.x,"^pct_diff_") %>% stringr::str_c("_zzpct_diff")
+      , T ~ .x
+    )
+  ) %>% 
+  dplyr::select(order(colnames(.))) %>% 
+  dplyr::mutate(site = all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(site)) %>% 
+  dplyr::relocate(site,method) %>% 
+  dplyr::arrange(site,method) %>% 
+  kableExtra::kbl(
+    caption = "Comparison of aggregated measurements at the PSINF site"
+    , col.names = c(
+      "site", "method"
+      , rep(c("Field","Predicted","Pct Diff"), times = 2)
+    )
+    , escape = F
+    # , digits = 2
+  ) %>% 
+  kableExtra::kable_styling(font_size = 11.5) %>% 
+  kableExtra::add_header_above(c(
+    " "=2
+    # , "Detection" = 3
+    # , "Area" = 3
+    , "Diameter (m)" = 3
+    , "Height (m)" = 3
+  )) %>% 
+  kableExtra::column_spec(seq(2,8,by=3), border_right = TRUE, include_thead = TRUE) %>% 
+  # kableExtra::column_spec(
+  #   column = 3:9
+  #   , extra_css = "font-size: 10px;"
+  #   , include_thead = T
+  # ) %>% 
+  kableExtra::collapse_rows(columns = 1, valign = "top")
+```
+
 ## Area Accuracy
 
 We could also evaluate quantification accuracy using pile areas based on the image annotations, though these are less presumptive than the "gold standard" field measurements. These annotations were occasionally limited by the difficulty of pinpointing exact pile boundaries, even when using high-resolution RGB data. Despite the potential for human error in the digitizing process, these area measurements provide additional validation data that is available across all four study sites.
@@ -183,6 +363,148 @@ df_temp %>%
 ```
 
 These results further confirm that the two segmentation methods yield similar quantification accuracies for pile area, mirroring the patterns observed for height and diameter. While the absolute area accuracy naturally varies across study sites according to the average pile size, the MAPE remains decently low, ranging between `r scales::percent(min(agg_ground_truth_match_ans$pct_diff_area_m2_mape),accuracy = 0.1)` and `r scales::percent(max(agg_ground_truth_match_ans$pct_diff_area_m2_mape),accuracy = 0.1)` across all locations. These metrics suggest that both DBSCAN and Watershed are capable of delineating pile boundaries with acceptable precision.
+
+### Stand-level Aggregation
+
+Let’s summarize the measurement values of the predictions (true positive and false positive) and the ground truth data (true positive and false negative) over the entire stand (this is similar to a basal area comparison in a forest inventory). Summarizing the predicted and ground truth pile height and diameter form measurements for all instances across the entire study area, regardless of whether individual piles were successfully matched between datasets, for comparison provides insight into the method’s aggregated performance in predicting total pile size in an area. Such totals are often required for administrative needs like submitting burn permits which do not typically focus on individual pile quantification differences.
+
+```{r}
+# do it
+sum_df_temp <-
+  all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    \(x)
+    dplyr::bind_rows(
+      dbscan_gt_pred_match[[x]] %>% 
+        stand_agg_fn(which_comp = "gt") %>% 
+        dplyr::mutate(
+          method = "dbscan"
+          , site = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+        )
+      , watershed_gt_pred_match[[x]] %>% 
+        stand_agg_fn(which_comp = "gt") %>% 
+        dplyr::mutate(
+          method = "watershed"
+          , site = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+        )
+    ) %>% 
+    dplyr::filter(
+      stringr::str_detect(metric,"area")
+    ) 
+  ) %>% 
+  dplyr::bind_rows()
+  
+# sum_df_temp %>% dplyr::glimpse()
+```
+
+plot the aggregated, stand-level height and diameter comparison between field-measured and predicted piles
+
+```{r}
+# plot it
+sum_df_temp %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    stand_id=1
+    , lab = paste0(
+      scales::comma(value,accuracy=0.1)
+      , dplyr::case_when(
+        is.na(pct_diff) ~ ""
+        , T ~ paste0(
+          "\n"
+          , ifelse(pct_diff<0,"-","+")
+          ,scales::percent(abs(pct_diff),accuracy=0.1)
+        )
+      )
+    )
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = which_data
+      , y = value
+      , label = lab
+      , group = stand_id
+    )
+  ) +
+  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
+  ggplot2::geom_col(mapping = ggplot2::aes(fill = which_data), alpha = 1, width = 0.4) +
+  harrypotter::scale_color_hp_d(option = "lunalovegood") +
+  harrypotter::scale_fill_hp_d(option = "lunalovegood") +
+  ggplot2::geom_text(
+    vjust = -0.25
+  ) +
+  ggplot2::facet_grid(
+    rows = dplyr::vars(site)
+    , cols = dplyr::vars(method)
+    , scales = "free_y", axes = "all_x"
+    , switch = "y"
+  ) +
+  ggplot2::scale_y_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0,.3)), breaks = NULL) +
+  ggplot2::labs(
+    x = "", y = ""
+    , subtitle = 
+      latex2exp::TeX("Comparison of aggregated pile Area ($m^2$) measurements for all sites")
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , axis.text.x = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , strip.text = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , panel.grid = ggplot2::element_blank()
+  ) 
+  
+```
+
+table the aggregated, stand-level height and diameter comparison between field-measured and predicted piles
+
+```{r}
+sum_df_temp %>% 
+  dplyr::mutate(
+    pile_metric=stringr::word(pile_metric)
+    , value = scales::comma(value,accuracy=0.1)
+    , pct_diff = scales::percent(pct_diff,accuracy=0.1)
+  ) %>% 
+  tidyr::pivot_wider(
+    id_cols = c(site,method)
+    , values_from = c(value,pct_diff)
+    , names_from = c(pile_metric,which_data)
+  ) %>% 
+  dplyr::select(dplyr::where(~ !all(is.na(.x)))) %>% 
+  dplyr::rename_with(
+    .cols = dplyr::everything()
+    , .fn = ~ dplyr::case_when(
+      stringr::str_starts(.x,"value_") ~ stringr::str_remove(.x,"^value_") %>% stringr::str_c("_value")
+      , stringr::str_starts(.x,"pct_diff_") ~ stringr::str_remove(.x,"^pct_diff_") %>% stringr::str_c("_zzpct_diff")
+      , T ~ .x
+    )
+  ) %>% 
+  dplyr::select(order(colnames(.))) %>% 
+  dplyr::relocate(site,method) %>% 
+  # dplyr::glimpse()
+  dplyr::arrange(site,method) %>% 
+  kableExtra::kbl(
+    caption = "Comparison of aggregated area measurements for all sites"
+    , col.names = c(
+      "site", "method"
+      , rep(c("Image-annotated","Predicted","Pct Diff"), times = 1)
+    )
+    , escape = F
+    # , digits = 2
+  ) %>% 
+  kableExtra::kable_styling(font_size = 11.5) %>% 
+  kableExtra::add_header_above(c(
+    " "=2
+    # , "Detection" = 3
+    # , "Area" = 3
+    , "Area (m<sup>2</sup>)" = 3
+  ),escape = F) %>% 
+  kableExtra::column_spec(seq(2,5,by=3), border_right = TRUE, include_thead = TRUE) %>%
+  # kableExtra::column_spec(
+  #   column = 3:9
+  #   , extra_css = "font-size: 10px;"
+  #   , include_thead = T
+  # ) %>% 
+  kableExtra::collapse_rows(columns = 1, valign = "top")
+```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
@@ -507,21 +829,20 @@ that's neat, the test gave us the same mean difference (MD) of `r scales::comma(
 let's investigate the extreme disagreements further to see what is happening 
 
 ```{r}
-xxx
 bad_vol_df_temp <- 
-  ground_truth_prediction_match_ans %>% 
+  dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::filter(match_grp=="true positive") %>%
   dplyr::ungroup() %>% 
   # calc needed metrics
   dplyr::mutate(
-    diff_vol = (gt_volume_m3-pred_volume_m3) # match the order used in vol_agg_df_temp
+    diff_vol = (field_volume_m3-pred_volume_m3) # match the order used in vol_agg_df_temp
   ) %>% 
   dplyr::filter(
     diff_vol < (vol_agg_df_temp$mean_diff-1.96*vol_agg_df_temp$sd_diff)
     | diff_vol > (vol_agg_df_temp$mean_diff+1.96*vol_agg_df_temp$sd_diff)
   ) %>% 
   dplyr::left_join(
-    slash_piles_polys %>% 
+    slash_piles_polys[["psinf"]] %>% 
       sf::st_drop_geometry() %>% 
       dplyr::select(pile_id, comment) %>% 
       dplyr::rename(pile_type = comment)
@@ -531,9 +852,9 @@ bad_vol_df_temp <-
 bad_vol_df_temp %>% 
   dplyr::select(
     pile_id, pile_type
-    , gt_height_m, pred_height_m, diff_height_m
-    , gt_diameter_m, pred_diameter_m, diff_field_diameter_m
-    , gt_volume_m3, pred_volume_m3
+    , field_height_m, pred_height_m, diff_field_height_m
+    , field_diameter_m, pred_diameter_m, diff_field_diameter_m
+    , field_volume_m3, pred_volume_m3
   ) %>% 
   dplyr::mutate(
     dplyr::across(
@@ -548,15 +869,17 @@ bad_vol_df_temp %>%
   kableExtra::kable_styling(font_size = 9.8)
 ```
 
-All these instances of extreme volume disagreement at the PSINF ponderosa pine training site are specific to mechanical piles and it looks like the field-measured height is much different than the CHM height. This suggests that the optimal `max_ht_m` parameter determined during sensitivity and statistical testing was set too low to properly include the upper extent of these taller machine piles. The parameter was optimized this way because the training data featured a much higher frequency of smaller, shorter hand piles, causing the statistical tuning to be inherently biased toward those dominant smaller objects. This finding highlights the difficulty of creating a single-stage process capable of simultaneously detecting distinct pile forms such as small hand piles and larger machine piles. A workaround for this challenge is to execute the pile detection process in two stages: the first parameterized specifically for the expected size, form, and spectral signature of the hand piles, and a second stage parameterized for the expectations of the larger machine piles and then combine the predictions into a final prediction set.
+All of the extreme volume discrepancies at the PSINF site occur for mechanical piles, where field-measured heights exceed the predicted, CHM-derived heights. One possible cause of this height discrepancy is that the `max_ht_m` parameter was set too low to capture the upper extent of these taller structures. If this is the case, then the predicted height would be right at the maximum height allowed by `max_ht_m`. However, we set the `max_ht_m` parameter to `r all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(max_ht_m) %>% scales::comma(accuracy = 0.1)` m and the maximum predicted height of these piles was `r max(bad_vol_df_temp$pred_height_m) %>% scales::comma(accuracy=0.1)` m which means that it is not likely that the height-filtered CHM removed the top of the pile from the unfiltered CHM.
+
+Instead, the under-prediction appears to stem from artifacts in height normalization during point cloud processing. If we go back to look at [the DTM of this site](#ptcld_process_psinf) we can see slight vertical variations within the pile footprints, suggesting that the ground classification algorithm incorrectly identified the lower portions of these larger piles as terrain. Because the DTM was incorrectly inflated within the pile footprint the height-normalized CHM slightly underestimates the true height of the piles.
 
 ```{r, fig.height=9.2}
 bad_vol_df_temp %>% 
   dplyr::select(
     pile_id
-    , gt_height_m, pred_height_m
-    , gt_diameter_m, pred_diameter_m
-    , gt_volume_m3, pred_volume_m3
+    , field_height_m, pred_height_m
+    , field_diameter_m, pred_diameter_m
+    , field_volume_m3, pred_volume_m3
   ) %>% 
   tidyr::pivot_longer(
     cols = -c(pile_id)
@@ -565,7 +888,7 @@ bad_vol_df_temp %>%
   ) %>% 
   dplyr::mutate(
     which_data = dplyr::case_when(
-        stringr::str_starts(metric,"gt_") ~ "ground 'truth'"
+        stringr::str_starts(metric,"field_") ~ "field"
         , stringr::str_starts(metric,"pred_") ~ "prediction"
         , T ~ "error"
       ) %>% 
@@ -577,14 +900,12 @@ bad_vol_df_temp %>%
         ordered = T
         , levels = c(
           "volume"
-          , "paraboloid_volume"
           , "area"
           , "height"
           , "diameter"
         )
         , labels = c(
           "Volume (m3)"
-          , "Volume paraboloid"
           , "Area (m2)"
           , "Height (m)"
           , "Diameter (m)"
@@ -596,7 +917,7 @@ bad_vol_df_temp %>%
   ) +
   ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
   ggplot2::geom_point(mapping = ggplot2::aes(color = which_data), alpha = 0.8, size = 2.5) +
-  ggplot2::scale_color_manual(values = c("blue","brown")) +
+  ggplot2::scale_color_manual(values = c("cyan","magenta")) +
   ggplot2::geom_text(
     vjust = -0.25
     , show.legend = FALSE
@@ -614,468 +935,84 @@ bad_vol_df_temp %>%
   ) 
 ```
 
-RGB with the predicted piles (brown) and the ground-truth piles (blue)
+RGB with the predicted piles (magenta) and the ground-truth piles (cyan) overlaid with the CHM
 
-```{r, fig.height=10.8}
+```{r, fig.height=10.5, fig.width=8.5, results=F, fig.show='asis'}
+# cloud2raster_ans$chm_rast %>% 
+#   terra::clamp(upper = structural_params_settings$max_ht_m, lower = 0, values = F) %>% 
+#   terra::plot()
+# bad_vol_df_temp %>% dplyr::glimpse()
+# plot RGB + CHM
 # plot RGB
 plts_temp <-
   1:nrow(bad_vol_df_temp) %>% 
-  purrr::map(function(x){
-    dta <- bad_vol_df_temp %>% dplyr::slice(x)
-    gt <- slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
-    pr <- final_predicted_slash_piles %>% dplyr::filter(pred_id==dta$pred_id)
-    #plt
-    ortho_plt_fn(my_ortho_rast=ortho_rast, stand=sf::st_union(gt,pr), buffer=6) +
-      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
-      ggplot2::geom_sf(data = pr, fill = NA, color = "brown", lwd = 0.5)
-  })
-# combine
-patchwork::wrap_plots(
-  plts_temp
-  , ncol = 2
-)
-ggplot2::ggsave("../data/PFDP_Data/bad_vol.jpg", height = 8.5, width = 8.5)
-```
-
-just looking at the RGB, the pile footprints are in good alignment
-
-let's look at the CHM
-
-```{r, fig.height=10.5, fig.width=8.5}
-# cloud2raster_ans$chm_rast %>% 
-#   terra::clamp(upper = structural_params_settings$max_ht_m, lower = 0, values = F) %>% 
-#   terra::plot()
-# bad_vol_df_temp %>% dplyr::glimpse()
-# plot RGB + CHM
-plts_temp <-
-  1:nrow(bad_vol_df_temp) %>% 
   # sample(1) %>% 
   purrr::map(function(x){
     dta <- bad_vol_df_temp %>% dplyr::slice(x)
-    gt <- slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
-    pr <- final_predicted_slash_piles %>% dplyr::filter(pred_id==dta$pred_id)
+    gt <- slash_piles_polys[["psinf"]] %>% dplyr::filter(pile_id==dta$pile_id)
+    pr <- dbscan_spectral_preds[["psinf"]] %>% dplyr::filter(pred_id==dta$pred_id)
     #plt
-    ortho_plt_fn(my_ortho_rast=ortho_rast, stand=sf::st_union(gt,pr), buffer=6) +
+    ortho_plt_fn(
+      rgb_rast = rgb_rast[["psinf"]]
+      , stand = gt
+      , add_stand = F
+      , buffer = 7
+    ) +
+      ggnewscale::new_scale_fill() +
       ggplot2::geom_tile(
-        data = cloud2raster_ans$chm_rast %>% 
+        data = chm_rast[["psinf"]] %>% 
           terra::crop(
             sf::st_union(gt,pr) %>% 
-              sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
+              sf::st_transform(terra::crs(chm_rast[["psinf"]])) %>% 
               terra::vect()
+            , mask = T
           ) %>% 
-          terra::mask(
-            sf::st_union(gt,pr) %>% 
-              sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
-              terra::vect()
-          ) %>% 
-          # slice the chm below our desired height
-          # this is what slash_pile_detect_watershed() does
-          terra::clamp(upper = structural_params_settings$max_ht_m, lower = 0, values = F) %>%
           terra::as.data.frame(xy=T) %>% 
           dplyr::rename(f=3)
         , mapping = ggplot2::aes(x=x,y=y,fill=f)
         , alpha = 0.5
+        , inherit.aes = F
+        , show.legend = T
       ) +
-      ggplot2::scale_fill_viridis_c(option = "plasma", na.value = "gray",name = "CHM (m)") +
-      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
-      ggplot2::geom_sf(data = pr, fill = NA, color = "brown", lwd = 0.5) +
+      ggplot2::scale_fill_viridis_c(
+        option = "plasma", na.value = "gray",name = "CHM (m)"
+        , limits = c(0,all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(max_ht_m))
+      ) +
+      ggplot2::geom_sf(data = gt, fill = NA, color = "cyan", lwd = 0.6) +
+      ggplot2::geom_sf(data = pr, fill = NA, color = "magenta", lwd = 0.5) +
       ggplot2::labs(
         subtitle = paste0(
-          "GT ht: ", round(dta$gt_height_m,1)
+          "Fld ht: ", round(dta$field_height_m,1)
           , " | Pred ht: ", round(dta$pred_height_m,1)
-          , "\nGT dia: ", round(dta$gt_diameter_m,1)
+          , "\nFld dia: ", round(dta$field_diameter_m,1)
           , " | Pred dia: ", round(dta$pred_diameter_m,1)
         )
       ) +
-      ggplot2::theme(legend.text = ggplot2::element_text(size = 6),legend.title = ggplot2::element_text(size = 6))
+      ggplot2::theme(
+        legend.position = "bottom"
+        , legend.text = ggplot2::element_text(size = 8)
+        , legend.title = ggplot2::element_text(size = 8)
+      )
   })
 # plts_temp
 # combine
 patchwork::wrap_plots(
   plts_temp
-  , ncol = 2
+  , ncol = 3
+  , guides = "collect"
+) +
+patchwork::plot_annotation(
+  theme = ggplot2::theme(
+    legend.position = "bottom"
+    , legend.text = ggplot2::element_text(size = 8)
+    , legend.title = ggplot2::element_text(size = 8)
+    , legend.margin = ggplot2::margin(0,0,0,0)
+  )
 )
 ```
-
-The predicted diameters generally align well with the field-measured diameters. However, the field-measured heights for some piles appear unusually high compared to the CHM-derived data.
-
-Our pile detection methodology uses a specific height slice of the CHM based on the `max_ht_m` parameter. This process then keeps only predicted piles that meet the height threshold across the *majority of their area*. The `convexity_pct` parameter functions to filter out predictions where excessive pile top area was removed by the CHM slicing and acts as a safeguard against misclassifying tall objects (like trees) as piles that would have the majority of their top removed by the slicing.
-
-After filtering for expected height, our detection methodology calculates the predicted height as the maximum CHM cell value within the expected height range (i.e. up to the `max_ht_m` setting), which effectively caps any actual height values above this threshold. For our training data, we assumed a maximum height of `r scales::comma(structural_params_settings$max_ht_m,accuracy=0.01)`m. The field data contains heights up to `r scales::comma(max(bad_vol_df_temp$gt_height_m),accuracy=0.01)`m for these volume outliers, which would only be expected of the largest machine piles. In these extreme cases, the significant volume difference observed in the outliers is magnified by both potentially incorrect field measurements and the systematic capping of the predicted height.
-
-To mitigate the risk of vastly underpredicted heights for these tall outliers, one can increase the `convexity_pct` parameter. Making this filtering more strict will remove the outlier height predictions and improve height quantification accuracy for true positive matches, but will likely reduce the detection rate as these piles become false negatives (omissions). Alternatively, one could increase the `max_ht_m` setting to be less restrictive with the height filtering; this would have the effect of estimating a more accurate height value for these tall piles but would potentially introduce new false positive predictions that are actually trees (or yurts?). If spectral data is available to filter these after structural segmentation, then this might be the preferred path to improve height quantification accuracy while maintaining detection accuracy. The choice ultimately depends on whether the user prioritizes detection rate or height quantification accuracy.
-
-There is precedent for smoothing the height of piles from aerial data point cloud data. Trofymow et al. ([2013](https://scholar.google.com/scholar?cluster=3556811352833339764&hl=en&as_sdt=0,6)) calculated pile height as the 95th percentile height of the height-normalized points within the pile polygon. This method was chosen after their preliminary analysis showed it best excluded points from isolated logs extending above the pile while retaining the main pile structure. Our method achieves a functionally similar result for the largest piles by capping the maximum CHM value and smoothing out extreme height measurements.
-
-we can look a the full CHM without capping the height to see how the field-measured values compare to the unfiltered CHM height profile within the pile footprint
-
-```{r, fig.height=10.5, fig.width=8.5}
-# cloud2raster_ans$chm_rast %>% 
-#   terra::clamp(upper = structural_params_settings$max_ht_m, lower = 0, values = F) %>% 
-#   terra::plot()
-# bad_vol_df_temp %>% dplyr::glimpse()
-# plot RGB + CHM
-plts_temp <-
-  1:nrow(bad_vol_df_temp) %>% 
-  # sample(1) %>% 
-  purrr::map(function(x){
-    dta <- bad_vol_df_temp %>% dplyr::slice(x)
-    gt <- slash_piles_polys %>% dplyr::filter(pile_id==dta$pile_id)
-    pr <- final_predicted_slash_piles %>% dplyr::filter(pred_id==dta$pred_id)
-    #plt
-    ortho_plt_fn(my_ortho_rast=ortho_rast, stand=sf::st_union(gt,pr), buffer=6) +
-      ggplot2::geom_tile(
-        data = cloud2raster_ans$chm_rast %>% 
-          terra::crop(
-            sf::st_union(gt,pr) %>% 
-              sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
-              terra::vect()
-          ) %>% 
-          terra::mask(
-            sf::st_union(gt,pr) %>% 
-              sf::st_transform(terra::crs(cloud2raster_ans$chm_rast)) %>% 
-              terra::vect()
-          ) %>% 
-          # DON'T slice the chm below our desired height
-          # terra::clamp(upper = structural_params_settings$max_ht_m, lower = 0, values = F) %>%
-          terra::as.data.frame(xy=T) %>% 
-          dplyr::rename(f=3)
-        , mapping = ggplot2::aes(x=x,y=y,fill=f)
-        , alpha = 0.5
-      ) +
-      ggplot2::scale_fill_viridis_c(option = "plasma", na.value = "gray",name = "CHM (m)", breaks = scales::breaks_extended(n=7)) +
-      ggplot2::geom_sf(data = gt, fill = NA, color = "blue", lwd = 0.6) +
-      ggplot2::geom_sf(data = pr, fill = NA, color = "brown", lwd = 0.5) +
-      ggplot2::labs(
-        subtitle = paste0(
-          "GT ht: ", round(dta$gt_height_m,1)
-          , " | Pred ht: ", round(dta$pred_height_m,1)
-          , "\nGT dia: ", round(dta$gt_diameter_m,1)
-          , " | Pred dia: ", round(dta$pred_diameter_m,1)
-        )
-      ) +
-      ggplot2::theme(legend.text = ggplot2::element_text(size = 6),legend.title = ggplot2::element_text(size = 6))
-  })
-# plts_temp
-# combine
-patchwork::wrap_plots(
-  plts_temp
-  , ncol = 2
-)
-
-
-```
-
-Visual inspection of the unfiltered CHM (note the CHM scale range) within the footprint of these volume outliers confirms that the field-measured values are misaligned with the CHM profile by at least 1m for some of the most extreme outliers, supporting the theory that the significant volume and height differences observed are magnified by potentially incorrect field measurements.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-
-#### Allometric Volume Comparison
-
-The volume comparison [immediately above](#training_detect_final_volcomp) compared the allometric field volume using a geometric shape assumption (paraboloid) with the predicted volume based on the irregular CHM elevation profile. Thus, the volume difference included the impact of the shape assumption. In an attempt to remove the influence of comparing a regular shape (field measured) to an irregular shape (predicted volume), we'll perform a comparison analysis where both volume calculations are based on the same paraboloid shape assumption. This should provide insight into the differences related only to the predicted versus field-measured maximum dimensions of height and diameter.
-
-In the following section, we compare volume predictions against field measured data where both volume calculations utilize the same paraboloid shape assumption. For this analysis, we'll update the predicted volume only using the following volume definitions: 
-
-* **field-measured piles** 
-  - **volume** assumes a paraboloid shape, with volume calculated using the field-measured diameter (as the width) and height. we'll refer to this as "Allometric Field Volume" to indicate the field measurement is derived using a shape assumption.
-* **predicted piles** 
-  - **volume** assumes a paraboloid shape, with volume calculated using the predicted diameter (as the width) and height. we'll refer to this as "Allometric Predicted Volume" to indicate the measurement is derived using a shape assumption.
-  
-We would generally expect that the allometric field volume will not be uniformly larger or smaller than the predicted allometric volume, as the volume difference will be the net result of two competing influences: the observed `r ifelse(agg_ground_truth_match_ans$diff_field_diameter_m_mean>=0,"overestimation","underestimation")` of diameter (`r scales::comma(agg_ground_truth_match_ans$diff_field_diameter_m_mean,accuracy=0.01)` m mean error) and the observed `r ifelse(agg_ground_truth_match_ans$diff_height_m_mean>=0,"overestimation","underestimation")` of height (`r scales::comma(agg_ground_truth_match_ans$diff_height_m_mean,accuracy=0.01)` m mean error) propagating through the volume calculation formula.
-
-let's first update the predicted volume to calculate the allometric predicted volume where the volume formula for a paraboloid is:
-  
-$$
-V = \frac{1}{8}\pi \cdot width^2 \cdot height
-$$
-we expect the allometric predicted volume to be larger than the predicted volume calculated based on the irregular elevation profile in the CHM because assuming a geometric shape smooths all the voids and irregularities ( which more accurately reflect reality ;) )
-
-```{r}
-ground_truth_prediction_match_ans <- ground_truth_prediction_match_ans %>% 
-  dplyr::mutate(
-    pred_allom_volume_m3 = (1/8) * pi * (pred_diameter_m^2) * pred_height_m
-  )
-# summarize it
-ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>% 
-  dplyr::select(gt_volume_m3, pred_volume_m3, pred_allom_volume_m3) %>% 
-  summary()
-```
-
-nice, the allometric predicted volume is larger than the predicted volume calculated based on the irregular elevation profile in the CHM 
-
-```{r}
-ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>% 
-  dplyr::mutate(diff_volume_m3 = gt_volume_m3 - pred_allom_volume_m3) %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(y = gt_volume_m3, x = pred_allom_volume_m3)) +
-  ggplot2::geom_abline(lwd = 1.5) +
-  ggplot2::geom_point(color = "navy") +
-  ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
-  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(ground_truth_prediction_match_ans$pred_allom_volume_m3,na.rm=T), max(ground_truth_prediction_match_ans$gt_volume_m3,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(ground_truth_prediction_match_ans$pred_allom_volume_m3,na.rm=T), max(ground_truth_prediction_match_ans$gt_volume_m3,na.rm=T) ) )) +
-  ggplot2::labs(
-    y = latex2exp::TeX("allometric field volume $m^3$")
-    , x = latex2exp::TeX("allometric predicted volume $m^3$")
-    # , color = "image-field\ndiameter diff."
-    , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
-  ) +
-  ggplot2::theme_light()
-```
-
-the differences between the predictions for the larger field measured piles are pulling the slope of the line upwards but for the smaller piles, the volume differences are clustered around the line of equality
-
-before we compare the volume measurements in aggregate, let's look at the distributions
-
-```{r}
-vol_df_temp <- 
-  ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>% 
-  dplyr::select(pile_id,gt_volume_m3,pred_allom_volume_m3) %>% 
-  tidyr::pivot_longer(cols = -c(pile_id)) %>% 
-  dplyr::mutate(
-    name = factor(
-      name
-      , ordered = T
-      , levels = c("gt_volume_m3","pred_allom_volume_m3")
-      , labels = c(
-        "allometric field volume"
-        , "allometric predicted volume"
-      )
-    )
-  ) 
-# plot dist
-vol_df_temp %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(x = value, color = name, fill = name)) +
-  ggplot2::geom_density(mapping = ggplot2::aes(y=ggplot2::after_stat(scaled)), alpha = 0.7) +
-  harrypotter::scale_color_hp_d(option = "lunalovegood") +
-  harrypotter::scale_fill_hp_d(option = "lunalovegood") +
-  ggplot2::scale_y_continuous(NULL,breaks=NULL) +
-  ggplot2::labs(
-    color="",fill="",x=latex2exp::TeX("allometric volume $m^3$")
-    , subtitle = latex2exp::TeX("Allometric bulk volume ($m^3$) comparison of distributions")
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    legend.position = "top"
-  )
-```
-
-nice, the distributions overlap much more than the volume comparison between the allometric field value and the irregular, CHM-derived prediction
-
-slope plots are neat too
-
-```{r}
-vol_df_temp %>% 
-  ggplot2::ggplot(
-    mapping = ggplot2::aes(x = name, y = value, group = pile_id)
-  ) +
-  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
-  ggplot2::geom_point(mapping = ggplot2::aes(color = name), alpha = 0.7, size = 2.5) +
-  harrypotter::scale_color_hp_d(option = "lunalovegood") +
-  ggplot2::labs(
-    color=""
-    , y = latex2exp::TeX("allometric volume $m^3$")
-    , x = ""
-    , subtitle = latex2exp::TeX("Allometric bulk volume ($m^3$) comparison at the pile level")
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    legend.position = "none"
-    , axis.title = ggplot2::element_text(size = 10)
-    , axis.text = ggplot2::element_text(size = 10)
-  )
-```
-
-what if we only look at the smaller piles?
-
-```{r}
-vol_df_temp %>% 
-  dplyr::filter(
-    value < quantile(vol_df_temp$value, probs = 0.938)
-  ) %>% 
-  ggplot2::ggplot(
-    mapping = ggplot2::aes(x = name, y = value, group = pile_id)
-  ) +
-  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
-  ggplot2::geom_point(mapping = ggplot2::aes(color = name), alpha = 0.7, size = 2.5) +
-  harrypotter::scale_color_hp_d(option = "lunalovegood") +
-  ggplot2::labs(
-    color=""
-    , y = latex2exp::TeX("allometric volume $m^3$")
-    , x = ""
-    , subtitle = latex2exp::TeX("Allometric bulk volume ($m^3$) comparison at the pile level for the smaller piles")
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(
-    legend.position = "none"
-    , axis.title = ggplot2::element_text(size = 10)
-    , axis.text = ggplot2::element_text(size = 10)
-  )
-```
-
-there is much more variability in this slope plot than the volume comparison between the allometric field value and the irregular, CHM-derived prediction
-
-let's compare aggregated volume measurements for the true positive matches
-
-```{r}
-vol_agg_df_temp <- 
-  ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>% 
-  dplyr::ungroup() %>% 
-  dplyr::summarise(
-    mean_diff = mean(gt_volume_m3-pred_allom_volume_m3)
-    , sd_diff = sd(gt_volume_m3-pred_allom_volume_m3)
-    , mean_gt_volume_m3 = mean(gt_volume_m3,na.rm = T)
-    , mean_pred_allom_volume_m3 = mean(pred_allom_volume_m3,na.rm = T)
-  ) %>% 
-  dplyr::mutate(
-    pct_mean_diff = mean_diff/mean_pred_allom_volume_m3
-  )
-```
-
-what did we get?
-
-```{r}
-vol_agg_df_temp %>% 
-  tidyr::pivot_longer(dplyr::everything()) %>% 
-  dplyr::mutate(
-    value = 
-      dplyr::case_when(
-        stringr::str_starts(name, "pct_") ~ scales::percent(value, accuracy = 0.1)
-        , T ~ scales::comma(value, accuracy = 0.1)
-      )
-  ) %>% 
-  kableExtra::kbl(
-    caption = "comparison of aggregated allometric field volume and allometric predicted volume"
-    , col.names = c("metric", "value")
-  ) %>% 
-  kableExtra::kable_styling()
-```
-
-we'll dig into the MD shortly but before we move on let's focus on the percent mean difference. We calcualted a %MD of `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` which indicates a slight systematic difference where the allometric field volume is, on average, `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` larger than our predicted allometric volume.
-
-let's make a Bland-Altman plot to compare the two measurement methods. this plot uses the average of the two measurements (approximate size) on the x-axis and the difference (bias) between the two measurements on the y-axis
-
-```{r}
-ground_truth_prediction_match_ans %>% 
-  dplyr::filter(match_grp=="true positive") %>%
-  dplyr::ungroup() %>% 
-  # calc needed metrics
-  dplyr::mutate(
-    mean_vol = (gt_volume_m3+pred_allom_volume_m3)/2
-    , diff_vol = (gt_volume_m3-pred_allom_volume_m3) # match the order used in vol_agg_df_temp
-    , scale_diff = ifelse(diff_vol < 0, -abs(diff_vol) / abs(min(diff_vol)), diff_vol / max(diff_vol))
-  ) %>% 
-  # ggplot() + geom_point(aes(x=diff_vol,y=0, color=scale_diff)) + scale_color_gradient2(mid = "gray", midpoint = 0, low = "red", high = "blue")
-  # plot
-  ggplot2::ggplot(
-    mapping = ggplot2::aes(x = mean_vol, y = diff_vol)
-  ) +
-  ggplot2::geom_hline(yintercept = 0, color = "black", lwd = 1.2) +
-  # mean difference (bias)
-  ggplot2::geom_hline(
-    yintercept = vol_agg_df_temp$mean_diff
-    , linetype = "dashed", color = "blue", lwd = 1
-  ) +
-  # upper limit
-  ggplot2::geom_hline(
-    yintercept = vol_agg_df_temp$mean_diff+1.96*vol_agg_df_temp$sd_diff
-    , linetype = "dotted", color = "red", lwd = 1
-  ) +
-  # lower limit
-  ggplot2::geom_hline(
-    yintercept = vol_agg_df_temp$mean_diff-1.96*vol_agg_df_temp$sd_diff
-    , linetype = "dotted", color = "red", lwd = 1
-  ) +
-  # annotations
-  ggplot2::annotate(
-    "text"
-    , x = Inf
-    , y = vol_agg_df_temp$mean_diff
-    , label = latex2exp::TeX(
-      paste0(
-        "mean difference (bias): "
-        , scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)
-        , " $m^3$"
-      )
-      , output = "character"
-    )
-    , vjust = -0.5
-    , hjust = 1
-    , color = "blue"
-    , size = 4
-    , parse = TRUE
-  ) +
-  ggplot2::annotate(
-    "text"
-    , x = Inf
-    , y = vol_agg_df_temp$mean_diff+1.96*vol_agg_df_temp$sd_diff
-    , label = latex2exp::TeX(
-      paste0(
-        "+1.96 SD: "
-        , scales::comma(vol_agg_df_temp$mean_diff+1.96*vol_agg_df_temp$sd_diff, accuracy = 0.01)
-        , " $m^3$"
-      )
-      , output = "character"
-    )
-    , vjust = -0.5
-    , hjust = 1
-    , color = "red"
-    , size = 4
-    , parse = TRUE
-  ) +
-  ggplot2::annotate(
-    "text"
-    , x = Inf
-    , y = vol_agg_df_temp$mean_diff-1.96*vol_agg_df_temp$sd_diff
-    , label = latex2exp::TeX(
-      paste0(
-        "-1.96 SD: "
-        , scales::comma(vol_agg_df_temp$mean_diff-1.96*vol_agg_df_temp$sd_diff, accuracy = 0.01)
-        , " $m^3$"
-      )
-      , output = "character"
-    )
-    , vjust = 1.5
-    , hjust = 1
-    , color = "red"
-    , size = 4
-    , parse = TRUE
-  ) +
-  # points
-  ggplot2::geom_point(mapping = ggplot2::aes(color = scale_diff), size = 1.9, alpha = 0.8) +
-  ggplot2::scale_color_steps2(mid = "gray", midpoint = 0) +
-  ggplot2::labs(
-    subtitle = "Bland-Altman plot: allometric field volume vs allometric predicted volume"
-    , x = latex2exp::TeX("mean allometric volume ($m^3$)")
-    , y = latex2exp::TeX("difference (allometric field - allometric predicted volume $m^3$)")
-  ) +
-  ggplot2::theme_light() +
-  ggplot2::theme(legend.position = "none")
-```
-
-That's a lot of plotting to show that the mean difference is `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^. This is a significant improvement over our comparison between the allometric field value and the irregular, CHM-derived prediction
-
-let's use a paired t-test to determine if the mean difference (MD) between the allometric field volume and the allometric predicted volume is statistically significant (i.e. significantly different from zero)
-
-```{r}
-# is the mean difference between the two volumes significantly different from zero
-ttest_temp <- t.test(
-  ground_truth_prediction_match_ans %>% 
-    dplyr::filter(match_grp == "true positive") %>% 
-    dplyr::pull(gt_volume_m3)
-  , ground_truth_prediction_match_ans %>% 
-    dplyr::filter(match_grp == "true positive") %>% 
-    dplyr::pull(pred_allom_volume_m3)
-  , paired = TRUE
-)
-ttest_temp
-```
-
-Wow, the p-value of `r scales::comma(ttest_temp$p.value, accuracy = 0.001)` is greater than 0.05 (even 0.10), meaning we *fail* to reject the null hypothesis that the true mean difference is zero. That is, the mean difference between the field-measured volume and the predicted volume is not different than zero when both are forced to use the same paraboloid shape assumption. This contrasts sharply with the previously observed major systematic difference between the allometric field volume and the predicted irregular, CHM-derived volume. The non-significant difference strongly suggests that the major volume discrepancy noted earlier was primarily due to the geometric irregularity of the actual piles, and not to systematic prediction bias in our CHM-derived height and diameter measurements.
