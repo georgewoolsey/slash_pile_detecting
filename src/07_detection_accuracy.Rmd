@@ -7,7 +7,7 @@ To this point we have:
 3. [Demonstrated our geometry-based slash pile detection methodology](#geom_detect)
 4. [Demonstrated our spectral refinement (i.e. data fusion) methodology](#data_fusion)
 5. [Reviewed how we will evaluate our method](#meth_eval)
-5. and [Made predictions using our method on four experimental sites](#meth_preds)
+6. and [Made predictions using our method on four experimental sites](#meth_preds)
 
 In this section, we'll evaluate the effectiveness of the proposed geometric, rules-based slash pile detection methodology by assessing its detection accuracy performance. We fully reviewed the detection accuracy assessment [workflow here](#detect_metrics_form), but here is a quick overview:
 
@@ -347,7 +347,7 @@ gc()
 
 now we aggregate the pile-level data (TP, FP, FN) into a single record for each study site and segmentation method combination. Detection performance metrics include F-score, precision, and recall.
 
-### Aggregate Instance Match Results
+### Aggregate Instance Match Results{#agg_inst_match}
 
 because our `agg_ground_truth_match()` function that we [defined earlier](#quant_metrics_form) includes capabilities to compute quantification metrics as well (e.g. height MAPE, RMSE, etc.), we'll add the pile sizing metrics to our instance match data so that `agg_ground_truth_match()` recognizes them.
 
@@ -1030,16 +1030,16 @@ p_fn_temp <- function(row_n = 1, site, method = "dbscan", mtchgrp = "true positi
       ceiling()
   }
   # tp
-  tp <- w_dta %>% dplyr::slice(row_n) 
-  # gt pile
-  gt_pile <- slash_piles_polys[[site]] %>% 
-    dplyr::filter(pile_id == tp$pile_id)
-  # pred pile
-  pred_pile <- p_dta %>% 
-    dplyr::filter(pred_id == tp$pred_id)
-  
+  tp <- w_dta %>% dplyr::slice(row_n)
   # ortho area
-  if(nrow(gt_pile) == 1 && nrow(pred_pile) == 1){
+  if(mtchgrp %in%  c("true positive")){
+    # gt pile
+    gt_pile <- slash_piles_polys[[site]] %>% 
+      dplyr::filter(pile_id == tp$pile_id)
+    # pred pile
+    pred_pile <- p_dta %>% 
+      dplyr::filter(pred_id == tp$pred_id)
+    
     ortho_st <- 
       sf::st_union(
         gt_pile %>% sf::st_transform(crs=terra::crs(rgb_rast[[site]])) 
@@ -1051,7 +1051,12 @@ p_fn_temp <- function(row_n = 1, site, method = "dbscan", mtchgrp = "true positi
         , endCapStyle = "SQUARE"
       ) %>%
       dplyr::mutate(dummy=1)  
-  }else if(nrow(gt_pile) == 1){
+  }else if(
+    mtchgrp %in%  c("omission")
+  ){
+    # gt pile
+    gt_pile <- slash_piles_polys[[site]] %>% 
+      dplyr::filter(pile_id == tp$pile_id)
     ortho_st <- 
       gt_pile %>% 
       sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
@@ -1061,7 +1066,12 @@ p_fn_temp <- function(row_n = 1, site, method = "dbscan", mtchgrp = "true positi
         , endCapStyle = "SQUARE"
       ) %>%
       dplyr::mutate(dummy=1)  
-  }else if(nrow(pred_pile) == 1){
+  }else if(
+    mtchgrp %in%  c("commission")
+  ){
+    # pred pile
+    pred_pile <- p_dta %>% 
+      dplyr::filter(pred_id == tp$pred_id)
     ortho_st <- 
       pred_pile %>% 
       sf::st_transform(crs=terra::crs(rgb_rast[[site]])) %>% 
@@ -1128,11 +1138,11 @@ p_fn_temp <- function(row_n = 1, site, method = "dbscan", mtchgrp = "true positi
   # }
   
   #### add piles
-  if(nrow(gt_pile) == 1){
+  if(mtchgrp %in%  c("true positive", "omission")){
     rp <- rp +
       ggplot2::geom_sf(data = gt_pile, fill = NA, color = "cyan", lwd = 0.6)
   }
-  if(nrow(pred_pile) == 1){
+  if(mtchgrp %in%  c("true positive", "commission")){
     rp <- rp +
       ggplot2::geom_sf(data = pred_pile, fill = NA, color = "magenta", lwd = 0.5)
   }
@@ -1264,7 +1274,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the TP matches
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # max piles per site
 nplts_temp <- 12
 # dbscan
@@ -1276,6 +1286,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
         dbscan_gt_pred_match[[x]] %>% 
         dplyr::filter(match_grp == "true positive") %>% 
         nrow()
+      if(nn==0){return(NULL)}
       pl <- 
         1:min(nn,nplts_temp) %>% 
         purrr::map(
@@ -1294,6 +1305,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
         watershed_gt_pred_match[[x]] %>% 
         dplyr::filter(match_grp == "true positive") %>% 
         nrow()
+      if(nn==0){return(NULL)}
       pl <- 
         1:min(nn,nplts_temp) %>% 
         purrr::map(
@@ -1309,19 +1321,21 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
-  \(x)
+  function(x){
+  if(any(is.null(dbscan_tp_plts_temp[[x]]))){return(NULL)}
+  l <- dbscan_tp_plts_temp[[x]] %>% length()
   dbscan_tp_plts_temp[[x]] %>% 
   # purrr::map(1) %>% 
   # purrr::keep_at(1:4) %>% 
-  patchwork::wrap_plots(ncol = 4) +
+  patchwork::wrap_plots(ncol = min(l,4)) +
   patchwork::plot_annotation(
     title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
     , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
   )
-)
+})  
   
 ```
 
@@ -1329,26 +1343,28 @@ purrr::map(
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
-  \(x)
+  function(x){
+  if(any(is.null(watershed_tp_plts_temp[[x]]))){return(NULL)}
+  l <- watershed_tp_plts_temp[[x]] %>% length()
   watershed_tp_plts_temp[[x]] %>% 
   # purrr::map(1) %>% 
-  patchwork::wrap_plots(ncol = 4) +
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = min(l,4)) +
   patchwork::plot_annotation(
     title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
     , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
   )
-)
-  
+})    
 ```
 
 ### Omissions (False Negatives)
 
 Check out the plots for the omissions (FN)
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1358,6 +1374,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
         dbscan_gt_pred_match[[x]] %>% 
         dplyr::filter(match_grp == "omission") %>% 
         nrow()
+      if(nn==0){return(NULL)}
       pl <- 
         1:min(nn,nplts_temp) %>% 
         purrr::map(
@@ -1376,6 +1393,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
         watershed_gt_pred_match[[x]] %>% 
         dplyr::filter(match_grp == "omission") %>% 
         nrow()
+      if(nn==0){return(NULL)}
       pl <- 
         1:min(nn,nplts_temp) %>% 
         purrr::map(
@@ -1391,25 +1409,49 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
-  \(x)
+  function(x){
+  if(any(is.null(dbscan_tp_plts_temp[[x]]))){return(NULL)}
+  l <- dbscan_tp_plts_temp[[x]] %>% length()
   dbscan_tp_plts_temp[[x]] %>% 
   # purrr::map(1) %>% 
   # purrr::keep_at(1:4) %>% 
-  patchwork::wrap_plots(ncol = 4) +
+  patchwork::wrap_plots(ncol = min(l,4)) +
   patchwork::plot_annotation(
     title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
     , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
   )
-)
-  
+})  
 ```
+
+#### Watershed
+
+plot example omissions on the RGB with the actual pile (cyan) pile outlined
+
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  function(x){
+  if(any(is.null(watershed_tp_plts_temp[[x]]))){return(NULL)}
+  l <- watershed_tp_plts_temp[[x]] %>% length()
+  watershed_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = min(l,4)) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
+})      
+```
+
+#### Omissions with CHM and RGB
 
 why are these missing?
 
-```{r}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -1495,7 +1537,7 @@ all_stand_boundary$site_data_lab %>%
       , chm = crp_chm_rast_temp
       , maxh = maxh
       , title = paste0(
-        "DBSCAN: "
+        "Omissions: "
         , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
       )
     )
@@ -1503,24 +1545,149 @@ all_stand_boundary$site_data_lab %>%
 
 ```
 
+### commissions (False Positives)
 
-#### Watershed
+Check out the plots for the commissions (FP)
 
-plot example omissions on the RGB with the actual pile (cyan) pile outlined
+```{r,eval=F,purl=FALSE, results=F}
+# dbscan
+dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "commission") %>% 
+        nrow()
+      if(nn==0){return(NULL)}
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "dbscan", mtchgrp = "commission")  
+        )
+      return(pl)
+    }
+  )
+# watershed
+watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    function(x){
+      nn <- 
+        watershed_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "commission") %>% 
+        nrow()
+      if(nn==0){return(NULL)}
+      pl <- 
+        1:min(nn,nplts_temp) %>% 
+        purrr::map(
+          \(r)
+          p_fn_temp(row_n = r, site = x, method = "watershed", mtchgrp = "commission")  
+        )
+      return(pl)
+    }
+  )
+```
 
-```{r,eval=F, fig.height=8.8, results='hide', fig.show='asis'}
+#### DBSCAN
+
+plot example commissions on the RGB with the actual pile (cyan) pile outlined
+
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
-  \(x)
-  watershed_tp_plts_temp[[x]] %>% 
+  function(x){
+  if(any(is.null(dbscan_tp_plts_temp[[x]]))){return(NULL)}
+  l <- dbscan_tp_plts_temp[[x]] %>% length()
+  dbscan_tp_plts_temp[[x]] %>% 
   # purrr::map(1) %>% 
   # purrr::keep_at(1:4) %>% 
-  patchwork::wrap_plots(ncol = 4) +
+  patchwork::wrap_plots(ncol = min(l,4)) +
   patchwork::plot_annotation(
     title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
     , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
   )
-)
-  
+})  
 ```
 
+#### Watershed
+
+plot example commissions on the RGB with the actual pile (cyan) pile outlined
+
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+all_stand_boundary$site_data_lab %>% 
+purrr::map(
+  function(x){
+  if(any(is.null(watershed_tp_plts_temp[[x]]))){return(NULL)}
+  l <- watershed_tp_plts_temp[[x]] %>% length()
+  watershed_tp_plts_temp[[x]] %>% 
+  # purrr::map(1) %>% 
+  # purrr::keep_at(1:4) %>% 
+  patchwork::wrap_plots(ncol = min(l,4)) +
+  patchwork::plot_annotation(
+    title = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+    , theme = ggplot2::theme(plot.title = ggplot2::element_text(size = 10, hjust = 0.5))
+  )
+})    
+```
+
+#### Commissions with CHM and RGB
+
+why are these missing?
+
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+# map over it 
+all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    function(x){
+    piles <- dbscan_structural_preds[[x]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      dplyr::inner_join(
+        dbscan_gt_pred_match[[x]] %>% 
+        dplyr::filter(match_grp == "commission") %>% 
+        dplyr::select(pred_id)
+        , by = "pred_id"
+      )
+    if(nrow(piles)==0){return(NULL)}
+    maxh <- all_stand_boundary %>% 
+      dplyr::filter(site_data_lab == x) %>% 
+      dplyr::slice(1) %>% 
+      dplyr::pull(max_ht_m)
+    # crop, slice rast
+    crp_chm_rast_temp <- chm_rast[[x]] %>% 
+      terra::crop(
+          piles %>% 
+          sf::st_transform(terra::crs(chm_rast[[x]])) %>% 
+          terra::vect()
+          , mask = T
+      )
+    
+    crp_chm_rast_temp <- crp_chm_rast_temp %>% 
+      # slice
+      terra::clamp(
+        upper = maxh
+        , lower = 0
+        , values = F
+      )
+    
+    terra_plt_ortho(
+      ortho = rgb_rast[[x]]
+      , gt_piles = NA
+      , pred_piles = piles
+      , boundary = stand_boundary[[x]]
+      , chm = crp_chm_rast_temp
+      , maxh = maxh
+      , title = paste0(
+        "Commissions: "
+        , all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+      )
+    )
+  })
+
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+gc()
+```

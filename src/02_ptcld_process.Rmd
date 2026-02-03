@@ -233,7 +233,7 @@ plt_rast_combine <- function(
 
 use this handy plotting function for some piles
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(psinf_slash_piles_polys$is_in_stand) %>% 
@@ -255,7 +255,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -418,7 +418,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(pj_slash_piles_polys$is_in_stand) %>% 
@@ -440,7 +440,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -567,7 +567,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(bhef_slash_piles_polys$is_in_stand) %>% 
@@ -589,7 +589,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -705,7 +705,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(arnf_slash_piles_polys$is_in_stand) %>% 
@@ -727,7 +727,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2

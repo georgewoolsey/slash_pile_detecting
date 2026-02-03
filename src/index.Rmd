@@ -145,21 +145,36 @@ knitr::write_bib(c(
 # })
 # 
 # 1. List .Rmd files, excluding those starting with "_"
-rmd_files <- list.files(pattern = "^[^_].*\\.Rmd$", full.names = TRUE)
+setwd("C:/Data/usfs/slash_pile_detecting/src")
+library(tidyverse)
+(
+  rmd_files <- list.files(pattern = "^[^_].*\\.Rmd$", full.names = TRUE) %>% 
+    stringr::str_remove_all("./index.Rmd") %>% 
+    purrr::discard(~identical(.x,""))
+)
+# rmd_files
+# rmd_files[1]
+# knitr::purl(rmd_files[1], output = "c:/Users/georg/Downloads/xxx.R", quiet = TRUE, documentation = 0)
 
 # 2. Iterate using walk() for side effects
 # Uses the ~ shorthand for an anonymous function where .x is each file
-purrr::walk(rmd_files, ~ {
-  temp_r_script <- tempfile(fileext = ".R")
-  
-  # Extract code (purl) and execute (sys.source)
-  knitr::purl(.x, output = temp_r_script, quiet = TRUE, documentation = 0)
-  sys.source(temp_r_script, envir = globalenv())
-  
-  # Cleanup
-  unlink(temp_r_script)
-})
+purrr::walk(
+  rmd_files
+  , ~ {
+    message(paste0(.x,".R"))
+    # temp_r_script <- file.path("c:/Users/georg/Downloads",paste0(.x,".R"))
+    temp_r_script <- tempfile(fileext = ".R")
+    if (file.exists(temp_r_script)) file.remove(temp_r_script)
+    # Extract code (purl) and execute (sys.source)
+    knitr::purl(.x, output = temp_r_script, quiet = TRUE, documentation = 0)
+    sys.source(temp_r_script, envir = globalenv())
 
+    # # Cleanup
+    unlink(temp_r_script)
+  })
+# unlink(temp_r_script)
+remove(rmd_files,temp_r_script)
+gc()
 
 
 ```
