@@ -100,9 +100,9 @@ We will follow the general analysis outline in five distinct sections:
 6. **Experimental Methodology Predictions:** We will make predictions using our proposed training-free, rules-based methodology for identifying slash piles from UAS data with the structural and spectral data fusion approach.
 7. **Detection Accuracy:** We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile detection (F-score, Recall, Precision).
 8. **Quantification Accuracy:** We will evaluate the accuracy of the structural-plus-spectral data fusion methodology in terms of slash pile form quantification (e.g. height and diameter MAPE, RMSE, ME).
-9. **Sensitivity Analysis:** Finally, we will perform a sensitivity analysis on the key user-defined parameters of the proposed method to systematically quantify the impact of each varied parameter on the stability and performance of the slash pile detection.
 
 ```{r, include=FALSE, echo=FALSE}
+# 9. **Sensitivity Analysis:** Finally, we will perform a sensitivity analysis on the key user-defined parameters of the proposed method to systematically quantify the impact of each varied parameter on the stability and performance of the slash pile detection.
 knitr::write_bib(c(
   .packages(),
   "bookdown"
