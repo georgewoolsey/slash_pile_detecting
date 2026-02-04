@@ -923,6 +923,7 @@ dplyr::bind_rows(
     , lab = paste0(scales::percent(pct,accuracy=0.1), "\n(n=", scales::comma(n,accuracy=1), ")")
   ) %>% 
   dplyr::ungroup() %>%
+  dplyr::mutate(site = stringr::word(site)) %>% 
   ggplot2::ggplot(
     mapping = ggplot2::aes(x = inrange_th_votes, y = pct, label = lab, fill = inrange_th_votes)
   ) +
