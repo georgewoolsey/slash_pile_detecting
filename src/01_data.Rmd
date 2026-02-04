@@ -367,7 +367,7 @@ Image-annotated pile footprints at each study site were created in a GIS by outl
 
 Let's load in those image-annotated pile polygons now for each study site.
 
-```{r}
+```{r, results=F}
 #######################################
 # polygons annotated using RGB and field-collected points
 #######################################

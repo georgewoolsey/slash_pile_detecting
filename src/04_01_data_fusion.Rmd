@@ -945,7 +945,7 @@ rgb_indices_df %>%
   summary()
 ```
 
-notice the "Mean" value in the summary above is the proportion of demonstration piles that successfully met the spectral index threshold criteria (i.e. piles to be "kept"). it looks like the GRVI threshold was most unaligned with these demonstration piles, something we anticipated by looking at the distributions above compared the threshold value recommended in the literature for detecting green vegetation.
+notice the "Mean" value in the summary above is the proportion of demonstration piles that successfully met the spectral index threshold criteria (i.e. piles to be "kept"). it looks like the GRVI threshold was most unaligned with these demonstration piles, something we anticipated by looking at the distributions above compared with the threshold value recommended in the literature for detecting green vegetation.
 
 let's look at the proportional distribution of demonstration piles meeting the threshold by individual spectral index
 
@@ -1180,19 +1180,19 @@ polygon_spectral_filtering <- function(
 
 we previously worked through an example where we identified candidate slash piles based on their structural form using our raster-based [segmentation approach](#geom_detect). we're going to use that demonstration area, apply the `slash_pile_detect()` [function](#slash_pile_detect_fn) to detect candidate slash piles from the CHM data based on expected size and geometric properties, and then integrate the spectral filtering method we defined above.
 
-for this demonstration, we'll use the DBSCAN segmentation method with slightly less strict size and geometric thresholds than we used in the previous section
+for this demonstration, we'll use the DBSCAN segmentation method with the same size and geometric thresholds that we used in the previous section so that we can demonstrate how the spectral filtering helps remove false positives that are likely vegetation
 
 ```{r}
 # structurally predicted from chm
 slash_pile_detect_dbscan_ans_temp <- slash_pile_detect(
   chm_rast = aoi_chm_rast
   , seg_method = "dbscan"
-  , min_ht_m = 1
+  , min_ht_m = 0.5
   , max_ht_m = 6
   , min_area_m2 = 1.5
   , max_area_m2 = 50
-  , min_convexity_ratio = 0.4
-  , min_circularity_ratio = 0.3
+  , min_convexity_ratio = 0.5
+  , min_circularity_ratio = 0.45
 )
 ```
 
@@ -1243,6 +1243,23 @@ terra::plot(
     terra::vect()
   , add = T, border = "magenta", col = NA, lwd = 2.5
 )
+```
+
+```{r,eval=T,purl=FALSE, include=FALSE}
+p_temp <- aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "cyan", lwd = 0.4
+  ) +
+  ggplot2::geom_sf(
+    data = slash_pile_detect_dbscan_ans_temp$segs_sf %>% 
+      sf::st_transform(terra::crs(aoi_rgb_rast))
+    , fill = NA, color = "magenta", lwd = 0.4
+  ) +
+  ggplot2::theme(legend.position = "none")
+
+ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_10_rgb_dbscan_cnddts.jpg", height = 8, width = 4.3)
 ```
 
 notice there are lower portions of trees or small trees that are proposed as candidate segments given our less strict size and geometric filters
@@ -1355,6 +1372,33 @@ terra::plot(
 ```
 
 in this demonsration area, the spectral filtering of our data fusion approach successfully filtered the structurally detected candidate piles that were clearly lower parts of trees (clearly green in the RGB). however, the spectral filtering failed to remove some false positive predictions that were shadowed in the RGB imagery. a positive result, though, was that the spectral filtering stage did not remove any true positive predictions.
+
+```{r,eval=T,purl=FALSE, include=FALSE}
+p_temp <- aoi_plt_ortho +
+  ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
+  ggplot2::geom_sf(
+    data = aoi_slash_piles_polys
+    , fill = NA, color = "cyan", lwd = 0.4
+  ) +
+  ggplot2::geom_sf(
+    data = slash_pile_detect_dbscan_ans_temp$segs_sf %>% 
+      sf::st_transform(terra::crs(aoi_rgb_rast))
+    , fill = NA, color = "magenta", lwd = 0.4
+  ) +
+  ggplot2::geom_sf(
+    data = 
+    slash_pile_detect_spec_filt_temp$segs_sf %>% 
+      dplyr::filter(inrange_th_votes<5) %>% 
+      st_bbox_by_row(corner="full",dimensions = F) %>% 
+      sf::st_buffer(0.4) %>% 
+      sf::st_transform(terra::crs(aoi_rgb_rast))
+    , fill = "black", color = "red"
+    , alpha = 0.15
+  ) +
+  ggplot2::theme(legend.position = "none")
+
+ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_11_rgb_dbscan_cnddts.jpg", height = 8, width = 4.3)
+```
 
 let's see the spectral index values of the candidates which were identified for removal
 
