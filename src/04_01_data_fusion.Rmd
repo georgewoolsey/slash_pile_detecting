@@ -455,7 +455,7 @@ gc()
 
 here is a plot of the different spectral indices (high values are brighter, low values are darker) on our example area we were working with in the last section with the demonstration piles in blue
 
-```{r,eval=T,purl=FALSE, fig.height=9.2}
+```{r,eval=F,purl=FALSE, fig.height=9.2}
 all_rgb_indices_rast %>% 
   terra::plot(
     nc = 3
@@ -498,7 +498,7 @@ terra::plot(
 we now need a function to crop the raster with all spectral indices given a polygon input data and return the spectral index values as columns attached to the polygon
 
 ```{r}
-extract_rast_values <- function(sf_data, rast, fun_agg = mean) {
+extract_rast_values <- function(sf_data, rast, fun_agg = "mean") {
   # checks
   if(!inherits(rast, "SpatRaster")){
     stop("Input `rast` must be a SpatRaster object.")
@@ -509,10 +509,16 @@ extract_rast_values <- function(sf_data, rast, fun_agg = mean) {
   if(!all(sf::st_geometry_type(sf_data) %in% c("POLYGON", "MULTIPOLYGON"))) {
     stop("Input `sf_data` must contain polygon geometries.")
   }
-  if(!is.function(fun_agg)) {
-    stop("Argument `fun_agg` must be a function (e.g., mean, median, sum).")
+  valid_cpp <- c(
+      "sum", "mean", "median", "min", "max", 
+      "modal", "weighted.mean", "none"
+    )
+  if(
+    !inherits(fun_agg,"character") ||
+    !(fun_agg %in% valid_cpp)
+  ) {
+    stop(paste0("`fun_agg` must be one of: ",paste0(valid_cpp,collapse = ",")))
   }
-
   # crs
   sf_data <- sf_data %>% sf::st_transform(terra::crs(rast))
 
@@ -526,15 +532,19 @@ extract_rast_values <- function(sf_data, rast, fun_agg = mean) {
 
   # clean data
   fun_name <- deparse(substitute(fun_agg))
-  extracted_values <- extracted_values %>% 
-    dplyr::select(-ID) %>% 
+  extracted_values <- 
+    extracted_values %>% 
+    dplyr::select( -dplyr::any_of(c(
+      "hey_xxxxxxxxxx"
+      , "ID"
+    ))) %>% 
     dplyr::rename_with(
       ~ paste0(
         "rast_"
         # , fun_name ### if we want to have custom output depending on the fun_agg
         , "agg"
         , "_"
-        , .x
+        , stringr::str_remove(.x,paste0("^",fun_agg,"."))
         , recycle0 = TRUE
       )
     )
@@ -550,13 +560,123 @@ extract_rast_values <- function(sf_data, rast, fun_agg = mean) {
 }
 ```
 
+```{r, include=FALSE, eval=FALSE}
+# rgb_indices_df <- extract_rast_values(aoi_slash_piles_polys, rast = all_rgb_indices_rast, fun_agg = median)
+fun_agg = "median"
+# extract values for each layer within each polygon
+  extracted_values1_temp <- terra::extract(
+    x = all_rgb_indices_rast
+    , y = aoi_slash_piles_polys
+    , fun = "median"
+    , na.rm = TRUE
+  )
+  # clean data
+  extracted_values1_temp <- extracted_values1_temp %>% 
+    dplyr::select(-ID) %>% 
+    dplyr::rename_with(
+      ~ paste0(
+        "rast_"
+        # , fun_name ### if we want to have custom output depending on the fun_agg
+        , "agg"
+        , "_"
+        , .x
+        , recycle0 = TRUE
+      )
+    )
+
+  df_temp <- aoi_slash_piles_polys %>% dplyr::bind_cols(extracted_values1_temp)
+  df_temp %>% dplyr::glimpse()
+#################################################################################################
+#################################################################################################
+#################################################################################################
+  # clean_fun_arg <- function(fun) {
+  #   # 1. If it's already a string, return it
+  #   if (inherits(fun,"character")) return(fun)
+  #   
+  #   # 2. If it's a function passed as an argument, get the name
+  #   # Use 'substitute' on the argument from the caller's perspective
+  #   name <- deparse(substitute(fun, env = parent.frame()))
+  #   
+  #   # 3. Validation: exactextractr only has C++ versions for specific strings
+  #   valid_cpp <- c("mean", "sum", "count", "min", "max", "median", "mode", "majority")
+  #   
+  #   if (name %in% valid_cpp) {
+  #     return(name)
+  #   } else {
+  #     # If it's not a standard C++ one, return the function itself 
+  #     # so exactextractr can still use it (just slower)
+  #     return(fun)
+  #   }
+  # }
+  # clean_fun_arg("median")
+  
+    fun_agg <- "median"
+    # exactextractr only has c++ versions for specific strings
+    valid_cpp <- c(
+      "min", "max", "count", "sum", "mean", "median", 
+      "mode", "majority", "minority", "variety", 
+      "stdev", "variance", "coefficient_of_variation",
+      "weighted_mean", "weighted_sum"
+    )
+    # terra_stats <- c(
+    #   "sum", "mean", "median", "min", "max", 
+    #   "modal", "weighted.mean", "none"
+    # )
+  valid_cpp
+    if(
+      !inherits(fun_agg,"character") ||
+      !(fun_agg %in% valid_cpp)
+    ) {
+      stop(paste0("`fun_agg` must be one of: ",paste0(valid_cpp,collapse = ",")))
+    }
+  
+
+  extracted_values2_temp <- exactextractr::exact_extract(
+    x = all_rgb_indices_rast
+    , y = aoi_slash_piles_polys
+    , fun = fun_agg # "median" # passing as a string uses the optimized c++ backend
+    # , append_cols = "ID" # unique identifier in the output
+  )
+  extracted_values1_temp
+  extracted_values2_temp
+  # clean data
+  
+  
+  extracted_values2_temp <-
+    extracted_values2_temp %>%
+    # extracted_values1_temp %>% 
+    dplyr::select( -dplyr::any_of(c(
+      "hey_xxxxxxxxxx"
+      , "ID"
+    ))) %>% 
+    dplyr::rename_with(
+      ~ paste0(
+        "rast_"
+        # , fun_name ### if we want to have custom output depending on the fun_agg
+        , "agg"
+        , "_"
+        , stringr::str_remove(.x,paste0("^",fun_agg,"."))
+        , recycle0 = TRUE
+      )
+    )
+    extracted_values2_temp
+  # Merge the extracted values back to the original sf data frame
+  # The row order is preserved by terra::extract, so a direct cbind is safe
+  # if no rows were dropped due to spatial mismatch.
+  # For robustness, we can explicitly join by row ID if needed, but for simple cases, cbind works.
+  # Assuming sf_data has a unique ID column or row order is stable:
+  df_temp <- aoi_slash_piles_polys %>% dplyr::bind_cols(extracted_values2_temp)
+df_temp %>% dplyr::glimpse()
+```
+
+
 ## Demonstration Pile Spectral Summary
 
 let's calculate the various spectral indices on our demonstration slash pile polygons by getting the median value within the bounds of the pile
 
 ```{r}
 # extract_rast_values
-rgb_indices_df <- extract_rast_values(aoi_slash_piles_polys, rast = all_rgb_indices_rast, fun_agg = median) %>% 
+rgb_indices_df <- extract_rast_values(aoi_slash_piles_polys, rast = all_rgb_indices_rast, fun_agg = "median") %>% 
   # convert hue to 0-360
   dplyr::rename(rast_agg_hsv_hue_01=rast_agg_hsv_hue) %>% 
   dplyr::mutate(rast_agg_hsv_hue = rast_agg_hsv_hue_01*360)
@@ -627,7 +747,7 @@ that's interesting. compare those values with the thresholds identified in the r
 
 here is a plot of the median value of the different spectral indices (high values are brighter, low values are darker) within the bounds of the pile on our example area we were working with in the last section
 
-```{r,eval=T,purl=FALSE, fig.height=9.2}
+```{r,eval=F,purl=FALSE, fig.height=9.2}
 polys_temp <-
   rgb_indices_df %>% 
   sf::st_transform(sf::st_crs(aoi_boundary)) %>% 
@@ -721,7 +841,7 @@ patchwork::wrap_plots(
 )
 ```
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 ggplot2::ggsave("../data/rast_agg.jpeg", height = 9.2, width = 10.5)
 ```
 
@@ -1137,7 +1257,7 @@ polygon_spectral_filtering <- function(
   rgb_indices_df <- extract_rast_values(
     sf_data = sf_data %>% dplyr::ungroup()
     , rast = some_rgb_indices_rast
-    , fun_agg = median
+    , fun_agg = "median"
   )
   ##################################################
   # rgb_indices_threshold_voting
@@ -1245,7 +1365,7 @@ terra::plot(
 )
 ```
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 p_temp <- aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1373,7 +1493,7 @@ terra::plot(
 
 in this demonsration area, the spectral filtering of our data fusion approach successfully filtered the structurally detected candidate piles that were clearly lower parts of trees (clearly green in the RGB). however, the spectral filtering failed to remove some false positive predictions that were shadowed in the RGB imagery. a positive result, though, was that the spectral filtering stage did not remove any true positive predictions.
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 p_temp <- aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(

@@ -537,7 +537,7 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected candidate segments using the DBSCAN method for each study site
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -590,7 +590,7 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected candidate segments using the Watershed method for each study site
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
@@ -1096,7 +1096,7 @@ kableExtra::collapse_rows(columns = 1, valign = "top")
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the DBSCAN method for each study site
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
@@ -1118,7 +1118,7 @@ all_stand_boundary$site_data_lab %>%
 
 We'll quickly plot the structurally-detected and spectrally filtered candidate segments using the Watershed method for each study site
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
