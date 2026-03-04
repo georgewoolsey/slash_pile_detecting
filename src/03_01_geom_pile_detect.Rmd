@@ -527,10 +527,20 @@ get_segmentation_params <- function(
   # start by scaling based on point spacing (1.5x average distance between points).
   spacing <- 1 / sqrt(pts_per_m2)
   connectivity_eps <- 1.5 * spacing
-  # eps should not exceed 50% of the minimum object radius to avoid merging separate objects into one cluster.
+  # eps should not exceed 25% of the minimum object radius to avoid merging separate objects into one cluster.
   max_allowable_eps <- target_radius_m * 0.25
   # cap eps by the object size constraint
+  # as long as the quarter-radius of your min_area_m2 is 
+  # greater than the pixel diagonal (1.5*spacing), the algorithm will function well and stay above the point density limit
   eps_val <- min(connectivity_eps, max_allowable_eps)
+  ### option 1b:
+  # eps_val <- max(connectivity_eps, max_allowable_eps) # to ensure it doesn't go below data resolutoin
+  ### option 2:
+  # eps_val <- min(2 / sqrt(pts_per_m2), 0.5 * sqrt(min_area_m2 / pi))
+  # $epsilon = \min\!\left(\frac{2}{\sqrt{\text{pt\_dens}}},\;\frac{1}{2}\sqrt{\frac{\text{min\_area}}{\pi}}\right)$
+  ### option 3:
+  # eps_val <- 1 / sqrt(pi * pts_per_m2)
+  # $epsilon = 1 / sqrt(pts_per_m2)$
   
   # dbscan::dbscan `minPts`
   # based on expected points within the epsilon neighborhood area

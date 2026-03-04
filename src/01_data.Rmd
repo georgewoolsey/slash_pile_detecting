@@ -1229,7 +1229,7 @@ ortho_plt_fn(
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r,eval=F,purl=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 terra::plotRGB(psinf_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1246,6 +1246,63 @@ terra::plot(
     terra::project(terra::crs(psinf_rgb_rast))
   , add = T, border = "cyan", col = NA, lwd = 1.2
 )
+```
+
+```{r,eval=F,purl=FALSE, fig.height=8, fig.width=8}
+# grDevices::jpeg("c:/Users/georg/Downloads/xxx.jpeg", width = 8, height = 8, units = "in", res = 300)
+# mar = c(bottom, left, top, right)
+terra::plotRGB(psinf_rgb_rast, stretch="lin", mar=c(2, 0.5, 3.5, 0.2))
+# add stand boundary
+terra::plot(
+  psinf_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  psinf_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(psinf_rgb_rast))
+  , add = T, border = "cyan", col = NA, lwd = 1.2
+)
+# main title top: "side = 3", line = 1
+mtext("Pike and San Isabel National Forest (PSINF)", side = 3, line = 1.5, cex = 0.9, font = 2)
+# sub title top: "side = 3", line = 1
+mtext(
+  all_stand_boundary %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::filter(site_data_lab == "psinf") %>% 
+    dplyr::mutate(
+      site_area_ha = scales::comma(site_area_ha, suffix = " ha treatment unit", accuracy = 0.1)
+    ) %>% 
+    dplyr::pull(site_area_ha)
+  , side = 3, line = 0.5, cex = 0.7
+)
+# 5. Add scale and north arrow
+e_temp <- terra::ext(psinf_rgb_rast)
+# 3. Define a position BELOW the minimum Y-coordinate (ymin)
+# Subtracting a small value moves it into the bottom margin
+scale_x_temp <- e_temp$xmin
+scale_y_temp <- e_temp$ymin - ( (e_temp$ymax - e_temp$ymin) * 0.025 ) # 8% below the image
+# ?terra::sbar
+# have to define the scale bar distance
+clean_d_temp <- ceiling((terra::ncol(psinf_rgb_rast)*terra::res(psinf_rgb_rast)[1]*0.2)/10)*10
+terra::sbar(
+  d = clean_d_temp
+  # , xy = "bottomleft"
+  , xy = c(scale_x_temp, scale_y_temp)
+  , type = "bar"
+  , divs = 5
+  , below = "meters"
+  , labels = c(0, round(clean_d_temp/2), clean_d_temp)
+  , adj = c(0.5, -1.5) # adjust label pos c(horz,vert)
+  , cex = 0.6
+  , xpd = T
+)
+# terra::north(xy = "topright", type = 1, cex = 0.6)
+# grDevices::dev.off()
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
@@ -1330,7 +1387,7 @@ ortho_plt_fn(
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r,eval=F,purl=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 terra::plotRGB(pj_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1347,6 +1404,55 @@ terra::plot(
     terra::project(terra::crs(pj_rgb_rast))
   , add = T, border = "cyan", col = NA, lwd = 1.2
 )
+```
+
+```{r,eval=F,purl=FALSE, fig.height=7.2, fig.width=9}
+# grDevices::jpeg("c:/Users/georg/Downloads/xxx.jpeg", width = 9, height = 7.2, units = "in", res = 300)
+terra::plotRGB(pj_rgb_rast, stretch="lin", mar=c(0.2, 0.2, 1, 0.2))
+# add stand boundary
+terra::plot(
+  pj_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(pj_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  pj_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(pj_rgb_rast))
+  , add = T, border = "cyan", col = NA, lwd = 1.2
+)
+# main title top: "side = 3", line = 1
+mtext("Tres Rios Field Office (TRFO-BLM)", side = 3, line = 1.5, cex = 0.9, font = 2)
+# sub title top: "side = 3", line = 1
+mtext(
+  all_stand_boundary %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::filter(site_data_lab == "pj") %>% 
+    dplyr::mutate(
+      site_area_ha = scales::comma(site_area_ha, suffix = " ha treatment unit", accuracy = 0.1)
+    ) %>% 
+    dplyr::pull(site_area_ha)
+  , side = 3, line = 0.5, cex = 0.7
+)
+# 5. Add scale and north arrow
+# ?terra::sbar
+# have to define the scale bar distance
+clean_d_temp <- ceiling((terra::ncol(pj_rgb_rast)*terra::res(pj_rgb_rast)[1]*0.2)/10)*10
+terra::sbar(
+  d = clean_d_temp
+  , xy = "bottomleft"
+  , type = "bar"
+  , divs = 5
+  , below = "meters"
+  , labels = c(0, round(clean_d_temp/2), clean_d_temp)
+  , adj = c(0.5, -1.5) # c(horz,vert)
+  , cex = 0.6
+)
+# terra::north(xy = "topright", type = 1, cex = 0.6)
+# grDevices::dev.off()
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
@@ -1433,7 +1539,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 for the entire study area, plotting with `terra` is much more computationally efficient. let's plot the RGB data with the stand boundary (black) and image annotated pile footprints (cyan)
 
-```{r,eval=F,purl=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 terra::plotRGB(bhef_rgb_rast, stretch="lin")
 # add stand boundary
 terra::plot(
@@ -1450,6 +1556,63 @@ terra::plot(
     terra::project(terra::crs(bhef_rgb_rast))
   , add = T, border = "cyan", col = NA, lwd = 1.2
 )
+```
+
+```{r,eval=F,purl=FALSE, fig.height=8, fig.width=8}
+grDevices::jpeg("c:/Users/georg/Downloads/xxx.jpeg", width = 10, height = 8, units = "in", res = 300)
+# mar = c(bottom, left, top, right)
+terra::plotRGB(bhef_rgb_rast, stretch="lin", mar=c(2, 0.5, 3.5, 0.2))
+# add stand boundary
+terra::plot(
+  bhef_stand_boundary %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(bhef_rgb_rast))
+  , add = T, border = "black", col = NA, lwd = 1.2
+)
+# add pile boundaries
+terra::plot(
+  bhef_slash_piles_polys %>% 
+    dplyr::filter(is_in_stand) %>% 
+    terra::vect() %>% 
+    terra::project(terra::crs(bhef_rgb_rast))
+  , add = T, border = "cyan", col = NA, lwd = 1.2
+)
+# main title top: "side = 3", line = 1
+mtext("Black Hills Experimental Forest (BHEF)", side = 3, line = 1.5, cex = 0.9, font = 2)
+# sub title top: "side = 3", line = 1
+mtext(
+  all_stand_boundary %>% 
+    sf::st_drop_geometry() %>% 
+    dplyr::filter(site_data_lab == "bhef") %>% 
+    dplyr::mutate(
+      site_area_ha = scales::comma(site_area_ha, suffix = " ha treatment unit", accuracy = 0.1)
+    ) %>% 
+    dplyr::pull(site_area_ha)
+  , side = 3, line = 0.5, cex = 0.7
+)
+# 5. Add scale and north arrow
+e_temp <- terra::ext(bhef_rgb_rast)
+# 3. Define a position BELOW the minimum Y-coordinate (ymin)
+# Subtracting a small value moves it into the bottom margin
+scale_x_temp <- e_temp$xmin
+scale_y_temp <- e_temp$ymin - ( (e_temp$ymax - e_temp$ymin) * 0.025 ) # 8% below the image
+# ?terra::sbar
+# have to define the scale bar distance
+clean_d_temp <- ceiling((terra::ncol(bhef_rgb_rast)*terra::res(bhef_rgb_rast)[1]*0.2)/10)*10
+terra::sbar(
+  d = clean_d_temp
+  # , xy = "bottomleft"
+  , xy = c(scale_x_temp, scale_y_temp)
+  , type = "bar"
+  , divs = 5
+  , below = "meters"
+  , labels = c(0, round(clean_d_temp/2), clean_d_temp)
+  , adj = c(0.5, -1.5) # adjust label pos c(horz,vert)
+  , cex = 0.6
+  , xpd = T
+)
+# terra::north(xy = "topright", type = 1, cex = 0.6)
+# grDevices::dev.off()
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
@@ -1734,3 +1897,4 @@ patchwork::wrap_plots(
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
+
