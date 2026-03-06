@@ -680,18 +680,18 @@ gc()
 
 ## Volume Comparison{#vol_comp}
 
-We excluded quantification accuracy metrics for derived volume because the resulting value would not constitute a true "error". Comparing our predicted volume to a volume that was *not* directly measured, but instead calculated using a geometric assumption (like assuming a perfectly circular base and paraboloid shape) would be inappropriate. This is because any resulting difference between the prediction and the ground truth would be a blend of three inseparable factors: the error of the remote-sensing prediction method, the error in the direct field measurements (diameter/height), and the error introduced by the geometric shape assumption. Reporting such combined errors would be misleading, as it would be impossible to isolate the true performance of our remote-sensing method alone.
+We excluded quantification accuracy metrics for derived volume because the resulting value would not constitute a true "error". Comparing our predicted irregular CHM volume to a volume that was *not* directly measured, but instead calculated using a geometric assumption (like assuming a perfectly circular base and paraboloid shape) would be inappropriate. This is because any resulting difference between the prediction and the ground truth would be a blend of three inseparable factors: the error of the remote-sensing prediction method, the error in the direct field measurements (diameter/height), and the error introduced by the geometric shape assumption. Reporting such combined errors would be misleading, as it would be impossible to isolate the true performance of our remote-sensing method alone.
 
 Instead, data involving derived values of volume based on field measurements and a shape assumption and its comparison to our irregularly shaped CHM-derived volume will be treated simply as data points for insight into the differences. Using geometric shape assumptions for estimating pile volume is the standard practice when implementing prescriptions or preparing for slash pile burning ([Hardy 1996](https://permanent.fdlp.gov/gpo45282/index.htm); [Long & Boston 2014](https://doi.org/10.5849/forsci.13-501)). This comparison will help us understand the discrepancy between our irregularly shaped CHM-derived volume and the volume calculated assuming a perfectly circular base and paraboloid shape with field-measured height and diameter. This approach will still provide valuable context about the impact of the perfectly circular base and paraboloid geometric assumptions without falsely attributing the error of the simplified model to the remote-sensing method itself.
 
 let's do that now
 
 * **field-measured piles** 
-  - **volume** assumes a paraboloid shape, with volume calculated using the field-measured diameter (as the width) and height. we'll refer to this as "Allometric Field Volume" to indicate the field measurement is derived using a shape assumption.
+  - **volume** assumes a paraboloid shape, with volume calculated using the field-measured diameter (as the width) and height. we'll refer to this as "Reference Paraboloid Volume" to indicate the reference field measurement is derived using a shape assumption.
 * **predicted piles** 
-  - **volume** calculated from the elevation profile of the irregular predicted pile footprint, without assuming a specific geometric shape. we'll refer to this as "Predicted Volume" to indicate the predicted measurement is from our CHM-based detection methodology
+  - **volume** calculated from the elevation profile of the irregular predicted pile footprint, without assuming a specific geometric shape. we'll refer to this as "Predicted Irregular CHM Volume" to indicate the predicted measurement is from our CHM-based detection methodology
   
-We would generally expect that the allometric field volume is larger than the predicted volume because the allometric calculation assumes a perfectly regular geometric shape (circular base and paraboloid) based on maximum field dimensions (height and diameter). this process effectively encloses the actual, irregular pile form within a simplified geometric dome which inherently neglects and sits above the actual irregularities and voids in the pile structure, likely leading to an overestimation of the volume.
+We would generally expect that the reference paraboloid volume is larger than the predicted irregular CHM volume because the calculation assumes a perfectly regular geometric shape (circular base and paraboloid) based on maximum field dimensions (height and diameter). this process effectively encloses the actual, irregular pile form within a simplified geometric dome which inherently neglects and sits above the actual irregularities and voids in the pile structure, likely leading to an overestimation of the volume.
   
 we already added volume measurements to the TP matches for both the ground truth and predicted piles, summary of that data
 
@@ -705,36 +705,56 @@ dbscan_gt_pred_match[["psinf"]] %>%
 those don't really look like they match up well...let's explore
 
 ```{r}
-dbscan_gt_pred_match[["psinf"]] %>% 
+# get prediction for r2
+lm_temp <- lm(
+  pred_volume_m3 ~ field_volume_m3
+  , data = 
+    dbscan_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp=="true positive")
+)
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+volume_comp_scatter1 <- dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::filter(match_grp=="true positive") %>% 
   dplyr::mutate(diff_volume_m3 = field_volume_m3 - pred_volume_m3) %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(y = field_volume_m3, x = pred_volume_m3)) +
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_volume_m3, x = field_volume_m3)) +
   ggplot2::geom_abline(lwd = 1.5) +
   # ggplot2::geom_point(ggplot2::aes(color = diff_volume_m3)) +
-  ggplot2::geom_point(color = "navy") +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2.5) +
   ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = paste0(
+      "R^2 == "
+      , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      , "*'%'"
+    )
+    , hjust = -0.2, vjust = 1.5, parse = TRUE
+  ) +
   ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
   ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
   ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
   ggplot2::labs(
-    y = latex2exp::TeX("allometric field volume $m^3$")
-    , x = latex2exp::TeX("predicted volume $m^3$")
+    x = latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = latex2exp::TeX("predicted irregular CHM volume $m^3$")
     # , color = "image-field\ndiameter diff."
-    , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "Predicted Irregular CHM Volume versus Reference Paraboloid Volume"
   ) +
   ggplot2::theme_light()
+volume_comp_scatter1
+ggplot2::ggsave("../data/volume_comp_scatter1.jpeg", height = 8, width = 8, dpi = 300)
 ```
 
-this is exactly what we expected: for true positive matches, there is a clear systematic difference with the plot showing that the volume calculated using the idealized, regular shape assumption (allometric field volume) is consistently larger than the predicted volume derived from the CHM
+this is exactly what we expected: for true positive matches, there is a clear systematic difference with the plot showing that the volume calculated using the idealized, regular shape assumption (reference paraboloid volume) is consistently larger than the predicted irregular CHM volume derived from the CHM
 
 let's check these using `lm()`
 
 ```{r}
-lm_temp <- lm(field_volume_m3 ~ pred_volume_m3, data = dbscan_gt_pred_match[["psinf"]] %>% dplyr::filter(match_grp=="true positive"))
 summary(lm_temp)
 ```
 
-These linear model results (intercept = `r scales::comma(lm_temp$coefficients[1], accuracy = 0.01)`, slope = `r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)`) indicate a strong proportional bias that significantly increases with pile size. The high slope (`r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)`) coupled with the negative intercept (`r scales::comma(lm_temp$coefficients[1], accuracy = 0.01)`) indicate that the volume difference is not a simple constant offset (e.g. slope of ~1.0 and intercept of >0 if our hypothesis of consistently higher allometric field volume is true), but rather a scaling issue that is driven by the largest piles. The much larger allometric field volume estimates relative to the CHM-predicted volumes for the largest piles exert a strong influence on the predicted form of the liner model, pulling the slope steeply upward and forcing the intercept below zero as a mathematical artifact. Despite the predicted negative intercept, visual inspection of the data shows that most allometric field volumes are larger than the CHM-predicted volumes, even for smaller piles. The slope value indicates that for every 1 m^3^ increase in predicted volume, the allometric field volume increases by nearly `r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)` m^3^. This data suggests that the geometric assumptions of the allometric model potentially introduce substantial scaling error which may limit its reliability (especially for larger piles) for accurately estimating the volume of real-world piles which have heterogeneous footprints and elevation profiles.
+These linear model results (intercept = `r scales::comma(lm_temp$coefficients[1], accuracy = 0.01)`, slope = `r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)`) indicate a strong proportional bias that significantly increases with pile size. The low slope (`r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)`) coupled with the positive intercept (`r scales::comma(lm_temp$coefficients[1], accuracy = 0.01)`) indicate that the volume difference is not a simple constant offset (e.g. slope of ~1.0 and intercept of <0 if our hypothesis of consistently higher reference paraboloid volume is true), but rather a scaling issue that is driven by the largest piles. The much larger reference paraboloid volume estimates relative to the CHM-predicted irregular CHM volumes for the largest piles exert a strong influence on the predicted form of the liner model, pulling the slope steeply downward and forcing the intercept above zero as a mathematical artifact. Despite the predicted positive intercept, visual inspection of the data shows that most reference paraboloid volumes are larger than the CHM-predicted irregular CHM volumes, even for smaller piles. The slope value indicates that for every 1 m^3^ increase in reference paraboloid volume, the predicted irregular volume volume increases by nearly `r scales::comma(lm_temp$coefficients[2], accuracy = 0.01)` m^3^. This data suggests that the geometric assumptions of the paraboloid model potentially introduce substantial scaling error which may limit its reliability (especially for larger piles) for accurately estimating the volume of real-world piles which have heterogeneous footprints and elevation profiles.
 
 before we compare the volume measurements in aggregate, let's look at the distributions
 
@@ -750,8 +770,8 @@ vol_df_temp <-
       , ordered = T
       , levels = c("field_volume_m3","pred_volume_m3")
       , labels = c(
-        "allometric field volume"
-        , "predicted volume"
+        "reference paraboloid volume"
+        , "predicted irregular CHM volume"
       )
     )
   ) 
@@ -829,7 +849,7 @@ vol_df_temp %>%
 let's compare aggregated volume measurements for the true positive matches
 
 **Mean Difference (MD):** 
-$$\text{MD} = \frac{1}{N} \sum_{i=1}^{N} (\text{Allometric Volume}_i - \text{Predicted Volume}_i)$$
+$$\text{MD} = \frac{1}{N} \sum_{i=1}^{N} (\text{Reference Paraboloid Volume}_i - \text{Predicted Volume}_i)$$
 
 **Percent Mean Difference:** 
 $$\%\text{MD} = \frac{\text{MD}}{\text{Mean}(\text{Predicted Volume})} \times 100$$
@@ -863,13 +883,13 @@ vol_agg_df_temp %>%
       )
   ) %>% 
   kableExtra::kbl(
-    caption = "comparison of aggregated allometric field volume and predicted volume"
+    caption = "comparison of aggregated reference paraboloid volume and predicted irregular CHM volume"
     , col.names = c("metric", "value")
   ) %>% 
   kableExtra::kable_styling()
 ```
 
-we'll dig into the MD shortly but before we move on let's focus on the percent mean difference. We calcualted a %MD of `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` which indicates a major systematic difference where the allometric field volume is, on average, `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` larger than our CHM-predicted volume. This large relative difference shows how much the geometric assumptions inflate the volume compared to the irregular volumes measured by our remote sensing-based method.
+we'll dig into the MD shortly but before we move on let's focus on the percent mean difference. We calcualted a %MD of `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` which indicates a major systematic difference where the reference paraboloid volume is, on average, `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` larger than our CHM-predicted irregular CHM volume. This large relative difference shows how much the geometric assumptions inflate the volume compared to the irregular volumes measured by our remote sensing-based method.
 
 let's make a Bland-Altman plot to compare the two measurement methods. this plot uses the average of the two measurements (approximate size) on the x-axis and the difference (bias) between the two measurements on the y-axis
 
@@ -963,21 +983,21 @@ dbscan_gt_pred_match[["psinf"]] %>%
   ggplot2::geom_point(mapping = ggplot2::aes(color = scale_diff), size = 1.9, alpha = 0.8) +
   ggplot2::scale_color_steps2(mid = "gray", midpoint = 0) +
   ggplot2::labs(
-    subtitle = "Bland-Altman plot: allometric field volume vs predicted volume"
+    subtitle = "Bland-Altman plot: reference paraboloid volume vs predicted irregular CHM volume"
     , x = latex2exp::TeX("mean volume ($m^3$)")
-    , y = latex2exp::TeX("difference (allometric - predicted volume $m^3$)")
+    , y = latex2exp::TeX("difference (allometric - predicted irregular CHM volume $m^3$)")
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "none")
 ```
 
-That's a lot of plotting to show that the mean difference is `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^. Points falling outside the 95% interval on the plot are instances of significant disagreement between the two volume measurements for those specific data points. These outliers indicate that, for a particular pile, the difference between the allometric field volume and the predicted volume is unusually large, suggesting a potential failure in either the CHM segmentation process, the quality of the original field measurements, the geometric shape assumption, or a combination thereof. We should investigate these extreme disagreements further to see what is happening
+That's a lot of plotting to show that the mean difference is `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^. Points falling outside the 95% interval on the plot are instances of significant disagreement between the two volume measurements for those specific data points. These outliers indicate that, for a particular pile, the difference between the reference paraboloid volume and the predicted irregular CHM volume is unusually large, suggesting a potential failure in either the CHM segmentation process, the quality of the original field measurements, the geometric shape assumption, or a combination thereof. We should investigate these extreme disagreements further to see what is happening
 
-before we do that, let's use a paired t-test to determine if the mean difference (MD) between the allometric field volume and the predicted volume is statistically significant (i.e. significantly different from zero)
+before we do that, let's use a paired t-test to determine if the mean difference (MD) between the reference paraboloid volume and the predicted irregular CHM volume is statistically significant (i.e. significantly different from zero)
 
 ```{r}
 # is the mean difference between the two volumes significantly different from zero
-ttest_temp <- t.test(
+ttest1 <- t.test(
   dbscan_gt_pred_match[["psinf"]] %>% 
     dplyr::filter(match_grp == "true positive") %>% 
     dplyr::pull(field_volume_m3)
@@ -986,10 +1006,10 @@ ttest_temp <- t.test(
     dplyr::pull(pred_volume_m3)
   , paired = TRUE
 )
-ttest_temp
+ttest1
 ```
 
-that's neat, the test gave us the same mean difference (MD) of `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^ that we calculated above. also, the p-value of `r scales::comma(ttest_temp$p.value, accuracy = 0.00001)` is less than 0.05, meaning we should reject the null hypothesis that the true mean difference is zero. this confirms that the systematic difference (or bias) we observed where allometric volume is larger than our predicted volume is statistically significant and not due to random chance.
+that's neat, the test gave us the same mean difference (MD) of `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^ that we calculated above. also, the p-value of `r scales::comma(ttest1$p.value, accuracy = 0.00001)` is less than 0.05, meaning we should reject the null hypothesis that the true mean difference is zero. this confirms that the systematic difference (or bias) we observed where allometric volume is larger than our predicted irregular CHM volume is statistically significant and not due to random chance.
 
 ### Extreme Volume Disagreements
 
@@ -1186,18 +1206,18 @@ gc()
 
 ### Allometric Volume Comparison
 
-The volume comparison [immediately above](#vol_comp) compared the allometric field volume using a geometric shape assumption (paraboloid) with the predicted volume based on the irregular CHM elevation profile. Thus, the volume difference included the impact of the shape assumption. In an attempt to remove the influence of comparing a regular shape (field measured) to an irregular shape (predicted volume), we'll perform a comparison analysis where both volume calculations are based on the same paraboloid shape assumption. This should provide insight into the differences related only to the predicted versus field-measured maximum dimensions of height and diameter.
+The volume comparison [immediately above](#vol_comp) compared the reference paraboloid volume using a geometric shape assumption (paraboloid) with the predicted irregular CHM volume based on the irregular CHM elevation profile. Thus, the volume difference included the impact of the shape assumption. In an attempt to remove the influence of comparing a regular shape (field measured) to an irregular shape (predicted irregular CHM volume), we'll perform a comparison analysis where both volume calculations are based on the same paraboloid shape assumption. This should provide insight into the differences related only to the predicted versus field-measured maximum dimensions of height and diameter.
 
-In the following section, we compare volume predictions against field measured data where both volume calculations utilize the same paraboloid shape assumption. For this analysis, we'll update the predicted volume only using the following volume definitions: 
+In the following section, we compare volume predictions against field measured data where both volume calculations utilize the same paraboloid shape assumption. For this analysis, we'll update the predicted irregular CHM volume only using the following volume definitions: 
 
 * **field-measured piles** 
-  - **volume** assumes a paraboloid shape, with volume calculated using the field-measured diameter (as the width) and height. we'll refer to this as "Allometric Field Volume" to indicate the field measurement is derived using a shape assumption.
+  - **volume** assumes a paraboloid shape, with volume calculated using the field-measured diameter (as the width) and height. we'll refer to this as "reference paraboloid volume" to indicate the field measurement is derived using a shape assumption.
 * **predicted piles** 
-  - **volume** assumes a paraboloid shape, with volume calculated using the predicted diameter (as the width) and height. we'll refer to this as "Allometric Predicted Volume" to indicate the measurement is derived using a shape assumption.
+  - **volume** assumes a paraboloid shape, with volume calculated using the predicted diameter (as the width) and height. we'll refer to this as "predicted paraboloid volume" to indicate the measurement is derived using a shape assumption.
   
-We would generally expect that the allometric field volume will not be uniformly larger or smaller than the predicted allometric volume, as the volume difference will be the net result of two competing influences: the overestimation/underestimation of diameter and the overestimation/underestimation of height propagating through the volume calculation formula.
+We would generally expect that the reference paraboloid volume will not be uniformly larger or smaller than the predicted paraboloid volume, as the volume difference will be the net result of two competing influences: the overestimation/underestimation of diameter and the overestimation/underestimation of height propagating through the volume calculation formula.
 
-let's first update the predicted volume to calculate the allometric predicted volume where the volume formula for a paraboloid is:
+let's first update the predicted irregular CHM volume to calculate the predicted paraboloid volume where the volume formula for a paraboloid is:
   
 $$
 V = \frac{1}{8}\pi \cdot width^2 \cdot height
@@ -1217,26 +1237,66 @@ dbscan_gt_pred_match[["psinf"]] %>%
   summary()
 ```
 
-nice, the allometric predicted volume is larger than the predicted volume calculated based on the irregular elevation profile in the CHM 
+nice, the predicted paraboloid volume is larger than the predicted irregular CHM volume calculated based on the irregular elevation profile in the CHM 
 
 ```{r}
-dbscan_gt_pred_match[["psinf"]] %>% 
+# get prediction for r2
+lm_temp <- lm(
+  pred_allom_volume_m3 ~ field_volume_m3
+  , data = 
+    dbscan_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp=="true positive")
+)
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+volume_comp_scatter2 <- dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::filter(match_grp=="true positive") %>% 
   dplyr::mutate(diff_volume_m3 = field_volume_m3 - pred_allom_volume_m3) %>% 
-  ggplot2::ggplot(mapping = ggplot2::aes(y = field_volume_m3, x = pred_allom_volume_m3)) +
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_allom_volume_m3, x = field_volume_m3)) +
   ggplot2::geom_abline(lwd = 1.5) +
-  ggplot2::geom_point(color = "navy") +
+  # ggplot2::geom_point(ggplot2::aes(color = diff_volume_m3)) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2.5) +
   ggplot2::geom_smooth(method = "lm", se=F, color = "tomato", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = paste0(
+      "R^2 == "
+      , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      , "*'%'"
+    )
+    , hjust = -0.2, vjust = 1.5, parse = TRUE
+  ) +
   ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
   ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_allom_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
   ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_allom_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
   ggplot2::labs(
-    y = latex2exp::TeX("allometric field volume $m^3$")
-    , x = latex2exp::TeX("allometric predicted volume $m^3$")
+    x = latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = latex2exp::TeX("predicted paraboloid volume $m^3$")
     # , color = "image-field\ndiameter diff."
-    , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "Predicted Paraboloid Volume versus Reference Paraboloid Volume"
   ) +
   ggplot2::theme_light()
+volume_comp_scatter2
+ggplot2::ggsave("../data/volume_comp_scatter2.jpeg", height = 8, width = 8, dpi = 300)
+```
+
+combine the scatter plots
+
+```{r}
+patchwork::wrap_plots(
+  list(
+    volume_comp_scatter1 + ggplot2::labs(subtitle = "A: Predicted Irregular CHM Volume versus Reference Paraboloid Volume")
+    , volume_comp_scatter2 + ggplot2::labs(subtitle = "B: Predicted Paraboloid Volume versus Reference Paraboloid Volume")
+  )
+  , nrow = 1
+) &
+ggplot2::theme(
+ plot.subtitle = ggplot2::element_text(size = 8.5)
+ , axis.text = ggplot2::element_text(size = 7)
+ , axis.title = ggplot2::element_text(size = 8)
+)
+ggplot2::ggsave("../data/volume_comp_scatter_full.jpeg", height = 6, width = 9, dpi = 300)
 ```
 
 the differences between the predictions for the larger field measured piles are pulling the slope of the line upwards but for the smaller piles, the volume differences are clustered around the line of equality
@@ -1255,8 +1315,8 @@ vol_df_temp <-
       , ordered = T
       , levels = c("field_volume_m3","pred_allom_volume_m3")
       , labels = c(
-        "allometric field volume"
-        , "allometric predicted volume"
+        "reference paraboloid volume"
+        , "predicted paraboloid volume"
       )
     )
   ) 
@@ -1277,7 +1337,7 @@ vol_df_temp %>%
   )
 ```
 
-nice, the distributions overlap much more than the volume comparison between the allometric field value and the irregular, CHM-derived prediction
+nice, the distributions overlap much more than the volume comparison between the reference paraboloid value and the irregular, CHM-derived prediction
 
 slope plots are neat too
 
@@ -1333,7 +1393,7 @@ vol_df_temp %>%
   )
 ```
 
-there is much more variability in this slope plot than the volume comparison between the allometric field value and the irregular, CHM-derived prediction
+there is much more variability in this slope plot than the volume comparison between the reference paraboloid value and the irregular, CHM-derived prediction
 
 let's compare aggregated volume measurements for the true positive matches
 
@@ -1366,13 +1426,13 @@ vol_agg_df_temp %>%
       )
   ) %>% 
   kableExtra::kbl(
-    caption = "comparison of aggregated allometric field volume and allometric predicted volume"
+    caption = "comparison of aggregated reference paraboloid volume and predicted paraboloid volume"
     , col.names = c("metric", "value")
   ) %>% 
   kableExtra::kable_styling()
 ```
 
-we'll dig into the MD shortly but before we move on let's focus on the percent mean difference. We calcualted a %MD of `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` which indicates a slight systematic difference where the allometric field volume is, on average, `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` larger than our predicted allometric volume.
+we'll dig into the MD shortly but before we move on let's focus on the percent mean difference. We calcualted a %MD of `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` which indicates a slight systematic difference where the reference paraboloid volume is, on average, `r scales::percent(vol_agg_df_temp$pct_mean_diff, accuracy = 0.1)` larger than our predicted allometric volume.
 
 let's make a Bland-Altman plot to compare the two measurement methods. this plot uses the average of the two measurements (approximate size) on the x-axis and the difference (bias) between the two measurements on the y-axis
 
@@ -1466,21 +1526,21 @@ dbscan_gt_pred_match[["psinf"]] %>%
   ggplot2::geom_point(mapping = ggplot2::aes(color = scale_diff), size = 1.9, alpha = 0.8) +
   ggplot2::scale_color_steps2(mid = "gray", midpoint = 0) +
   ggplot2::labs(
-    subtitle = "Bland-Altman plot: allometric field volume vs allometric predicted volume"
+    subtitle = "Bland-Altman plot: reference paraboloid volume vs predicted paraboloid volume"
     , x = latex2exp::TeX("mean allometric volume ($m^3$)")
-    , y = latex2exp::TeX("difference (allometric field - allometric predicted volume $m^3$)")
+    , y = latex2exp::TeX("difference (reference paraboloid - predicted paraboloid volume $m^3$)")
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(legend.position = "none")
 ```
 
-That's a lot of plotting to show that the mean difference is `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^. This is a significant improvement over our comparison between the allometric field value and the irregular, CHM-derived prediction
+That's a lot of plotting to show that the mean difference is `r scales::comma(vol_agg_df_temp$mean_diff, accuracy = 0.01)` m^3^. This is a significant improvement over our comparison between the reference paraboloid value and the irregular, CHM-derived prediction
 
-let's use a paired t-test to determine if the mean difference (MD) between the allometric field volume and the allometric predicted volume is statistically significant (i.e. significantly different from zero)
+let's use a paired t-test to determine if the mean difference (MD) between the reference paraboloid volume and the predicted paraboloid volume is statistically significant (i.e. significantly different from zero)
 
 ```{r}
 # is the mean difference between the two volumes significantly different from zero
-ttest_temp <- t.test(
+ttest2 <- t.test(
   dbscan_gt_pred_match[["psinf"]] %>% 
     dplyr::filter(match_grp == "true positive") %>% 
     dplyr::pull(field_volume_m3)
@@ -1489,10 +1549,68 @@ ttest_temp <- t.test(
     dplyr::pull(pred_allom_volume_m3)
   , paired = TRUE
 )
-ttest_temp
+ttest2
 ```
 
-Wow, the p-value of `r scales::comma(ttest_temp$p.value, accuracy = 0.001)` is greater than 0.05 (even 0.10), meaning we *fail* to reject the null hypothesis that the true mean difference is zero. That is, the mean difference between the field-measured volume and the predicted volume is not different than zero when both are forced to use the same paraboloid shape assumption. This contrasts sharply with the previously observed major systematic difference between the allometric field volume and the predicted irregular, CHM-derived volume. The non-significant difference strongly suggests that the major volume discrepancy noted earlier was primarily due to the geometric irregularity of the actual piles, and not to systematic prediction bias in our CHM-derived height and diameter measurements.
+Wow, the p-value of `r scales::comma(ttest2$p.value, accuracy = 0.001)` is greater than 0.05 (even 0.10), meaning we *fail* to reject the null hypothesis that the true mean difference is zero. That is, the mean difference between the field-measured volume and the predicted irregular CHM volume is not different than zero when both are forced to use the same paraboloid shape assumption. This contrasts sharply with the previously observed major systematic difference between the reference paraboloid volume and the predicted irregular, CHM-derived volume. The non-significant difference strongly suggests that the major volume discrepancy noted earlier was primarily due to the geometric irregularity of the actual piles, and not to systematic prediction bias in our CHM-derived height and diameter measurements.
+
+let's make a table to show the summary of paired t-test results comparing field-based reference volume to predicted volumes that separates the two distinct comparisons into their own sections to quickly see the impact of the geometric shape assumption versus the impact of the predicted height and diameter inputs
+
+```{r}
+dbscan_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp == "true positive") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(field_volume_m3, pred_volume_m3, pred_allom_volume_m3) %>% 
+  # dplyr::mutate(d = field_volume_m3-pred_volume_m3) %>% 
+  dplyr::summarise(dplyr::across(.cols = dplyr::everything(), ~mean(.x,na.rm=T))) %>% 
+  tidyr::pivot_longer(
+    cols = -c(field_volume_m3)
+  ) %>% 
+  dplyr::mutate(
+    md = ifelse( 
+        name=="pred_volume_m3"
+        , ttest1$estimate
+        , ttest2$estimate
+      ) %>% 
+      scales::comma(accuracy = 0.01)
+    , p = ifelse( 
+        name=="pred_volume_m3"
+        , ttest1$p.value
+        , ttest2$p.value
+      )
+    , p_pretty = dplyr::case_when(
+      p < 0.001 ~ "p < 0.001 ***"
+      , p < 0.01  ~ paste0("p = ", format(round(p, 3)), " **")
+      , p < 0.05  ~ paste0("p = ", format(round(p, 3)), " *")
+      , TRUE            ~ paste0("p = ", format(round(p, 3)), " (ns)") 
+    )
+    , name = dplyr::recode_values(
+      name
+      , "pred_volume_m3" ~ "Comparison 1:<br>Reference Paraboloid vs. Predicted Irregular CHM"
+      , "pred_allom_volume_m3" ~ "Comparison 2:<br>Reference Paraboloid vs. Predicted Paraboloid"
+    )
+    , dplyr::across(
+      .cols = dplyr::where(is.numeric)
+      , ~scales::comma(.x,accuracy=0.01)
+    )
+  ) %>% 
+  dplyr::relocate(name) %>% 
+  dplyr::select(-c(p)) %>% 
+  kableExtra::kbl(
+    caption = "comparison of field-measured paraboloid volumes to<br>predicted volumes from irregular CHM data<br>and simplified predicted paraboloid geometry"
+    , col.names = c(
+      "comparison"
+      , "Mean Reference Volume (m<sup>3</sup>)"
+      , "Mean Predicted Volume (m<sup>3</sup>)"
+      , "Mean Difference (m<sup>3</sup>)"
+      , "p-value"
+    )
+    , escape = F
+    # , digits = 2
+  ) %>% 
+  kableExtra::kable_styling()
+
+```
 
 ### Stand-level Aggregation
 

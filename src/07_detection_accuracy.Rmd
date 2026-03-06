@@ -940,7 +940,7 @@ comp_temp %>%
 # scales::percent(ttest_temp$estimate, accuracy = 0.1)
 ```
 
-the 95% HDI shown as the gray line below the posterior distribution summarizes the posterior draws to represent a density interval with a value of central tendency. We plot the median (`scales::percent(med_comp_temp$y,accuracy=0.1)`) as the value of central tendency of the difference in F-score between the two methods but we could also determine the mean difference which we calculated above using `tidybayes::mean_hdci()`. Our Bayesian approach estimates the mean difference in F-score between the two methods as `scales::percent(mean_comp_temp$y,accuracy=0.1)` which we can directly compare to the mean difference tested using the paired t-test above of `scales::percent(ttest_temp$estimate, accuracy = 0.1)`.
+the 95% HDI shown as the gray line below the posterior distribution summarizes the posterior draws to represent a density interval with a value of central tendency. We plot the median (`r scales::percent(med_comp_temp$y,accuracy=0.1)`) as the value of central tendency of the difference in F-score between the two methods but we could also determine the mean difference which we calculated above using `tidybayes::mean_hdci()`. Our Bayesian approach estimates the mean difference in F-score between the two methods as `r scales::percent(mean_comp_temp$y,accuracy=0.1)` which we can directly compare to the mean difference tested using the paired t-test above of `r scales::percent(ttest_temp$estimate, accuracy = 0.1)`.
 
 table the 95% HDI of the difference in F-score between the two methods
 
@@ -978,7 +978,7 @@ comp_temp <- comp_temp %>%
 mean(comp_temp$diff_gt_0) %>% scales::percent(accuracy = 0.1)
 ```
 
-There is a `scales::percent(mean(comp_temp$diff_gt_0),accuracy = 0.1)` probability that the DBSCAN method results in better slash pile detection accuracy (i.e. higher F-score) than the Watershed method
+There is a `r scales::percent(mean(comp_temp$diff_gt_0),accuracy = 0.1)` probability that the DBSCAN method results in better slash pile detection accuracy (i.e. higher F-score) than the Watershed method
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
