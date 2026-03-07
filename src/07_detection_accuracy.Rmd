@@ -1698,3 +1698,358 @@ all_stand_boundary$site_data_lab %>%
 remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
+
+## Figures for Manuscript
+
+let's make some figures specifically for the manuscript...these were tacked on after the analysis, so, sorry for the break in sequential flow in the analysis...
+
+* Figure 1: [study area maps](#data_load)
+* Figure 2: workflow diagram of proposed method in powerpoint? ;/
+
+### Figure 3
+
+let's zoom-in on a representative area in each of the four study sites to present detection results (TP, FP, and FN). this will allow users to "see" how the method performed and where it might have struggled
+
+do we have to manually define a sample area in each study site??? probably  :|
+
+```{r, include = F, eval = F}
+# define the aoi
+x_temp <-
+  slash_piles_polys$psinf %>% 
+      dplyr::filter(
+        pile_id %in% c(
+          84,80,77,78,92
+        ) # just need the outermost
+      ) %>%
+      sf::st_union() %>% 
+      sf::st_buffer(3) %>% 
+      sf::st_bbox() %>%
+      sf::st_as_sfc()
+mapview::mapview(
+  stand_boundary$psinf
+  , color = "black", lwd = 1, alpha.regions = 0, label = FALSE, popup = FALSE
+) +
+mapview::mapview(slash_piles_polys$psinf) +
+mapview::mapview(dbscan_spectral_preds$psinf, col.regions = "magenta") +
+mapview::mapview(
+  x_temp
+  , color = "red", alpha.regions = 0, lwd = 1.5
+)
+remove(list = ls()[grep("_temp",ls())])
+gc()
+
+```
+
+```{r}
+# manually define aoi
+example_aoi <- list(
+  "arnf" = 
+    dbscan_spectral_preds$arnf %>% 
+      dplyr::filter(
+        pred_id %in% c(8867,13476,10788) # just need the outermost
+      ) %>%
+      sf::st_union() %>% 
+      sf::st_buffer(30) %>% 
+      sf::st_bbox() %>%
+      sf::st_as_sfc() %>% 
+      sf::st_as_sf() %>% 
+    dplyr::mutate(dummy = 1)
+  , "bhef" = 
+    slash_piles_polys$bhef %>% 
+      dplyr::filter(
+        pile_id %in% c(
+          # 2,3,4 # for vert
+          18,19,20,21 # for horz
+        ) # just need the outermost
+      ) %>%
+      sf::st_union() %>% 
+      sf::st_buffer(20) %>% 
+      sf::st_bbox() %>%
+      sf::st_as_sfc() %>% 
+      sf::st_as_sf() %>% 
+    dplyr::mutate(dummy = 1)
+  , "psinf" = 
+    slash_piles_polys$psinf %>% 
+      dplyr::filter(
+        pile_id %in% c(
+          # 79, 88, 70 # equal l x w
+          84,80,77,78,92 # horz
+        ) # just need the outermost
+      ) %>%
+      sf::st_union() %>% 
+      sf::st_buffer(3) %>% 
+      sf::st_bbox() %>%
+      sf::st_as_sfc() %>% 
+      sf::st_as_sf() %>% 
+    dplyr::mutate(dummy = 1)
+  , "pj" = 
+    slash_piles_polys$pj %>% 
+      dplyr::filter(
+        pile_id %in% c(
+          155, 151, 39, 142, 84, 72 # include if want horz 
+          # , 40
+          # , 5, 6 # include in addition to ^ if want vert
+        ) # just need the outermost
+      ) %>%
+      sf::st_union() %>% 
+      sf::st_buffer(0.8) %>% 
+      sf::st_bbox() %>%
+      sf::st_as_sfc() %>% 
+      sf::st_as_sf() %>% 
+    dplyr::mutate(dummy = 1)
+)
+```
+
+what is the area of each?
+
+```{r}
+example_aoi %>% 
+  purrr::map_dfr(
+    \(x)
+    sf::st_area(x) %>% as.numeric()
+  ) %>% 
+  tidyr::pivot_longer(dplyr::everything()) %>% 
+  dplyr::mutate(value= scales::comma(value/10000, accuracy = 0.01)) %>% 
+  kableExtra::kbl(caption = "example AOI area", col.names = c("area short name", "hectares")) %>% 
+  kableExtra::kable_styling()
+```
+
+we could use our `ggplot2` based `ortho_plt_fn()` function to get the RGB basemap for the aoi which we'll overlay the reference and predictions on...
+
+...but the only reason to do this would be to use `patchwork` to create a tiled figure that combines all of the example areas from the four study sites. since we are already doing manual stuff, we're just going to generate the images using the fast-plotting of `terra`, save them, and then combine them in powerpoint (which will also be not much fun but maybe AI can align since it's AI and all?)
+
+```{r, results=F, fig.show='hide'}
+# high contrast pal
+# neon_colors <- c("cyan", "magenta", "gold", "royalblue")
+# neon_colors <- c("cyan", "darkorchid", "gold", "white")
+neon_colors <- c("cyan", "blue", "yellow", "white")
+# neon_colors <- c("cyan", "orange", "gold", "royalblue")
+# neon_colors <- c("cyan", "chartreuse", "firebrick", "deepskyblue")
+names(neon_colors) <- c("reference", "correct prediction (TP)", "incorrect detection (FP)", "omitted (FN)")
+terra_plt_gt_pred_match <- function(nm) {
+  # grDevices::jpeg("../data/psinf_stand_rgb.jpeg", width = 8, height = 8, units = "in", res = 300)
+  # mar = c(bottom, left, top, right)
+  rgb_temp <- rgb_rast[[nm]] %>% 
+    terra::crop(
+      example_aoi[[nm]] %>% terra::vect()
+    )
+  terra::plotRGB(rgb_temp) #, stretch = "lin") #, mar=c(2, 0.5, 3.5, 0.2))
+  # all reference piles 
+  gt_temp <- slash_piles_polys[[nm]] %>% 
+    dplyr::filter(is_in_stand) %>% 
+    sf::st_intersection(example_aoi[[nm]])
+  # dplyr::glimpse(gt_temp)
+  
+  # all pred piles 
+  pred_temp <- dbscan_spectral_preds[[nm]] %>% 
+    dplyr::filter(is_in_stand) %>% 
+    sf::st_intersection(example_aoi[[nm]])
+  # dplyr::glimpse(pred_temp)
+  ############################
+  # check for FN
+  ############################
+  fn_temp <-
+    gt_temp %>% 
+    dplyr::inner_join(
+      dbscan_gt_pred_match[[nm]] %>% 
+        dplyr::filter(match_grp == "omission") %>% 
+        dplyr::select(pile_id)
+      , by = "pile_id"
+    )
+  if(nrow(fn_temp)>0){
+    # add pile boundaries
+    terra::plot(
+      terra::vect(fn_temp)
+      , add = T
+      , border = neon_colors[4] # "royalblue"
+      , col = NA, lwd = 3.5
+    )  
+  }
+  ############################
+  # add GT
+  ############################
+  # add pile boundaries
+  terra::plot(
+    terra::vect(gt_temp)
+    , add = T
+    , border = neon_colors[1] # "cyan"
+    , col = NA, lwd = 1.2
+  )
+  ############################
+  # check for FP
+  ############################
+  fp_temp <-
+    pred_temp %>% 
+    dplyr::inner_join(
+      dbscan_gt_pred_match[[nm]] %>% 
+        dplyr::filter(match_grp == "commission") %>% 
+        dplyr::select(pred_id)
+      , by = "pred_id"
+    )
+  if(nrow(fp_temp)>0){
+    # add pile boundaries
+    terra::plot(
+      terra::vect(fp_temp)
+      , add = T
+      , border = neon_colors[3] # "gold"
+      , col = NA, lwd = 1.4
+    )  
+  }
+  ############################
+  # add TP
+  ############################
+  tp_temp <-
+    pred_temp %>% 
+    dplyr::inner_join(
+      dbscan_gt_pred_match[[nm]] %>% 
+        dplyr::filter(match_grp == "true positive") %>% 
+        dplyr::select(pred_id)
+      , by = "pred_id"
+    )
+  if(nrow(tp_temp)>0){
+    # add pile boundaries
+    terra::plot(
+      terra::vect(tp_temp)
+      , add = T
+      , border = neon_colors[2] # "magenta"
+      , col = NA, lwd = 1.4
+    )
+  }
+  # # main title top: "side = 3", line = 1
+  # mtext(
+  #   all_stand_boundary %>% 
+  #     sf::st_drop_geometry() %>% 
+  #     dplyr::filter(site_data_lab == nm) %>%
+  #     dplyr::pull(site_full_lab)
+  #   # "Pike and San Isabel National Forest (PSINF)"
+  #   , side = 3, line = 1.5, cex = 0.9, font = 2
+  # )
+  # # sub title top: "side = 3", line = 1
+  # mtext(
+  #   paste0(
+  #     all_stand_boundary %>% 
+  #     sf::st_drop_geometry() %>% 
+  #     dplyr::filter(site_data_lab == nm) %>% 
+  #     dplyr::mutate(
+  #       site_area_ha = scales::comma(site_area_ha, suffix = " ha treatment unit", accuracy = 0.1)
+  #     ) %>% 
+  #     dplyr::pull(site_area_ha)
+  #     , " | "
+  #     , psinf_slash_piles_polys %>% dplyr::filter(is_in_stand) %>% nrow() %>% scales::comma(accuracy = 1, suffix = " validation slash piles")
+  #   )
+  #   , side = 3, line = 0.5, cex = 0.7
+  # )
+  # 5. Add scale and north arrow
+  e_temp <- terra::ext(rgb_temp)
+  # 3. Define a position BELOW the minimum Y-coordinate (ymin)
+  # Subtracting a small value moves it into the bottom margin
+  scale_x_temp <- e_temp$xmin
+  scale_y_temp <- e_temp$ymin - ( (e_temp$ymax - e_temp$ymin) * 0.025 ) # 8% below the image
+  # ?terra::sbar
+  # have to define the scale bar distance
+  clean_d_temp <- ceiling((terra::ncol(rgb_temp)*terra::res(rgb_temp)[1]*0.10)/10)*10
+  terra::sbar(
+    d = clean_d_temp
+    , xy = "bottomright"
+    # , xy = c(scale_x_temp, scale_y_temp)
+    , type = "bar"
+    , divs = 5
+    , below = "meters"
+    , labels = c(0, round(clean_d_temp/2), clean_d_temp)
+    , adj = c(0.5, -1.5) # adjust label pos c(horz,vert)
+    , cex = 0.45
+    # , xpd = T
+  )
+  # # terra::north(xy = "topright", type = 1, cex = 0.6)
+  # grDevices::dev.off()
+  # Capture the plot as an object
+  grDevices::recordPlot()
+}
+# do it
+example_aoi_plt <- 
+  all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(terra_plt_gt_pred_match)
+```
+
+```{r, include=FALSE, eval=FALSE}
+basemap_aoi <- 
+  all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(
+    \(x)
+    ortho_plt_fn(
+      rgb_rast = rgb_rast[[x]]
+      , stand = example_aoi[[x]]
+      , add_stand = F
+      , buffer = 0
+    )
+  )
+ggsave("c:/Users/georg/Downloads/xxx.jpeg", width = 9, height = 5, dpi = 300)
+```
+
+save a color palette for future use
+
+```{r, fig.height=2, fig.width=6.6}
+# scales::show_col(neon_colors)
+# custom ggplot
+neon_colors %>% 
+  tibble::enframe() %>% 
+  dplyr::mutate(
+    x=dplyr::row_number()
+    , y = 1
+    # x = rep(c(0,1),2)
+    # , y = c(0,0,1,1)
+    , zzz = c("black","white","black","black")
+  ) %>% 
+  ggplot2::ggplot(neon_data, mapping = ggplot2::aes(x = x, y = y, fill = value)) +
+  ggplot2::geom_tile(color = "gray", lwd = 1) +
+  ggplot2::geom_text(mapping = ggplot2::aes(label = name, color = zzz), fontface = "bold", size = 3) +
+  ggplot2::scale_fill_identity() +
+  ggplot2::scale_color_identity() +
+  ggplot2::theme_void() +
+  ggplot2::theme(aspect.ratio = 0.2)
+```
+
+```{r, include=FALSE, eval=TRUE}
+ggplot2::ggsave("../data/legend_example_aoi.jpeg", width = 6.6, height = 2, units = "in", dpi = 300)
+```
+
+plot them one at a time with custom sizes
+
+#### ARNF
+
+```{r, fig.height= 4, fig.width=8}
+# names(example_aoi_plt)
+# grDevices::jpeg("../data/arnf_example_aoi.jpeg", width = 8, height = 4, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt[["arnf"]])
+# grDevices::dev.off()
+```
+
+#### BHEF
+
+```{r, fig.height= 4.5, fig.width=8}
+# names(example_aoi_plt)
+# grDevices::jpeg("../data/bhef_example_aoi.jpeg", width = 8, height = 4.5, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt[["bhef"]])
+# grDevices::dev.off()
+```
+
+#### PSINF
+
+```{r, fig.height= 4, fig.width=8}
+# names(example_aoi_plt)
+# grDevices::jpeg("../data/psinf_example_aoi.jpeg", width = 8, height = 4, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt[["psinf"]])
+# grDevices::dev.off()
+```
+
+#### TRFO-BLM
+
+```{r, fig.height= 4.5, fig.width=8}
+# names(example_aoi_plt)
+# grDevices::jpeg("../data/pj_example_aoi.jpeg", width = 8, height = 4.5, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt[["pj"]])
+# grDevices::dev.off()
+```
+

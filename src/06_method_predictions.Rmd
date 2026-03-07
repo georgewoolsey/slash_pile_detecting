@@ -132,6 +132,7 @@ all_stand_boundary %>%
   dplyr::select(-c(
     tidyselect::starts_with("site_area")
     , site_data_lab
+    , site_full_lab
   )) %>% 
   tidyr::pivot_longer(cols=-site) %>% 
   dplyr::mutate(
