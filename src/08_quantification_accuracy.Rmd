@@ -79,7 +79,7 @@ df_temp <-
     )
     , dplyr::across(
       .cols = c(tidyselect::ends_with("_rmse"))
-      , .fn = ~ scales::comma(.x, accuracy = 0.1)
+      , .fn = ~ scales::comma(.x, accuracy = 0.01)
     )
   )
   # dplyr::glimpse()
@@ -676,6 +676,191 @@ sum_df_temp %>%
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 gc()
+```
+
+### Manuscript Figure Addition
+
+#### Figure 4
+
+```{r, include=F, eval=F}
+####################################
+# height scatter
+####################################
+# # get prediction for r2
+# lm_temp <- lm(
+#   pred_height_m ~ field_height_m
+#   , data = 
+#     dbscan_gt_pred_match[["psinf"]] %>% 
+#     dplyr::filter(match_grp=="true positive")
+# )
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+# agg_ground_truth_match_ans %>% dplyr::glimpse()
+# agg_ground_truth_match_ans %>% dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% dplyr::pull(diff_field_height_m_rmse)
+height_comp_scatter1 <-
+  dbscan_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_height_m, x = field_height_m)) +
+  ggplot2::geom_abline(lwd = 1.5) +
+  # ggplot2::geom_point(ggplot2::aes(color = diff_volume_m3)) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2.5) +
+  ggplot2::geom_smooth(method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      # paste0(
+      #   "R^2 == "
+      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      #   , "*'%'"
+      # )
+      paste0(
+        "RMSE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(diff_field_height_m_rmse) %>% 
+          scales::number(accuracy = 0.01, suffix = " (m)")
+        , "\n MAPE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(pct_diff_field_height_m_mape) %>% 
+          scales::percent(accuracy = 0.1)
+      )
+    , hjust = -0.2, vjust = 1.5
+    , parse = F
+  ) +
+  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) ) )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) ) )) +
+  ggplot2::labs(
+    x = "reference height (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = "predicted height (m)" # latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "B: Predicted Height versus Reference Height"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(plot.subtitle = ggplot2::element_text(face = "bold"))
+# height_comp_scatter1
+####################################
+# diameter scatter
+####################################
+# # get prediction for r2
+# lm_temp <- lm(
+#   pred_diameter_m ~ field_diameter_m
+#   , data = 
+#     dbscan_gt_pred_match[["psinf"]] %>% 
+#     dplyr::filter(match_grp=="true positive")
+# )
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+diameter_comp_scatter1 <-
+  dbscan_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_diameter_m, x = field_diameter_m)) +
+  ggplot2::geom_abline(lwd = 1.5) +
+  # ggplot2::geom_point(ggplot2::aes(color = diff_volume_m3)) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2.5) +
+  ggplot2::geom_smooth(method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      # paste0(
+      #   "R^2 == "
+      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      #   , "*'%'"
+      # )
+      paste0(
+        "RMSE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(diff_field_diameter_m_rmse) %>% 
+          scales::number(accuracy = 0.01, suffix = " (m)")
+        , "\n MAPE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(pct_diff_diameter_m_mape) %>% 
+          scales::percent(accuracy = 0.1)
+      )
+    , hjust = -0.2, vjust = 1.5
+    , parse = F
+  ) +
+  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
+  ggplot2::labs(
+    x = "reference height (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = "predicted height (m)" # latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "A: Predicted Diameter versus Reference Diameter"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(plot.subtitle = ggplot2::element_text(face = "bold"))
+# diameter_comp_scatter1
+####################################
+# area scatter
+####################################
+dbscan_gt_pred_match %>% 
+  purrr::imap(
+    \(x,nm) 
+    dplyr::filter(x,match_grp=="true positive") %>% 
+    dplyr::mutate(site_data_lab = nm)
+  )%>% 
+  dplyr::bind_rows() %>% 
+  dplyr::left_join(
+    agg_ground_truth_match_ans %>% 
+      dplyr::filter(tolower(method)=="dbscan") %>% 
+      dplyr::select(site_data_lab, diff_area_m2_rmse, pct_diff_area_m2_mape)
+  ) %>% 
+  dplyr::inner_join(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  # dplyr::glimpse()
+
+  
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_diameter_m, x = field_diameter_m)) +
+  ggplot2::geom_abline(lwd = 1.5) +
+  # ggplot2::geom_point(ggplot2::aes(color = diff_volume_m3)) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2.5) +
+  ggplot2::geom_smooth(method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      # paste0(
+      #   "R^2 == "
+      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      #   , "*'%'"
+      # )
+      paste0(
+        "RMSE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(diff_field_diameter_m_rmse) %>% 
+          scales::number(accuracy = 0.01, suffix = " (m)")
+        , "\n MAPE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
+          dplyr::pull(pct_diff_diameter_m_mape) %>% 
+          scales::percent(accuracy = 0.1)
+      )
+    , hjust = -0.2, vjust = 1.5
+    , parse = F
+  ) +
+  ggplot2::scale_color_viridis_c(option = "mako", direction = -1, alpha = 0.8) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
+  ggplot2::labs(
+    x = "reference height (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = "predicted height (m)" # latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "A: Predicted Diameter versus Reference Diameter"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(plot.subtitle = ggplot2::element_text(face = "bold"))
 ```
 
 ## Volume Comparison{#vol_comp}
