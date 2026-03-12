@@ -1509,11 +1509,11 @@ p_temp <- aoi_plt_ortho +
     data = 
     slash_pile_detect_spec_filt_temp$segs_sf %>% 
       dplyr::filter(inrange_th_votes<5) %>% 
+      sf::st_buffer(0.3) %>% 
       st_bbox_by_row(corner="full",dimensions = F) %>% 
-      sf::st_buffer(0.4) %>% 
       sf::st_transform(terra::crs(aoi_rgb_rast))
     , fill = "black", color = "red"
-    , alpha = 0.15
+    , alpha = 0.3
   ) +
   ggplot2::theme(legend.position = "none")
 

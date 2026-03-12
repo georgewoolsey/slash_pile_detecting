@@ -1089,7 +1089,7 @@ plt_aoi_chm(aoi_chm_rast_slice) +
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-p_temp <- plt_aoi_chm(aoi_chm_rast_slice) +
+p_hrrr <- plt_aoi_chm(aoi_chm_rast_slice) +
   ggplot2::geom_sf(
     data = aoi_slash_piles_polys
     , fill = NA, color = "cyan", lwd = 0.4
@@ -1104,7 +1104,7 @@ p_temp <- plt_aoi_chm(aoi_chm_rast_slice) +
       dplyr::filter(sf::st_is_valid(.))
     , fill = NA, color = "magenta", lwd = 0.4
   ) + ggplot2::theme(legend.position = "none")
-ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_05_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
+ggplot2::ggsave(plot = p_hrrr, filename = "../data/workflow_ex_05_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
 ```
 
 nice...we are getting close.
@@ -2127,12 +2127,134 @@ p_temp <- plt_aoi_chm(aoi_chm_rast_slice) +
     , fill = NA, color = "magenta", lwd = 0.4
   ) + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot = p_temp, filename = "../data/workflow_ex_06_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
+
+#### highlight removals #################
+st_bbox_by_row <- function(
+  df
+  , corner = NA # ul,ll,ur,lr,full
+  , dimensions = T
+) {
+  if(!inherits(df,"sf")){stop("must be sf class object")}
+  # corner
+  corner <- dplyr::coalesce(corner,"") %>% tolower()
+  
+  nd <- df %>% 
+    sf::st_set_geometry("geometry") %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(
+      xmin_temp = sf::st_bbox(geometry)[1]
+      , ymin_temp = sf::st_bbox(geometry)[2]
+      , xmax_temp = sf::st_bbox(geometry)[3]
+      , ymax_temp = sf::st_bbox(geometry)[4]
+    )
+
+  if(corner == "ul"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmin_temp","ymax_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "ll"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmin_temp","ymin_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "ur"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmax_temp","ymax_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "lr"){
+    ret_d <- nd %>% 
+      sf::st_drop_geometry() %>% 
+      sf::st_as_sf(
+        coords = c("xmax_temp","ymin_temp")
+        , remove = F
+        , crs = sf::st_crs(df)
+      ) %>% 
+      dplyr::ungroup()
+  }else if(corner == "full"){
+    ret_d <- nd %>% 
+      dplyr::mutate(
+        geometry = sf::st_sfc(
+            sf::st_point(c(xmin_temp,ymin_temp)) # lower_left_pt
+            , sf::st_point(c(xmax_temp,ymax_temp)) # upper_right_pt
+          ) %>% 
+          sf::st_bbox() %>% 
+          sf::st_as_sfc()
+      ) %>%
+      dplyr::ungroup() %>%
+      sf::st_set_geometry("geometry") %>%
+      sf::st_set_crs(sf::st_crs(df))
+  }else{
+    ret_d <- nd %>% dplyr::ungroup()
+  }
+  
+  # length/width
+  if(dimensions){
+    ret_d <- ret_d %>% 
+      dplyr::rowwise() %>% 
+      dplyr::mutate(
+        # calc dimensions
+        xdiff_temp = xmax_temp-xmin_temp
+        , ydiff_temp = ymax_temp-ymin_temp
+        , shape_length = max(xdiff_temp,ydiff_temp,na.rm = T)
+        , shape_width = min(xdiff_temp,ydiff_temp,na.rm = T)
+      ) %>% 
+      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp,xdiff_temp,ydiff_temp)) %>% 
+      dplyr::ungroup()
+  }else{
+    ret_d <- ret_d %>% 
+      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp))
+  }
+  
+  return(ret_d)
+}
+
+p_hrrr <-
+  p_hrrr +
+  ggplot2::geom_sf(
+    data = 
+      dbscan_segs %>% 
+      terra::as.polygons(round = F, aggregate = T, values = T, extent = F, na.rm = T) %>% 
+      setNames("pred_id") %>%
+      sf::st_as_sf() %>% 
+      sf::st_simplify() %>% 
+      sf::st_make_valid() %>% 
+      dplyr::filter(sf::st_is_valid(.)) %>% 
+      # dplyr::glimpse()
+      dplyr::anti_join(
+        dbscan_segs_poly %>% 
+        sf::st_drop_geometry()
+        , by = "pred_id"
+      ) %>% 
+      # dplyr::glimpse()
+      sf::st_buffer(0.2) %>% 
+      st_bbox_by_row(corner="full",dimensions = F)
+      
+    , fill = "black", color = "red"
+    , alpha = 0.35
+    # , lwd = 0.3
+  )  + ggplot2::theme(legend.position = "none")
+ggplot2::ggsave(plot = p_hrrr, filename = "../data/workflow_ex_0600_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
 ```
 
 nice...we are getting closer.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
+remove(p_hrrr)
 gc()
 ```
 
@@ -2469,98 +2591,6 @@ dplyr::tibble(
 ```
 
 ```{r, include=FALSE,eval=TRUE}
-st_bbox_by_row <- function(
-  df
-  , corner = NA # ul,ll,ur,lr,full
-  , dimensions = T
-) {
-  if(!inherits(df,"sf")){stop("must be sf class object")}
-  # corner
-  corner <- dplyr::coalesce(corner,"") %>% tolower()
-  
-  nd <- df %>% 
-    sf::st_set_geometry("geometry") %>% 
-    dplyr::rowwise() %>% 
-    dplyr::mutate(
-      xmin_temp = sf::st_bbox(geometry)[1]
-      , ymin_temp = sf::st_bbox(geometry)[2]
-      , xmax_temp = sf::st_bbox(geometry)[3]
-      , ymax_temp = sf::st_bbox(geometry)[4]
-    )
-
-  if(corner == "ul"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmin_temp","ymax_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "ll"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmin_temp","ymin_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "ur"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmax_temp","ymax_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "lr"){
-    ret_d <- nd %>% 
-      sf::st_drop_geometry() %>% 
-      sf::st_as_sf(
-        coords = c("xmax_temp","ymin_temp")
-        , remove = F
-        , crs = sf::st_crs(df)
-      ) %>% 
-      dplyr::ungroup()
-  }else if(corner == "full"){
-    ret_d <- nd %>% 
-      dplyr::mutate(
-        geometry = sf::st_sfc(
-            sf::st_point(c(xmin_temp,ymin_temp)) # lower_left_pt
-            , sf::st_point(c(xmax_temp,ymax_temp)) # upper_right_pt
-          ) %>% 
-          sf::st_bbox() %>% 
-          sf::st_as_sfc()
-      ) %>%
-      dplyr::ungroup() %>%
-      sf::st_set_geometry("geometry") %>%
-      sf::st_set_crs(sf::st_crs(df))
-  }else{
-    ret_d <- nd %>% dplyr::ungroup()
-  }
-  
-  # length/width
-  if(dimensions){
-    ret_d <- ret_d %>% 
-      dplyr::rowwise() %>% 
-      dplyr::mutate(
-        # calc dimensions
-        xdiff_temp = xmax_temp-xmin_temp
-        , ydiff_temp = ymax_temp-ymin_temp
-        , shape_length = max(xdiff_temp,ydiff_temp,na.rm = T)
-        , shape_width = min(xdiff_temp,ydiff_temp,na.rm = T)
-      ) %>% 
-      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp,xdiff_temp,ydiff_temp)) %>% 
-      dplyr::ungroup()
-  }else{
-    ret_d <- ret_d %>% 
-      dplyr::select(-c(xmin_temp,ymin_temp,xmax_temp,ymax_temp))
-  }
-  
-  return(ret_d)
-}
 # plotting
 p_temp <-
   plt_aoi_chm(aoi_chm_rast_slice) +
@@ -2584,10 +2614,10 @@ p_temp <-
         dplyr::filter(convexity_ratio<min_convexity_ratio)
         , by = "pred_id"
       ) %>% 
-      st_bbox_by_row(corner="full",dimensions = F) %>% 
-      sf::st_buffer(0.4)
+      sf::st_buffer(0.35) %>% 
+      st_bbox_by_row(corner="full",dimensions = F)
     , fill = "black", color = "red"
-    , alpha = 0.15
+    , alpha = 0.35
     # , lwd = 0.3
   )  + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_0700_chm_watershed_cnddts.jpg", height = 8, width = 4.6)
@@ -2614,10 +2644,10 @@ p_temp <-
         dplyr::filter(convexity_ratio<min_convexity_ratio)
         , by = "pred_id"
       ) %>% 
-      st_bbox_by_row(corner="full",dimensions = F) %>% 
-      sf::st_buffer(0.4)
+      sf::st_buffer(0.35) %>% 
+      st_bbox_by_row(corner="full",dimensions = F)
     , fill = "black", color = "red"
-    , alpha = 0.15
+    , alpha = 0.35
     # , lwd = 0.3
   )  + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_0700_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
@@ -3122,10 +3152,10 @@ p_temp <-
         dplyr::filter(circularity_ratio<min_circularity_ratio)
         , by = "pred_id"
       ) %>% 
-      st_bbox_by_row(corner="full",dimensions = F) %>% 
-      sf::st_buffer(0.4)
+      sf::st_buffer(0.3) %>% 
+      st_bbox_by_row(corner="full",dimensions = F)
     , fill = "black", color = "red"
-    , alpha = 0.15
+    , alpha = 0.35
     # , lwd = 0.3
   )  + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_0800_chm_watershed_cnddts.jpg", height = 8, width = 4.6)
@@ -3152,10 +3182,10 @@ p_temp <-
         dplyr::filter(circularity_ratio<min_circularity_ratio)
         , by = "pred_id"
       ) %>% 
-      st_bbox_by_row(corner="full",dimensions = F) %>% 
-      sf::st_buffer(0.4)
+      sf::st_buffer(0.3) %>% 
+      st_bbox_by_row(corner="full",dimensions = F)
     , fill = "black", color = "red"
-    , alpha = 0.15
+    , alpha = 0.35
     # , lwd = 0.3
   )  + ggplot2::theme(legend.position = "none")
 ggplot2::ggsave(plot=p_temp,filename = "../data/workflow_ex_0800_chm_dbscan_cnddts.jpg", height = 8, width = 4.6)
