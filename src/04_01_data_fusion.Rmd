@@ -455,7 +455,7 @@ gc()
 
 here is a plot of the different spectral indices (high values are brighter, low values are darker) on our example area we were working with in the last section with the demonstration piles in blue
 
-```{r,eval=T,purl=FALSE, fig.height=9.2}
+```{r,eval=F,purl=FALSE, fig.height=9.2}
 all_rgb_indices_rast %>% 
   terra::plot(
     nc = 3
@@ -747,7 +747,7 @@ that's interesting. compare those values with the thresholds identified in the r
 
 here is a plot of the median value of the different spectral indices (high values are brighter, low values are darker) within the bounds of the pile on our example area we were working with in the last section
 
-```{r,eval=T,purl=FALSE, fig.height=9.2}
+```{r,eval=F,purl=FALSE, fig.height=9.2}
 polys_temp <-
   rgb_indices_df %>% 
   sf::st_transform(sf::st_crs(aoi_boundary)) %>% 
@@ -841,7 +841,7 @@ patchwork::wrap_plots(
 )
 ```
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 ggplot2::ggsave("../data/rast_agg.jpeg", height = 9.2, width = 10.5)
 ```
 
@@ -1365,7 +1365,7 @@ terra::plot(
 )
 ```
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 p_temp <- aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
@@ -1493,7 +1493,7 @@ terra::plot(
 
 in this demonsration area, the spectral filtering of our data fusion approach successfully filtered the structurally detected candidate piles that were clearly lower parts of trees (clearly green in the RGB). however, the spectral filtering failed to remove some false positive predictions that were shadowed in the RGB imagery. a positive result, though, was that the spectral filtering stage did not remove any true positive predictions.
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 p_temp <- aoi_plt_ortho +
   ggplot2::geom_sf(data = aoi_boundary, fill = NA, color = "black", lwd = 0.8) +
   ggplot2::geom_sf(
