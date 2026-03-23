@@ -1281,7 +1281,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the TP matches
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # max piles per site
 nplts_temp <- 12
 # dbscan
@@ -1328,7 +1328,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1350,7 +1350,7 @@ purrr::map(
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1371,7 +1371,7 @@ purrr::map(
 
 Check out the plots for the omissions (FN)
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1416,7 +1416,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1437,7 +1437,7 @@ purrr::map(
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1458,7 +1458,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -1556,7 +1556,7 @@ all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the commissions (FP)
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1601,7 +1601,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1622,7 +1622,7 @@ purrr::map(
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1643,7 +1643,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(
@@ -1862,7 +1862,7 @@ terra_plt_gt_pred_match <- function(nm) {
       terra::vect(fn_temp)
       , add = T
       , border = neon_colors[4] # "royalblue"
-      , col = NA, lwd = 3.5
+      , col = NA, lwd = 5
     )  
   }
   ############################
@@ -1873,7 +1873,7 @@ terra_plt_gt_pred_match <- function(nm) {
     terra::vect(gt_temp)
     , add = T
     , border = neon_colors[1] # "cyan"
-    , col = NA, lwd = 1.2
+    , col = NA, lwd = 2
   )
   ############################
   # check for FP
@@ -1892,7 +1892,7 @@ terra_plt_gt_pred_match <- function(nm) {
       terra::vect(fp_temp)
       , add = T
       , border = neon_colors[3] # "gold"
-      , col = NA, lwd = 1.4
+      , col = NA, lwd = 2
     )  
   }
   ############################
@@ -1912,7 +1912,7 @@ terra_plt_gt_pred_match <- function(nm) {
       terra::vect(tp_temp)
       , add = T
       , border = neon_colors[2] # "magenta"
-      , col = NA, lwd = 1.4
+      , col = NA, lwd = 1.8
     )
   }
   # # main title top: "side = 3", line = 1
@@ -2000,11 +2000,16 @@ neon_colors %>%
     , y = 1
     # x = rep(c(0,1),2)
     # , y = c(0,0,1,1)
+    , name = stringr::str_wrap(name, width = 9)
     , zzz = c("black","white","black","black")
   ) %>% 
   ggplot2::ggplot(neon_data, mapping = ggplot2::aes(x = x, y = y, fill = value)) +
   ggplot2::geom_tile(color = "gray", lwd = 1) +
-  ggplot2::geom_text(mapping = ggplot2::aes(label = name, color = zzz), fontface = "bold", size = 3) +
+  ggplot2::geom_text(
+    mapping = ggplot2::aes(label = name, color = zzz)
+    , fontface = "bold"
+    , size = 6
+  ) +
   ggplot2::scale_fill_identity() +
   ggplot2::scale_color_identity() +
   ggplot2::theme_void() +

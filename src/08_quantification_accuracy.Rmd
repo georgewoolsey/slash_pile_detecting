@@ -688,18 +688,29 @@ gc()
 
 #### Figure 4
 
+Predicted versus reference values for the correctly detected slash piles (a) diameter and (b) height for the PSINF study site and (c) 2D area for all four study sites. The solid dark line represents a 1:1 relationship while the gray dashed line indicates a simple linear regression fit.
+
 ```{r, results=F}
 ####################################
 # height scatter
 ####################################
 # # get prediction for r2
-# lm_temp <- lm(
-#   pred_height_m ~ field_height_m
-#   , data = 
-#     dbscan_gt_pred_match[["psinf"]] %>% 
-#     dplyr::filter(match_grp=="true positive")
-# )
+lm_temp <- lm(
+  pred_height_m ~ field_height_m
+  , data =
+    dbscan_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+# summary(lm_temp)
 # scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+# summary(lm_temp) %>% names()
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
 # agg_ground_truth_match_ans %>% dplyr::glimpse()
 # agg_ground_truth_match_ans %>% dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% dplyr::pull(diff_field_height_m_rmse)
 height_comp_scatter1 <-
@@ -719,11 +730,6 @@ height_comp_scatter1 <-
     "text", 
     x = -Inf, y = Inf # Top Left
     , label = 
-      # paste0(
-      #   "R^2 == "
-      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
-      #   , "*'%'"
-      # )
       paste0(
         "RMSE = "
         , agg_ground_truth_match_ans %>% 
@@ -735,13 +741,18 @@ height_comp_scatter1 <-
           dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
           dplyr::pull(pct_diff_field_height_m_mape) %>% 
           scales::percent(accuracy = 0.1)
+        , "\n"
+        , lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
       )
     , hjust = -0.1, vjust = 1.1
     , parse = F
-    , size = 3
+    , size = 3.5
   ) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) ) )) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) )*1.02 )) +
   ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
   ggplot2::labs(
     x = "reference height (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
@@ -759,15 +770,24 @@ height_comp_scatter1 <-
 ####################################
 # diameter scatter
 ####################################
-# # get prediction for r2
-# lm_temp <- lm(
-#   pred_diameter_m ~ field_diameter_m
-#   , data = 
-#     dbscan_gt_pred_match[["psinf"]] %>% 
-#     dplyr::filter(match_grp=="true positive")
-# )
+# get prediction for r2
+lm_temp <- lm(
+  pred_diameter_m ~ field_diameter_m
+  , data =
+    dbscan_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+# summary(lm_temp)
 # scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
-agg_ground_truth_match_ans %>% dplyr::glimpse()
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
+
+# agg_ground_truth_match_ans %>% dplyr::glimpse()
 diameter_comp_scatter1 <-
   dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::filter(match_grp=="true positive") %>% 
@@ -801,13 +821,18 @@ diameter_comp_scatter1 <-
           dplyr::filter(site_data_lab=="psinf", tolower(method)=="dbscan") %>% 
           dplyr::pull(pct_diff_field_diameter_m_mape) %>% 
           scales::percent(accuracy = 0.1)
+        , "\n"
+        , lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
       )
     , hjust = -0.1, vjust = 1.1
     , parse = F
-    , size = 3
+    , size = 3.5
   ) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) ) )) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) )*1.02 )) +
   ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
   ggplot2::labs(
     x = "reference diameter (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
@@ -852,6 +877,20 @@ plts_temp <-
   purrr::map(function(x){
     d <- dta_temp %>% 
       dplyr::filter(site_data_lab==x)
+    lm_temp <- lm(
+      pred_area_m2 ~ gt_area_m2
+      , data = d
+    )
+    # summary(lm_temp)
+    # scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+    lmf_temp <- paste0(
+      "y = "
+      , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+      , "x"
+      , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+      , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+    )
+    # plot
     d %>% 
       ggplot2::ggplot(mapping = ggplot2::aes(y = pred_area_m2, x = gt_area_m2)) +
       ggplot2::geom_abline(color = "gray33", lwd = 1) +
@@ -872,15 +911,20 @@ plts_temp <-
               dplyr::slice(1) %>% 
               dplyr::pull(diff_area_m2_rmse) %>% 
               scales::number(accuracy = 0.1, suffix = " (m²)")
-            , "\n MAPE = "
+            , "\nMAPE = "
             , d %>% 
               dplyr::slice(1) %>% 
               dplyr::pull(pct_diff_area_m2_mape) %>% 
               scales::percent(accuracy = 0.1)
+            , "\n"
+            , lmf_temp
+            , "\n R² = "
+            # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+            , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
           )
         , hjust = -0.1, vjust = 1.1
         , parse = F
-        , size = 2.5
+        , size = 3
       ) +
       ggplot2::facet_wrap(
         facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all"
@@ -900,8 +944,11 @@ plts_temp <-
         strip.text = ggplot2::element_text(face = "bold", color = "black")
       ) 
   })
+```
 
-a_temp <- patchwork::wrap_plots(plts_temp, nrow = 1) + 
+
+```{r, results=F}
+a_temp <- patchwork::wrap_plots(plts_temp, ncol = 2) + 
   # ggplot2::labs(subtitle = "C: Predicted Area versus Reference Area") +
   # ggplot2::theme(plot.subtitle = ggplot2::element_text(face = "bold", hjust = 0.5))
   patchwork::plot_annotation(
@@ -909,8 +956,8 @@ a_temp <- patchwork::wrap_plots(plts_temp, nrow = 1) +
     , theme = ggplot2::theme(plot.subtitle = ggplot2::element_text(face = "bold"))
   ) &
   ggplot2::theme(
-    axis.title = ggplot2::element_text(size = 6)
-    , axis.text = ggplot2::element_text(size = 6)
+    axis.title = ggplot2::element_text(size = 7)
+    , axis.text = ggplot2::element_text(size = 7)
   )
 # a_temp
 # c(
@@ -931,13 +978,13 @@ p_temp <- patchwork::wrap_plots(
     # t, l, b , r 
     patchwork::area(1, 1)
     , patchwork::area(1,2)
-    , patchwork::area(2,1,2,2)
+    , patchwork::area(2,1,3,2)
     # , patchwork::area(3,1,3,2)
   )
 ) &
 ggplot2::theme(
-  axis.title = ggplot2::element_text(size = 6)
-  , axis.text = ggplot2::element_text(size = 6)
+  axis.title = ggplot2::element_text(size = 7)
+  , axis.text = ggplot2::element_text(size = 7)
 )
 
   
@@ -950,7 +997,39 @@ p_temp
 ```
 
 ```{r, results=F, include=F, eval=T}
-ggplot2::ggsave("../data/all_comp_scatter.jpeg", height = 8, width = 10, dpi = 300)
+ggplot2::ggsave("../data/all_comp_scatter.jpeg", plot = p_temp, height = 9.9, width = 8.5, dpi = 300)
+```
+
+```{r, results=F, include=F, eval=F}
+class(diameter_comp_scatter1)
+patchwork::wrap_plots(
+  c(
+    list(
+      diameter_comp_scatter1, height_comp_scatter1
+    )
+    , plts_temp
+  )
+  , ncol = 2
+  # , design = c(
+  #   # t, l, b , r 
+  #   patchwork::area(1, 1)
+  #   , patchwork::area(1,2)
+  #   , patchwork::area(2,1,3,2)
+  #   # , patchwork::area(3,1,3,2)
+  # )
+) 
+&
+ggplot2::theme(
+  axis.title = ggplot2::element_text(size = 7)
+  , axis.text = ggplot2::element_text(size = 7)
+  , plot.title = ggplot2::element_blank()
+  , plot.subtitle = ggplot2::element_blank()
+) 
++
+patchwork::plot_annotation(
+    tag_levels = list(c("Step 1", "Step 2", "Final"))
+  )
+ggplot2::ggsave("../data/all_comp_scatter2.jpeg", plot = p_temp, height = 9.9, width = 8.5, dpi = 300)
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}

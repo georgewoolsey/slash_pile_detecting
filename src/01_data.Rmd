@@ -79,7 +79,7 @@ pal_eval_metric2 <- c(
 all_agg_ground_truth_match_ans_fp <- file.path("../data/","all_agg_ground_truth_match_ans.gpkg")
 
 # run RGB plotting
-# rgb_plotting_switch <- "```{r,eval=T,purl=FALSE"
+# rgb_plotting_switch <- "```{r,eval=F,purl=FALSE"
 ```
 
 ## Study Units Vector Data
@@ -206,6 +206,137 @@ mapview::mapview(
 )
 ```
 
+```{r, include=FALSE, eval=FALSE}
+facts_temp <- "c:/Users/georg/Downloads/Actv_TimberHarvest.gdb/Actv_TimberHarvest.gdb/"
+facts_temp <- sf::st_read(
+  dsn = facts_temp
+  , layer = sf::st_layers(facts_temp)[[1]]
+)
+facts_temp <- facts_temp %>% 
+  dplyr::rename_with(tolower) %>% 
+  dplyr::filter(
+    tolower(stage_desc) == "accomplished"
+    , !is.na(date_completed)
+    , date_completed >= lubridate::today() - lubridate::years(8)
+  ) %>% 
+  dplyr::filter(!sf::st_is_empty(.)) %>%
+  dplyr::filter(sf::st_is_valid(.)) %>%
+  sf::st_make_valid() %>%
+  sf::st_simplify() %>%
+  dplyr::filter(!sf::st_is_empty(.)) %>%
+  dplyr::filter(sf::st_is_valid(.)) %>%
+  sf::st_transform(sf::st_crs(all_stand_boundary))
+
+facts_temp %>% sf::st_drop_geometry() %>% dplyr::count(stage_desc)
+dplyr::glimpse(facts_temp)
+all_stand_boundary %>% 
+  sf::st_centroid() %>% 
+  dplyr::select(site) %>% 
+  sf::st_intersection(facts_temp)
+
+ft_temp <- "c:/Users/georg/Downloads/Actv_HazFuelTrt_PL.gdb/Actv_HazFuelTrt_PL.gdb/"
+ft_temp <- sf::st_read(
+  dsn = ft_temp
+  , layer = sf::st_layers(ft_temp)[[1]]
+)
+ft_temp <-
+  ft_temp %>% 
+  dplyr::rename_with(tolower) %>% 
+  dplyr::filter(
+    tolower(cat_nm) != "fire"
+    , tolower(stage_value) == "accomplished"
+    , !is.na(date_completed)
+    , date_completed >= lubridate::today() - lubridate::years(8)
+  ) %>% 
+  dplyr::filter(!sf::st_is_empty(.)) 
+sf::sf_use_s2(F)
+ft_temp <-
+  ft_temp %>%
+  dplyr::filter(!sf::st_is_empty(.)) %>%
+  dplyr::filter(sf::st_is_valid(.)) %>%
+  sf::st_make_valid() %>%
+  sf::st_simplify() %>%
+  sf::st_transform(sf::st_crs(all_stand_boundary))
+ft_temp %>% dplyr::glimpse()
+zzz_temp <- 
+  all_stand_boundary %>% 
+  sf::st_centroid() %>% 
+  dplyr::select(site) %>% 
+  sf::st_intersection(ft_temp)
+zzz_temp %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::count(activity)
+zzz_temp %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::select(site, activity, date_completed)
+
+actv_temp <- "c:/Users/georg/Downloads/Actv_CFLRP_PL.gdb/Actv_CFLRP_PL.gdb/"
+actv_temp <- sf::st_read(
+  dsn = actv_temp
+  , layer = sf::st_layers(actv_temp)[[1]]
+)
+actv_temp %>% dplyr::glimpse()
+actv_temp <-
+  actv_temp %>% 
+  dplyr::rename_with(tolower) %>% 
+  dplyr::filter(
+    tolower(stage_desc) == "accomplished"
+    , !is.na(date_completed)
+    , date_completed >= lubridate::today() - lubridate::years(8)
+  ) %>% 
+  dplyr::filter(!sf::st_is_empty(.)) 
+sf::sf_use_s2(F)
+actv_temp <-
+  actv_temp %>%
+  dplyr::filter(!sf::st_is_empty(.)) %>%
+  dplyr::filter(sf::st_is_valid(.)) %>%
+  sf::st_make_valid() %>%
+  sf::st_simplify() %>%
+  sf::st_transform(sf::st_crs(all_stand_boundary))
+actv_temp %>% dplyr::glimpse()
+# zzz_temp <- 
+  all_stand_boundary %>% 
+  sf::st_centroid() %>% 
+  dplyr::select(site) %>% 
+  sf::st_intersection(actv_temp)
+
+actv_temp <- "c:/Users/georg/Downloads/Actv_StwrdshpCntrctng_PL.gdb/Actv_StwrdshpCntrctng_PL.gdb/"
+actv_temp <- sf::st_read(
+  dsn = actv_temp
+  , layer = sf::st_layers(actv_temp)[[1]]
+)
+actv_temp %>% dplyr::glimpse()
+actv_temp <-
+  actv_temp %>% 
+  dplyr::rename_with(tolower) %>% 
+  dplyr::filter(
+    tolower(stage_desc) == "accomplished"
+    , !is.na(date_completed)
+    , date_completed >= lubridate::today() - lubridate::years(8)
+  ) %>% 
+  dplyr::filter(!sf::st_is_empty(.)) 
+sf::sf_use_s2(F)
+actv_temp <-
+  actv_temp %>%
+  dplyr::filter(!sf::st_is_empty(.)) %>%
+  dplyr::filter(sf::st_is_valid(.)) %>%
+  sf::st_make_valid() %>%
+  sf::st_simplify() %>%
+  sf::st_transform(sf::st_crs(all_stand_boundary))
+actv_temp %>% dplyr::glimpse()
+# zzz_temp <- 
+  all_stand_boundary %>% 
+  sf::st_centroid() %>% 
+  dplyr::select(site) %>% 
+  sf::st_intersection(actv_temp)
+
+
+
+remove(list = ls()[grep("_temp",ls())])
+gc()
+
+```
+
 static map for printing
 
 let's make a pretty image for use in the journal article. we'll use the `ggmap` package to get a nice background map and do some transformation to actually work with the map. We'll add a map scale using `ggspatial`
@@ -302,7 +433,7 @@ my_ggmap_basemap <- function(sf_data, zoom_level = 14, buffer_box = 2600, my_crs
 
 plot the fancy basemap with the points
 
-```{r,eval=T,purl=FALSE, fig.height=8, fig.width=6.5}
+```{r,eval=F,purl=FALSE, fig.height=8, fig.width=6.5}
 # get the basemap with our my_ggmap_basemap()
 plt_basemap <- my_ggmap_basemap(
   sf_data = all_stand_boundary %>% dplyr::group_by(site) %>% sf::st_point_on_surface()
@@ -313,7 +444,7 @@ plt_basemap <- my_ggmap_basemap(
 )
 # plt_basemap
 # plot
-plt2_temp <- 
+plt1_temp <- 
   plt_basemap + 
     ggplot2::geom_sf(
       data = all_stand_boundary %>% 
@@ -321,19 +452,20 @@ plt2_temp <-
         sf::st_point_on_surface() %>% 
         sf::st_transform(crs=plt_crs)
       , mapping = ggplot2::aes(fill = site_full_lab)
-      , size = 4.0
+      , size = 5
       , inherit.aes = F
       , shape = 21
       , color = "gray88"
       , fill = "blue2"
-    ) +
+    )
+plt2_temp <- plt1_temp +
     ggplot2::geom_sf_label(
       data = all_stand_boundary %>% 
         dplyr::group_by(site_full_lab) %>% 
         sf::st_point_on_surface() %>% 
         sf::st_transform(crs=plt_crs)
       , mapping = ggplot2::aes(label = stringr::str_wrap(site_full_lab, width = 25))
-      , size = 2.5
+      , size = 2.8
       , hjust = -0.06
       , vjust = -0.1 # 0.5
       , inherit.aes = F
@@ -343,9 +475,16 @@ plt2_temp <-
 plt2_temp
 ```
 
-```{r,eval=T,purl=FALSE, include=FALSE}
+```{r,eval=F,purl=FALSE, include=FALSE}
 ggplot2::ggsave(
   "../data/all_study_site_map.jpg"
+  , dpi = "print"
+  , height = 8, width = 6.5
+)
+
+ggplot2::ggsave(
+  filename = "../data/all_study_site_map_pts.jpg"
+  , plot = plt1_temp
   , dpi = "print"
   , height = 8, width = 6.5
 )
@@ -1068,8 +1207,9 @@ load the original data
 #### read RGB data keep only RGB
 psinf_rgb_rast <- terra::rast(
     file.path(
-      "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
+      "f:/PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\3_dsm_ortho\\2_mosaic"
       , "P4Pro_06_17_2021_half_half_optimal_transparent_mosaic_group1.tif"
+      # "../data/Dawson_Data/dawson_rgb.tif"
     )
   ) %>% 
   terra::subset(c(1,2,3))
@@ -1227,7 +1367,7 @@ ortho_plt_fn <- function(rgb_rast, stand, add_stand = F, buffer = 10, plt_lwd = 
 
 test our plotting function on a zoomed-in portion of the study area
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 ortho_plt_fn(
   psinf_rgb_rast
   , psinf_stand_boundary %>% 
@@ -1253,11 +1393,11 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(psinf_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.5
 )
 ```
 
-```{r,eval=T,purl=FALSE, fig.height=8, fig.width=8}
+```{r,eval=F,purl=FALSE, fig.height=8, fig.width=8}
 # grDevices::jpeg("../data/psinf_stand_rgb.jpeg", width = 8, height = 8, units = "in", res = 300)
 # mar = c(bottom, left, top, right)
 terra::plotRGB(psinf_rgb_rast, mar=c(2, 0.5, 3.5, 0.2)) # , stretch="lin"
@@ -1274,7 +1414,7 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(psinf_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.6
 )
 # main title top: "side = 3", line = 1
 mtext(
@@ -1396,7 +1536,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 test our `ggplot2` plotting function on a zoomed-in portion of the study area
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 ortho_plt_fn(
   pj_rgb_rast
   , pj_stand_boundary %>% 
@@ -1422,11 +1562,11 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(pj_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.5
 )
 ```
 
-```{r,eval=T,purl=FALSE, fig.height=7.2, fig.width=9}
+```{r,eval=F,purl=FALSE, fig.height=7.2, fig.width=9}
 # grDevices::jpeg("../data/pj_stand_rgb.jpeg", width = 9, height = 7.2, units = "in", res = 300)
 terra::plotRGB(pj_rgb_rast, mar=c(0.2, 0.2, 1, 0.2)) # , stretch="lin"
 # add stand boundary
@@ -1442,7 +1582,7 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(pj_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.5
 )
 # main title top: "side = 3", line = 1
 mtext(
@@ -1585,11 +1725,11 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(bhef_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.5
 )
 ```
 
-```{r,eval=T,purl=FALSE, fig.height=6.6, fig.width=10}
+```{r,eval=F,purl=FALSE, fig.height=6.6, fig.width=10}
 # grDevices::jpeg("../data/bhef_stand_rgb.jpeg", width = 10, height = 6.6, units = "in", res = 300)
 # mar = c(bottom, left, top, right)
 terra::plotRGB(bhef_rgb_rast, mar=c(1.5, 0.5, 0.5, 0.2)) # , stretch="lin"
@@ -1606,7 +1746,7 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(bhef_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.6
 )
 # main title top: "side = 3", line = 1
 mtext(
@@ -1669,6 +1809,7 @@ load the original data
 #### read RGB data keep only RGB
 arnf_rgb_rast <- terra::rast(
     "f:/UAS_Collections/ARNF_DiamondView_202510/DiamondPeak_Switchblade_transparent_mosaic_group1.tif"
+    # "../data/ARNF_DiamondView_202510/arnf_rgb_rast.tif"
   ) %>% 
   terra::subset(c(1,2,3))
 # rename bands
@@ -1715,7 +1856,7 @@ if(!file.exists(rgb_fnm_temp)){
 
 test our `ggplot2` plotting function on a zoomed-in portion of the study area
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 ortho_plt_fn(
   arnf_rgb_rast
   , arnf_stand_boundary %>% 
@@ -1741,11 +1882,11 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(arnf_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.5
 )
 ```
 
-```{r,eval=T,purl=FALSE, fig.height=6.7, fig.width=10}
+```{r,eval=F,purl=FALSE, fig.height=6.7, fig.width=10}
 # grDevices::jpeg("../data/arnf_stand_rgb.jpeg", width = 10, height = 6.7, units = "in", res = 300)
 # mar = c(bottom, left, top, right)
 terra::plotRGB(arnf_rgb_rast, mar=c(0.5, 0.5, 1, 0.2)) # , stretch="lin"
@@ -1762,7 +1903,7 @@ terra::plot(
     dplyr::filter(is_in_stand) %>% 
     terra::vect() %>% 
     terra::project(terra::crs(arnf_rgb_rast))
-  , add = T, border = "cyan", col = NA, lwd = 1.2
+  , add = T, border = "cyan", col = NA, lwd = 1.6
 )
 # main title top: "side = 3", line = 1
 mtext(
@@ -1908,11 +2049,11 @@ samp_plt_fn_temp <- function(piles, ortho) {
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=T,purl=FALSE, results=F, warning=FALSE, message=FALSE}
+```{r,eval=F,purl=FALSE, results=F, warning=FALSE, message=FALSE}
 psinf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = psinf_slash_piles_polys, ortho = psinf_rgb_rast)
 ```
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 psinf_samp_plt_fn_temp
 ```
 
@@ -1934,11 +2075,11 @@ ggplot2::ggsave("../data/pile_tiles_rgb.jpeg", height = 10.5, width = 8)
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=T,purl=FALSE, results=F, warning=FALSE, message=FALSE}
+```{r,eval=F,purl=FALSE, results=F, warning=FALSE, message=FALSE}
 pj_samp_plt_fn_temp <- samp_plt_fn_temp(piles = pj_slash_piles_polys, ortho = pj_rgb_rast)
 ```
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 pj_samp_plt_fn_temp
 ```
 
@@ -1946,11 +2087,11 @@ pj_samp_plt_fn_temp
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=T,purl=FALSE, results=F, warning=FALSE, message=FALSE}
+```{r,eval=F,purl=FALSE, results=F, warning=FALSE, message=FALSE}
 bhef_samp_plt_fn_temp <- samp_plt_fn_temp(piles = bhef_slash_piles_polys, ortho = bhef_rgb_rast)
 ```
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 bhef_samp_plt_fn_temp
 ```
 
@@ -1958,17 +2099,17 @@ bhef_samp_plt_fn_temp
 
 example smallest, median, and largest slash pile (red) with a one square meter box for size reference
 
-```{r,eval=T,purl=FALSE, results=F, warning=FALSE, message=FALSE}
+```{r,eval=F,purl=FALSE, results=F, warning=FALSE, message=FALSE}
 arnf_samp_plt_fn_temp <- samp_plt_fn_temp(piles = arnf_slash_piles_polys, ortho = arnf_rgb_rast)
 ```
 
-```{r,eval=T,purl=FALSE}
+```{r,eval=F,purl=FALSE}
 arnf_samp_plt_fn_temp
 ```
 
 ### All
 
-```{r,eval=T,purl=FALSE, fig.height=9.5, fig.width=5}
+```{r,eval=F,purl=FALSE, fig.height=9.5, fig.width=5}
 patchwork::wrap_plots(
   patchwork::wrap_elements( 
     psinf_samp_plt_fn_temp + 
