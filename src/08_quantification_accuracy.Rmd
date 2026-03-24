@@ -1000,11 +1000,10 @@ p_temp
 ggplot2::ggsave("../data/all_comp_scatter.jpeg", plot = p_temp, height = 9.9, width = 8.5, dpi = 300)
 ```
 
-```{r, results=F, include=F, eval=F}
+```{r, results=F, include=F, eval=T}
 p_top_left <- diameter_comp_scatter1 + 
   theme(
-    plot.background = element_rect(color = "black", linewidth = 1, fill = NA),
-    # plot.margin = margin(unit = "in", t = 0.11, r = 0.9, b = 0.11, l = 0.11) # Large 'b' (bottom) gap
+    plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
     # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
     , plot.title = ggplot2::element_blank()
     , plot.subtitle = ggplot2::element_blank()
@@ -1012,8 +1011,7 @@ p_top_left <- diameter_comp_scatter1 +
 
 p_top_right <- height_comp_scatter1 + 
   theme(
-    plot.background = element_rect(color = "black", linewidth = 1, fill = NA),
-    # plot.margin = margin(unit = "in", t = 0.11, r = 0.11, b = 0.11, l = 0.9) # Large 'b' (bottom) gap
+    plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
     # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
     , plot.title = ggplot2::element_blank()
     , plot.subtitle = ggplot2::element_blank()
@@ -1022,11 +1020,15 @@ p_top_right <- height_comp_scatter1 +
 p_bottom_group <- wrap_elements(full = (
   (plts_temp[[1]] + plts_temp[[2]]) / (plts_temp[[3]] + plts_temp[[4]]) +
   plot_annotation(
-    theme = theme(
-      # This draws the box around the 4-plot unit
-      plot.background = element_rect(color = "black", linewidth = 1, fill = NA)
-      # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
-    )
+    theme = 
+      ggplot2::theme(
+        plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
+        # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+      )
+  ) &
+  ggplot2::theme(
+    axis.title = ggplot2::element_text(size = 7.5)
+    , axis.text = ggplot2::element_text(size = 7.5)
   )
 ))
 
@@ -1036,27 +1038,32 @@ final_layout <-
   plot_spacer() / 
   p_bottom_group + 
   plot_layout(
-    heights = c(0.05, 1, 0.05, 2),
-    guides = 'collect'
+    heights = c(0.05, 1, 0.05, 2.1)
   ) +
   plot_annotation(
-    tag_levels = list(c("Tag A", "Tag B", "Group Tag"))
+    ### this is so horrible......
+    tag_levels = list(c(
+      "                                                 (a) Predicted Diameter versus Reference Diameter"
+      , "                                         (b) Predicted Height versus Reference Height"
+      , "\n\n(c) Predicted Area versus Reference Area" ## this gd tag is higher than the others?
+    ))
   ) & 
-  theme(
-    plot.tag = element_text(face = "bold", size = 14),
-    plot.tag.position = c(0.1, 1.05) # Keeps tags above the boxes
+  ggplot2::theme(
+    axis.title = ggplot2::element_text(size = 7.5)
+    , axis.text = ggplot2::element_text(size = 7.5)
+    , plot.tag = element_text(face = "bold", size = 11)
+    , plot.tag.position = c(0.17, 1.06)
     , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
   )
 
 # final_layout
-ggplot2::ggsave("../data/all_comp_scatter2.jpeg", plot = final_layout, height = 9.9, width = 8.5, dpi = 300)
-
+ggplot2::ggsave("../data/all_comp_scatter2.jpeg", plot = final_layout, height = 10.5, width = 8.5, dpi = 300)
 
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
-remove(diameter_comp_scatter1, height_comp_scatter1)
+remove(diameter_comp_scatter1, height_comp_scatter1, final_layout, p_top_left, p_top_right, p_bottom_group)
 gc()
 ```
 
@@ -1344,15 +1351,23 @@ that's neat, the test gave us the same mean difference (MD) of `r scales::comma(
 ### Irregular vs. Paraboloid: Comparison of Individual Piles
 
 ```{r}
-# get prediction for r2
+# # get prediction for r2
 lm_temp <- lm(
   pred_volume_m3 ~ field_volume_m3
-  , data = 
-    dbscan_gt_pred_match[["psinf"]] %>% 
+  , data =
+    dbscan_gt_pred_match[["psinf"]] %>%
     dplyr::filter(match_grp=="true positive")
 )
-# scales::percent(summary(lm_temp)$r.squared, accuracy = 1)
-# scales::comma(ttest1$estimate, accuracy = 0.01, suffix = " (m²)")
+# summary(lm_temp)
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+# summary(lm_temp) %>% names()
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
 
 volume_comp_scatter1 <-
   dbscan_gt_pred_match[["psinf"]] %>% 
@@ -1379,15 +1394,18 @@ volume_comp_scatter1 <-
       paste0(
         "MD = "
         , scales::comma(ttest1$estimate, accuracy = 0.01, suffix = " (m³)")
+        , "\n"
+        , lmf_temp
         , "\n R² = "
-        , scales::percent(summary(lm_temp)$r.squared, accuracy = 1)
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
       )
     , hjust = -0.1, vjust = 1.1
     , parse = F
-    , size = 3
+    , size = 3.5
   ) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
   ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
   ggplot2::labs(
     x = latex2exp::TeX("reference paraboloid volume $m^3$")
@@ -1956,14 +1974,23 @@ dbscan_gt_pred_match[["psinf"]] %>%
 ### Paraboloid vs. Paraboloid: Comparison of Individual Piles
 
 ```{r}
-# get prediction for r2
+# # get prediction for r2
 lm_temp <- lm(
   pred_allom_volume_m3 ~ field_volume_m3
-  , data = 
-    dbscan_gt_pred_match[["psinf"]] %>% 
+  , data =
+    dbscan_gt_pred_match[["psinf"]] %>%
     dplyr::filter(match_grp=="true positive")
 )
+# summary(lm_temp)
 # scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+# summary(lm_temp) %>% names()
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
 
 volume_comp_scatter2 <-
   dbscan_gt_pred_match[["psinf"]] %>% 
@@ -1982,23 +2009,21 @@ volume_comp_scatter2 <-
     "text", 
     x = -Inf, y = Inf # Top Left
     , label = 
-      # paste0(
-      #   "R^2 == "
-      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
-      #   , "*'%'"
-      # )
       paste0(
         "MD = "
         , scales::comma(ttest2$estimate, accuracy = 0.01, suffix = " (m³)")
+        , "\n"
+        , lmf_temp
         , "\n R² = "
-        , scales::percent(summary(lm_temp)$r.squared, accuracy = 1)
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
       )
     , hjust = -0.1, vjust = 1.1
     , parse = F
-    , size = 3
+    , size = 3.5
   ) +
-  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_allom_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
-  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_allom_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) ) )) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(dbscan_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(dbscan_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
   ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
   ggplot2::labs(
     x = latex2exp::TeX("reference paraboloid volume $m^3$")
@@ -2011,6 +2036,7 @@ volume_comp_scatter2 <-
     plot.subtitle = ggplot2::element_text(face = "bold")
     , strip.text = ggplot2::element_text(face = "bold", color = "black")
   )
+# volume_comp_scatter2
 ```
 
 combine the scatter plots
@@ -2024,11 +2050,11 @@ patchwork::wrap_plots(
   , nrow = 1
 ) &
 ggplot2::theme(
- plot.subtitle = ggplot2::element_text(size = 8.5)
+ plot.subtitle = ggplot2::element_text(size = 9)
  , axis.text = ggplot2::element_text(size = 7)
  , axis.title = ggplot2::element_text(size = 7)
 )
-ggplot2::ggsave("../data/volume_comp_scatter_full.jpeg", height = 6, width = 9, dpi = 300)
+ggplot2::ggsave("../data/volume_comp_scatter_full.jpeg", height = 4.8, width = 9, dpi = 300)
 ```
 
 the differences between the predictions for the larger field measured piles are pulling the slope of the line upwards but for the smaller piles, the volume differences are clustered around the line of equality
