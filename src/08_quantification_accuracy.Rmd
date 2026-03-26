@@ -1057,7 +1057,332 @@ final_layout <-
   )
 
 # final_layout
-ggplot2::ggsave("../data/all_comp_scatter2.jpeg", plot = final_layout, height = 10.5, width = 8.5, dpi = 300)
+ggplot2::ggsave("../data/all_comp_scatter2_dbscan.jpeg", plot = final_layout, height = 10.5, width = 8.5, dpi = 300)
+
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(diameter_comp_scatter1, height_comp_scatter1, final_layout, p_top_left, p_top_right, p_bottom_group)
+gc()
+```
+
+```{r, results=F, include=FALSE, eval=TRUE, warning=FALSE, message=FALSE, echo=FALSE}
+################################################################################################################################################
+# do it real messy by repeatin allll the code with the watershed
+################################################################################################################################################
+####################################
+# height scatter
+####################################
+# # get prediction for r2
+lm_temp <- lm(
+  pred_height_m ~ field_height_m
+  , data =
+    watershed_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+# summary(lm_temp)
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+# summary(lm_temp) %>% names()
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
+# agg_ground_truth_match_ans %>% dplyr::glimpse()
+height_comp_scatter1 <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  dplyr::bind_cols(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::filter(site_data_lab=="psinf") %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_height_m, x = field_height_m)) +
+  ggplot2::geom_abline(color = "gray33", lwd = 1) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 1.5) +
+  ggplot2::geom_smooth(lwd = 0.8, method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      paste0(
+        "RMSE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="watershed") %>% 
+          dplyr::pull(diff_field_height_m_rmse) %>% 
+          scales::number(accuracy = 0.01, suffix = " (m)")
+        , "\nMAPE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="watershed") %>% 
+          dplyr::pull(pct_diff_field_height_m_mape) %>% 
+          scales::percent(accuracy = 0.1)
+        , "\n"
+        , lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
+      )
+    , hjust = -0.1, vjust = 1.1
+    , parse = F
+    , size = 3.5
+  ) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_height_m,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_height_m,na.rm=T) )*1.02 )) +
+  ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
+  ggplot2::labs(
+    x = "reference height (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = "predicted height (m)" # latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(b) Predicted Height versus Reference Height"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# height_comp_scatter1
+####################################
+# diameter scatter
+####################################
+# get prediction for r2
+lm_temp <- lm(
+  pred_diameter_m ~ field_diameter_m
+  , data =
+    watershed_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+# summary(lm_temp)
+# scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
+
+# agg_ground_truth_match_ans %>% dplyr::glimpse()
+diameter_comp_scatter1 <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  dplyr::bind_cols(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::filter(site_data_lab=="psinf") %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_diameter_m, x = field_diameter_m)) +
+  ggplot2::geom_abline(color = "gray33", lwd = 1) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 1.5) +
+  ggplot2::geom_smooth(lwd = 0.8, method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      # paste0(
+      #   "R^2 == "
+      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      #   , "*'%'"
+      # )
+      paste0(
+        "RMSE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="watershed") %>% 
+          dplyr::pull(diff_field_diameter_m_rmse) %>% 
+          scales::number(accuracy = 0.01, suffix = " (m)")
+        , "\nMAPE = "
+        , agg_ground_truth_match_ans %>% 
+          dplyr::filter(site_data_lab=="psinf", tolower(method)=="watershed") %>% 
+          dplyr::pull(pct_diff_field_diameter_m_mape) %>% 
+          scales::percent(accuracy = 0.1)
+        , "\n"
+        , lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
+      )
+    , hjust = -0.1, vjust = 1.1
+    , parse = F
+    , size = 3.5
+  ) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_diameter_m,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_diameter_m,na.rm=T) )*1.02 )) +
+  ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
+  ggplot2::labs(
+    x = "reference diameter (m)" # latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = "predicted diameter (m)" # latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(a) Predicted Diameter versus Reference Diameter"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# diameter_comp_scatter1
+####################################
+# area scatter
+####################################
+dta_temp <- 
+  watershed_gt_pred_match %>% 
+  purrr::imap(
+    \(x,nm) 
+    dplyr::filter(x,match_grp=="true positive") %>% 
+    dplyr::mutate(site_data_lab = nm)
+  )%>% 
+  dplyr::bind_rows() %>% 
+  dplyr::left_join(
+    agg_ground_truth_match_ans %>% 
+      dplyr::filter(tolower(method)=="watershed") %>% 
+      dplyr::select(site_data_lab, diff_area_m2_rmse, pct_diff_area_m2_mape)
+  ) %>% 
+  dplyr::inner_join(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  dplyr::mutate(
+    site_full_lab = stringr::str_wrap(site_full_lab, width=26)
+  )
+# dta_temp %>% dplyr::glimpse()
+plts_temp <- 
+  unique(dta_temp$site_data_lab) %>% 
+  purrr::map(function(x){
+    d <- dta_temp %>% 
+      dplyr::filter(site_data_lab==x)
+    lm_temp <- lm(
+      pred_area_m2 ~ gt_area_m2
+      , data = d
+    )
+    # summary(lm_temp)
+    # scales::percent(summary(lm_temp)$r.squared, accuracy = 0.1)
+    lmf_temp <- paste0(
+      "y = "
+      , scales::number(summary(lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+      , "x"
+      , ifelse(summary(lm_temp)$coefficients[1,1]<0," - ", " + ")
+      , scales::number(abs(summary(lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+    )
+    # plot
+    d %>% 
+      ggplot2::ggplot(mapping = ggplot2::aes(y = pred_area_m2, x = gt_area_m2)) +
+      ggplot2::geom_abline(color = "gray33", lwd = 1) +
+      ggplot2::geom_point(color = "navy", alpha = 0.7, size = 1.1) +
+      ggplot2::geom_smooth(lwd = 0.8, method = "lm", se=F, color = "gray", linetype = "dashed") +
+      ggplot2::annotate(
+        "text", 
+        x = -Inf, y = Inf # Top Left
+        , label = 
+          # paste0(
+          #   "R^2 == "
+          #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+          #   , "*'%'"
+          # )
+          paste0(
+            "RMSE = "
+            , d %>% 
+              dplyr::slice(1) %>% 
+              dplyr::pull(diff_area_m2_rmse) %>% 
+              scales::number(accuracy = 0.1, suffix = " (m²)")
+            , "\nMAPE = "
+            , d %>% 
+              dplyr::slice(1) %>% 
+              dplyr::pull(pct_diff_area_m2_mape) %>% 
+              scales::percent(accuracy = 0.1)
+            , "\n"
+            , lmf_temp
+            , "\n R² = "
+            # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+            , scales::number((summary(lm_temp)$r.squared), accuracy = 0.01)
+          )
+        , hjust = -0.1, vjust = 1.1
+        , parse = F
+        , size = 3
+      ) +
+      ggplot2::facet_wrap(
+        facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all"
+        # , labeller = ggplot2::labeller(class = ggplot2::label_wrap_gen(width = 10))
+      ) +
+      ggplot2::scale_x_continuous(limits = c(0, max( max(d$pred_area_m2,na.rm=T), max(d$gt_area_m2,na.rm=T) ) ), expand = ggplot2::expansion(mult = c(0,0.1))) +
+      ggplot2::scale_y_continuous(limits = c(0, max( max(d$pred_area_m2,na.rm=T), max(d$gt_area_m2,na.rm=T) ) ), expand = ggplot2::expansion(mult = c(0,0.1))) +
+      ggplot2::labs(
+        x = latex2exp::TeX("reference area ($m^2$)")
+        , y = latex2exp::TeX("predicted area ($m^2$)")
+        # , color = "image-field\ndiameter diff."
+        # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+        # , subtitle = "B: Predicted Height versus Reference Height"
+      ) +
+      ggplot2::theme_light() +
+      ggplot2::theme(
+        strip.text = ggplot2::element_text(face = "bold", color = "black")
+      ) 
+  })
+###################################################################
+# combine + export
+###################################################################
+p_top_left <- diameter_comp_scatter1 + 
+  theme(
+    plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
+    # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+    , plot.title = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_blank()
+  )
+
+p_top_right <- height_comp_scatter1 + 
+  theme(
+    plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
+    # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+    , plot.title = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_blank()
+  )
+
+p_bottom_group <- wrap_elements(full = (
+  (plts_temp[[1]] + plts_temp[[2]]) / (plts_temp[[3]] + plts_temp[[4]]) +
+  plot_annotation(
+    theme = 
+      ggplot2::theme(
+        plot.background = element_rect(color = "gray88", linewidth = 1, fill = NA)
+        # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+      )
+  ) &
+  ggplot2::theme(
+    axis.title = ggplot2::element_text(size = 7.5)
+    , axis.text = ggplot2::element_text(size = 7.5)
+  )
+))
+
+final_layout <- 
+  plot_spacer() / 
+  (p_top_left + p_top_right) / 
+  plot_spacer() / 
+  p_bottom_group + 
+  plot_layout(
+    heights = c(0.05, 1, 0.05, 2.1)
+  ) +
+  plot_annotation(
+    ### this is so horrible......
+    tag_levels = list(c(
+      "                                                 (a) Predicted Diameter versus Reference Diameter"
+      , "                                         (b) Predicted Height versus Reference Height"
+      , "\n\n(c) Predicted Area versus Reference Area" ## this gd tag is higher than the others?
+    ))
+  ) & 
+  ggplot2::theme(
+    axis.title = ggplot2::element_text(size = 7.5)
+    , axis.text = ggplot2::element_text(size = 7.5)
+    , plot.tag = element_text(face = "bold", size = 11)
+    , plot.tag.position = c(0.17, 1.06)
+    , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+  )
+
+# final_layout
+ggplot2::ggsave("../data/all_comp_scatter2_watershed.jpeg", plot = final_layout, height = 10.5, width = 8.5, dpi = 300)
 
 ```
 
@@ -1423,6 +1748,87 @@ volume_comp_scatter1
 
 this is exactly what we expected: for true positive matches, there is a clear systematic difference with the plot showing that the volume calculated using the idealized, regular shape assumption (reference paraboloid volume) is consistently larger than the predicted irregular CHM volume derived from the CHM
 
+```{r, include = F, eval = T, message=F, echo=F, warning=F, results=F}
+################################################################################################################################################
+# do it real messy by repeatin allll the code with the watershed
+################################################################################################################################################
+# is the mean difference between the two volumes significantly different from zero
+wshed_ttest1 <- t.test(
+  watershed_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp == "true positive") %>% 
+    dplyr::pull(field_volume_m3)
+  , watershed_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp == "true positive") %>% 
+    dplyr::pull(pred_volume_m3)
+  , paired = TRUE
+)
+# # get prediction for r2
+wshed_lm_temp <- lm(
+  pred_volume_m3 ~ field_volume_m3
+  , data =
+    watershed_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+wshed_lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(wshed_lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(wshed_lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(wshed_lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
+
+wshed_volume_comp_scatter1 <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  dplyr::bind_cols(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::filter(site_data_lab=="psinf") %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_volume_m3, x = field_volume_m3)) +
+  ggplot2::geom_abline(color = "gray33", lwd = 1) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2) +
+  ggplot2::geom_smooth(lwd = 0.8, method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      # paste0(
+      #   "R^2 == "
+      #   , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1)
+      #   , "*'%'"
+      # )
+      paste0(
+        "MD = "
+        , scales::comma(wshed_ttest1$estimate, accuracy = 0.01, suffix = " (m³)")
+        , "\n"
+        , wshed_lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(wshed_lm_temp)$r.squared), accuracy = 0.01)
+      )
+    , hjust = -0.1, vjust = 1.1
+    , parse = F
+    , size = 3.5
+  ) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
+  ggplot2::labs(
+    x = latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = latex2exp::TeX("predicted irregular CHM volume $m^3$")
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(a) Predicted Irregular CHM versus Reference Paraboloid Volume"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# wshed_volume_comp_scatter1
+```
+
 let's check these using `lm()`
 
 ```{r}
@@ -1644,12 +2050,17 @@ V = \frac{1}{8}\pi \cdot width^2 \cdot height
 $$
 
 ```{r}
+# calculate paraboloid volume
 dbscan_gt_pred_match[["psinf"]] <-
   dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::mutate(
     pred_allom_volume_m3 = (1/8) * pi * (pred_diameter_m^2) * pred_height_m
-  ) %>% 
-  dplyr::glimpse()
+  )
+watershed_gt_pred_match[["psinf"]] <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  dplyr::mutate(
+    pred_allom_volume_m3 = (1/8) * pi * (pred_diameter_m^2) * pred_height_m
+  )
 # summarize it
 dbscan_gt_pred_match[["psinf"]] %>% 
   dplyr::filter(match_grp=="true positive") %>% 
@@ -2054,10 +2465,103 @@ ggplot2::theme(
  , axis.text = ggplot2::element_text(size = 7)
  , axis.title = ggplot2::element_text(size = 7)
 )
-ggplot2::ggsave("../data/volume_comp_scatter_full.jpeg", height = 4.8, width = 9, dpi = 300)
+ggplot2::ggsave("../data/volume_comp_scatter_full_dbscan.jpeg", height = 4.8, width = 9, dpi = 300)
 ```
 
 the differences between the predictions for the larger field measured piles are pulling the slope of the line upwards but for the smaller piles, the volume differences are clustered around the line of equality
+
+```{r, include = F, eval = T, message=F, echo=F, warning=F, results=F}
+################################################################################################################################################
+# do it real messy by repeatin allll the code with the watershed
+################################################################################################################################################
+# is the mean difference between the two volumes significantly different from zero
+wshed_ttest2 <- t.test(
+  watershed_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp == "true positive") %>% 
+    dplyr::pull(field_volume_m3)
+  , watershed_gt_pred_match[["psinf"]] %>% 
+    dplyr::filter(match_grp == "true positive") %>% 
+    dplyr::pull(pred_allom_volume_m3)
+  , paired = TRUE
+)
+# # get prediction for r2
+wshed_lm_temp <- lm(
+  pred_allom_volume_m3 ~ field_volume_m3
+  , data =
+    watershed_gt_pred_match[["psinf"]] %>%
+    dplyr::filter(match_grp=="true positive")
+)
+# summary(wshed_lm_temp)
+# scales::percent(summary(wshed_lm_temp)$r.squared, accuracy = 0.1)
+# summary(wshed_lm_temp) %>% names()
+wshed_lmf_temp <- paste0(
+  "y = "
+  , scales::number(summary(wshed_lm_temp)$coefficients[2,1], accuracy = 0.01) #slope
+  , "x"
+  , ifelse(summary(wshed_lm_temp)$coefficients[1,1]<0," - ", " + ")
+  , scales::number(abs(summary(wshed_lm_temp)$coefficients[1,1]), accuracy = 0.01) #intercept
+)
+
+wshed_volume_comp_scatter2 <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  dplyr::bind_cols(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::filter(site_data_lab=="psinf") %>% 
+      dplyr::select(site_data_lab, site_full_lab)
+  ) %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pred_allom_volume_m3, x = field_volume_m3)) +
+  ggplot2::geom_abline(color = "gray33", lwd = 1) +
+  ggplot2::geom_point(color = "navy", alpha = 0.7, size = 2) +
+  ggplot2::geom_smooth(lwd = 0.8, method = "lm", se=F, color = "gray", linetype = "dashed") +
+  ggplot2::annotate(
+    "text", 
+    x = -Inf, y = Inf # Top Left
+    , label = 
+      paste0(
+        "MD = "
+        , scales::comma(wshed_ttest2$estimate, accuracy = 0.01, suffix = " (m³)")
+        , "\n"
+        , wshed_lmf_temp
+        , "\n R² = "
+        # , scales::number((summary(wshed_lm_temp)$r.squared)*100, accuracy = 0.1, suffix = "%")
+        , scales::number((summary(wshed_lm_temp)$r.squared), accuracy = 0.01)
+      )
+    , hjust = -0.1, vjust = 1.1
+    , parse = F
+    , size = 3.5
+  ) +
+  ggplot2::scale_x_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::scale_y_continuous(limits = c(0, max( max(watershed_gt_pred_match[["psinf"]]$pred_volume_m3,na.rm=T), max(watershed_gt_pred_match[["psinf"]]$field_volume_m3,na.rm=T) )*1.02 )) +
+  ggplot2::facet_wrap(facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all") +
+  ggplot2::labs(
+    x = latex2exp::TeX("reference paraboloid volume $m^3$")
+    , y = latex2exp::TeX("predicted paraboloid volume $m^3$")
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(b) Predicted Paraboloid versus Reference Paraboloid Volume"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# volume_comp_scatter2
+
+pltpltplt_temp <- patchwork::wrap_plots(
+  list(
+    wshed_volume_comp_scatter1 # + ggplot2::labs(subtitle = "A: Predicted Irregular CHM Volume versus Reference Paraboloid Volume")
+    , wshed_volume_comp_scatter2 # + ggplot2::labs(subtitle = "B: Predicted Paraboloid Volume versus Reference Paraboloid Volume")
+  )
+  , nrow = 1
+) &
+ggplot2::theme(
+ plot.subtitle = ggplot2::element_text(size = 9)
+ , axis.text = ggplot2::element_text(size = 7)
+ , axis.title = ggplot2::element_text(size = 7)
+)
+ggplot2::ggsave("../data/volume_comp_scatter_full_watershed.jpeg", plot = pltpltplt_temp, height = 4.8, width = 9, dpi = 300)
+```
 
 ### Stand-level Aggregation
 
@@ -2534,7 +3038,241 @@ p_temp
 ```
 
 ```{r, results=F, include=F, eval=T}
-ggplot2::ggsave("../data/all_comp_treatment_total.jpeg", plot = p_temp, height = 8, width = 10, dpi = 300)
+ggplot2::ggsave("../data/all_comp_treatment_total_dbscan.jpeg", plot = p_temp, height = 8, width = 10, dpi = 300)
+```
+
+```{r, include = F, eval = T, message=F, echo=F, warning=F, results=F}
+################################################################################################################################################
+# do it real messy by repeatin allll the code with the watershed
+################################################################################################################################################
+# do it
+wshed_sum_df_temp <-
+  all_stand_boundary$site_data_lab %>% 
+  purrr::map(
+    \(x)
+    dplyr::bind_rows(
+      watershed_gt_pred_match[[x]] %>% 
+        stand_agg_fn(which_comp = "gt") %>% 
+        dplyr::mutate(
+          method = "watershed"
+          , site = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+          , site_full_lab = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site_full_lab)
+        )
+    ) %>% 
+    dplyr::filter(
+      stringr::str_detect(tolower(pile_metric),"area")
+    )
+  ) %>% 
+  dplyr::bind_rows()
+# plot it
+wshed_plt_area <- wshed_sum_df_temp %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    stand_id=1
+    , lab = paste0(
+      scales::comma(value,accuracy=0.1)
+      , dplyr::case_when(
+        is.na(pct_diff) ~ ""
+        , T ~ paste0(
+          "\n"
+          , ifelse(pct_diff<0,"-","+")
+          ,scales::percent(abs(pct_diff),accuracy=0.1)
+        )
+      )
+    )
+    , site_full_lab = stringr::str_wrap(site_full_lab, width=26)
+    , which_data = forcats::fct_recode(which_data, "reference"="image-annotated", "predicted"="prediction")
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = which_data
+      , y = value
+      , label = lab
+      , group = site_full_lab
+    )
+  ) +
+  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
+  ggplot2::geom_col(mapping = ggplot2::aes(fill = which_data), alpha = 1, width = 0.4) +
+  harrypotter::scale_color_hp_d(option = "hermionegranger") +
+  harrypotter::scale_fill_hp_d(option = "hermionegranger") +
+  ggplot2::geom_text(
+    vjust = -0.25
+    , size = 3
+  ) +
+  ggplot2::facet_wrap(
+    facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all"
+    , nrow = 1
+    # , labeller = ggplot2::labeller(class = ggplot2::label_wrap_gen(width = 10))
+  ) +
+  ggplot2::scale_y_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0,0.2)), breaks = NULL) +
+  ggplot2::labs(
+    x = ""
+    , y = "treament total\npile area (m²)"
+    # , y = latex2exp::TeX("treament total pile area ($m^2$)")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(c) Treatment-Wide Total Pile Area"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+    , axis.text.x = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , panel.grid = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+  ) 
+### Height and Diameter
+wshed_plt_ht <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  stand_agg_fn() %>% 
+  dplyr::mutate(
+    site = all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(site)
+    , site_full_lab = all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(site_full_lab)
+  ) %>% 
+  dplyr::filter(
+    stringr::str_detect(tolower(pile_metric),"height")
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    stand_id=1
+    , lab = paste0(
+      scales::comma(value,accuracy=0.1)
+      , dplyr::case_when(
+        is.na(pct_diff) ~ ""
+        , T ~ paste0(
+          "\n"
+          , ifelse(pct_diff<0,"-","+")
+          ,scales::percent(abs(pct_diff),accuracy=0.1)
+        )
+      )
+    )
+    , site_full_lab = stringr::str_wrap(site_full_lab, width=26)
+    , which_data = forcats::fct_recode(which_data, "reference"="field", "predicted"="prediction")
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = which_data
+      , y = value
+      , label = lab
+      , group = site_full_lab
+    )
+  ) +
+  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
+  ggplot2::geom_col(mapping = ggplot2::aes(fill = which_data), alpha = 1, width = 0.4) +
+  harrypotter::scale_color_hp_d(option = "hermionegranger") +
+  harrypotter::scale_fill_hp_d(option = "hermionegranger") +
+  ggplot2::geom_text(
+    vjust = -0.25
+    , size = 3
+  ) +
+  ggplot2::facet_wrap(
+    facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all"
+    , nrow = 1
+    # , labeller = ggplot2::labeller(class = ggplot2::label_wrap_gen(width = 10))
+  ) +
+  ggplot2::scale_y_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0,0.2)), breaks = NULL) +
+  ggplot2::labs(
+    x = ""
+    , y = "treament total\npile height (m)"
+    # , y = latex2exp::TeX("treament total pile area ($m^2$)")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(b) Treatment-Wide Total Pile Height"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+    , axis.text.x = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , panel.grid = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+  ) 
+# plot it
+wshed_plt_diam <-
+  watershed_gt_pred_match[["psinf"]] %>% 
+  stand_agg_fn() %>% 
+  dplyr::mutate(
+    site = all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(site)
+    , site_full_lab = all_stand_boundary %>% dplyr::filter(site_data_lab=="psinf") %>% dplyr::pull(site_full_lab)
+  ) %>% 
+  dplyr::filter(
+    stringr::str_detect(tolower(pile_metric),"diameter")
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    stand_id=1
+    , lab = paste0(
+      scales::comma(value,accuracy=0.1)
+      , dplyr::case_when(
+        is.na(pct_diff) ~ ""
+        , T ~ paste0(
+          "\n"
+          , ifelse(pct_diff<0,"-","+")
+          ,scales::percent(abs(pct_diff),accuracy=0.1)
+        )
+      )
+    )
+    , site_full_lab = stringr::str_wrap(site_full_lab, width=26)
+    , which_data = forcats::fct_recode(which_data, "reference"="field", "predicted"="prediction")
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      x = which_data
+      , y = value
+      , label = lab
+      , group = site_full_lab
+    )
+  ) +
+  ggplot2::geom_line(key_glyph = "point", alpha = 0.7, color = "gray", lwd = 1.1) +
+  ggplot2::geom_col(mapping = ggplot2::aes(fill = which_data), alpha = 1, width = 0.4) +
+  harrypotter::scale_color_hp_d(option = "hermionegranger") +
+  harrypotter::scale_fill_hp_d(option = "hermionegranger") +
+  ggplot2::geom_text(
+    vjust = -0.25
+    , size = 3
+  ) +
+  ggplot2::facet_wrap(
+    facets = dplyr::vars(site_full_lab), scales = "free", axis.labels = "all"
+    , nrow = 1
+    # , labeller = ggplot2::labeller(class = ggplot2::label_wrap_gen(width = 10))
+  ) +
+  ggplot2::scale_y_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0,0.2)), breaks = NULL) +
+  ggplot2::labs(
+    x = ""
+    , y = "treament total\npile diameter (m)"
+    # , y = latex2exp::TeX("treament total pile area ($m^2$)")
+    # , color = "image-field\ndiameter diff."
+    # , subtitle = latex2exp::TeX("bulk volume ($m^3$) comparison")
+    , subtitle = "(a) Treatment-Wide Total Pile Diameter"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+    , axis.text.x = ggplot2::element_text(size = 10, color = "black", face = "bold")
+    , panel.grid = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+  ) 
+wshed_p_temp <-
+  patchwork::wrap_plots(
+  list(
+    wshed_plt_diam + ggplot2::theme(axis.text.x = ggplot2::element_text(size = 8, color = "black", face = "bold"))
+    , wshed_plt_ht + ggplot2::theme(axis.text.x = ggplot2::element_text(size = 8, color = "black", face = "bold"))
+    # , patchwork::plot_spacer()
+    , wshed_plt_area + ggplot2::theme(axis.text.x = ggplot2::element_text(size = 7, color = "black", face = "bold"))
+  )
+  , design = c(
+    # t, l, b , r 
+    patchwork::area(1, 1)
+    , patchwork::area(1,2)
+    , patchwork::area(2,1,2,2)
+    # , patchwork::area(3,1,3,2)
+  )
+) &
+ggplot2::theme(
+  axis.title = ggplot2::element_text(size = 8, color = "black", face = "bold")
+)
+ggplot2::ggsave("../data/all_comp_treatment_total_watershed.jpeg", plot = wshed_p_temp, height = 8, width = 10, dpi = 300)
 ```
 
 ### Table Area, Diam, Ht

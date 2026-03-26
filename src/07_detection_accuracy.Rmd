@@ -61,6 +61,8 @@ we reviewed this process and defined the function `ground_truth_prediction_match
         )
       , .progress = T
     )
+# watershed_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1) %>% dplyr::arrange(desc(n))
+# dbscan_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1) %>% dplyr::arrange(desc(n))
 ```
 
 let's see what the instance matching data looks like
@@ -548,6 +550,129 @@ watershed_gt_pred_match <-
   )
 # watershed_gt_pred_match %>% dplyr::glimpse()
 # agg_ground_truth_match(watershed_gt_pred_match[[1]]) %>% dplyr::glimpse()
+# watershed_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1) %>% dplyr::arrange(desc(n))
+# dbscan_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1) %>% dplyr::arrange(desc(n))
+```
+
+```{r, include=FALSE, eval=FALSE}
+dplyr::bind_rows(
+  # watershed
+    watershed_spectral_preds["pj"] %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::ungroup() %>% 
+        dplyr::summarise(
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
+        ) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+        )
+    ) %>% 
+    dplyr::bind_rows() %>% 
+    dplyr::mutate(method = "watershed")
+  , # dbscan
+    dbscan_spectral_preds["pj"] %>% 
+    purrr::imap(
+      \(x,nm)
+      x %>% 
+        sf::st_drop_geometry() %>% 
+        dplyr::ungroup() %>% 
+        dplyr::summarise(
+          dplyr::across(
+            c(area_m2, volume_m3, max_height_m)
+            , .fns = list(
+              mean = ~mean(.x,na.rm=T)
+              , sd = ~sd(.x,na.rm=T)
+              , sum = ~sum(.x,na.rm=T)
+            )
+          )
+          , n = dplyr::n()
+        ) %>% 
+        dplyr::mutate(
+          site = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(site)
+        )
+    ) %>% 
+    dplyr::bind_rows() %>% 
+    dplyr::mutate(method = "dbscan")
+) %>% 
+dplyr::select(site,method,c(tidyselect::ends_with("_sum") & tidyselect::starts_with("area_")))
+
+###### 
+# matches
+# c("pj") %>%
+#   purrr::map(
+#     \(x)
+#     dplyr::bind_rows(
+#       watershed_gt_pred_match[[x]] %>%
+#         stand_agg_fn(which_comp = "gt") %>%
+#         dplyr::mutate(
+#           method = "watershed"
+#           , site = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site)
+#           , site_full_lab = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(site_full_lab)
+#         )
+#     ) %>%
+#     dplyr::filter(
+#       stringr::str_detect(tolower(pile_metric),"area")
+#     )
+#   ) %>%
+#   dplyr::bind_rows()
+dplyr::bind_rows(
+  watershed_gt_pred_match[["pj"]] %>% 
+    dplyr::ungroup() %>% 
+    dplyr::select(-c(pred_id)) %>% 
+    dplyr::summarise(
+      dplyr::across(
+        .cols = tidyselect::starts_with( paste0("gt","_") ) | tidyselect::starts_with("pred_")
+        # , ~sum(.x,na.rm=T)
+        , list(sum=~sum(.x,na.rm=T), n=~sum(!is.na(.x)) )
+      )
+    ) %>% 
+    dplyr::select(tidyselect::ends_with("_sum") & tidyselect::starts_with("pred_area")) %>% 
+    dplyr::mutate(method = "watershed")
+  , dbscan_gt_pred_match[["pj"]] %>% 
+    dplyr::ungroup() %>% 
+    dplyr::select(-c(pred_id)) %>% 
+    dplyr::summarise(
+      dplyr::across(
+        .cols = tidyselect::starts_with( paste0("gt","_") ) | tidyselect::starts_with("pred_")
+        # , ~sum(.x,na.rm=T)
+        , list(sum=~sum(.x,na.rm=T), n=~sum(!is.na(.x)) )
+      )
+    ) %>% 
+    dplyr::select(tidyselect::ends_with("_sum") & tidyselect::starts_with("pred_area")) %>% 
+    dplyr::mutate(method = "dbscan")
+) %>% 
+dplyr::glimpse()
+  
+
+watershed_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::arrange(desc(n))
+dbscan_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::arrange(desc(n))
+
+watershed_gt_pred_match[["pj"]] %>%
+  dplyr::inner_join(
+    watershed_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1)
+    , by = "pred_id"
+  ) %>% 
+  dplyr::filter(!is.na(pred_id)) %>% 
+  dplyr::glimpse()
+dbscan_gt_pred_match[["pj"]] %>%
+  dplyr::inner_join(
+    dbscan_gt_pred_match[["pj"]] %>% dplyr::count(pred_id) %>% dplyr::filter(n>1)
+    , by = "pred_id"
+  ) %>% 
+  dplyr::filter(!is.na(pred_id)) %>% 
+  dplyr::glimpse()
+
 ```
 
 apply our `agg_ground_truth_match()` function
@@ -1816,7 +1941,7 @@ example_aoi %>%
 
 we could use our `ggplot2` based `ortho_plt_fn()` function to get the RGB basemap for the aoi which we'll overlay the reference and predictions on...
 
-...but the only reason to do this would be to use `patchwork` to create a tiled figure that combines all of the example areas from the four study sites. since we are already doing manual stuff, we're just going to generate the images using the fast-plotting of `terra`, save them, and then combine them in powerpoint (which will also be not much fun but maybe AI can align since it's AI and all?). *update, AI in powerpoint did not align the images worth a darn. the result looked like what would be generated by a first-time powerpoint user with zero clue about creating visually appealing graphics (small images haphazardly arranged on the slide, comic sans text overlapping and placed partially behind images...). i manually organized the images in powerpoint to make the image for the manuscript that looked decent. the biggest challenge was working with different sized/dimensions example area images.*
+...but the only reason to do this would be to use `patchwork` to create a tiled figure that combines all of the example areas from the four study sites. since we are already doing manual stuff, we're just going to generate the images using the fast-plotting of `terra`, save them, and then combine them in powerpoint (which will also be not much fun but maybe AI can align since it's AI and all?). *update, AI in powerpoint did not align the images worth a darn. the result looked like what would be generated by a first-time powerpoint user with zero clue about creating visually appealing graphics (small images haphazardly arranged on the slide, comic sans text overlapping and placed partially behind images...). i manually organized the images in powerpoint to make the image for the manuscript that looked decent. one challenge was working with different sized/dimensions example area images.*
 
 ```{r, results=F, fig.show='hide'}
 # high contrast pal
@@ -1826,7 +1951,7 @@ neon_colors <- c("cyan", "blue", "yellow", "white")
 # neon_colors <- c("cyan", "orange", "gold", "royalblue")
 # neon_colors <- c("cyan", "chartreuse", "firebrick", "deepskyblue")
 names(neon_colors) <- c("reference", "correct prediction (TP)", "incorrect detection (FP)", "omitted (FN)")
-terra_plt_gt_pred_match <- function(nm) {
+terra_plt_gt_pred_match <- function(nm, seg_mthd = "dbscan") {
   # grDevices::jpeg("../data/psinf_stand_rgb.jpeg", width = 8, height = 8, units = "in", res = 300)
   # mar = c(bottom, left, top, right)
   rgb_temp <- rgb_rast[[nm]] %>% 
@@ -1841,21 +1966,39 @@ terra_plt_gt_pred_match <- function(nm) {
   # dplyr::glimpse(gt_temp)
   
   # all pred piles 
-  pred_temp <- dbscan_spectral_preds[[nm]] %>% 
-    dplyr::filter(is_in_stand) %>% 
-    sf::st_intersection(example_aoi[[nm]])
+  if(seg_mthd=="watershed"){
+    pred_temp <- watershed_spectral_preds[[nm]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      sf::st_intersection(example_aoi[[nm]]) 
+  }else{
+    pred_temp <- dbscan_spectral_preds[[nm]] %>% 
+      dplyr::filter(is_in_stand) %>% 
+      sf::st_intersection(example_aoi[[nm]]) 
+  }
   # dplyr::glimpse(pred_temp)
   ############################
   # check for FN
   ############################
-  fn_temp <-
-    gt_temp %>% 
-    dplyr::inner_join(
-      dbscan_gt_pred_match[[nm]] %>% 
-        dplyr::filter(match_grp == "omission") %>% 
-        dplyr::select(pile_id)
-      , by = "pile_id"
-    )
+  if(seg_mthd=="watershed"){
+    fn_temp <-
+      gt_temp %>% 
+      dplyr::inner_join(
+        watershed_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "omission") %>% 
+          dplyr::select(pile_id)
+        , by = "pile_id"
+      )
+  }else{
+    fn_temp <-
+      gt_temp %>% 
+      dplyr::inner_join(
+        dbscan_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "omission") %>% 
+          dplyr::select(pile_id)
+        , by = "pile_id"
+      )
+  }
+  
   if(nrow(fn_temp)>0){
     # add pile boundaries
     terra::plot(
@@ -1878,14 +2021,26 @@ terra_plt_gt_pred_match <- function(nm) {
   ############################
   # check for FP
   ############################
-  fp_temp <-
-    pred_temp %>% 
-    dplyr::inner_join(
-      dbscan_gt_pred_match[[nm]] %>% 
-        dplyr::filter(match_grp == "commission") %>% 
-        dplyr::select(pred_id)
-      , by = "pred_id"
-    )
+  if(seg_mthd=="watershed"){
+    fp_temp <-
+      pred_temp %>% 
+      dplyr::inner_join(
+        watershed_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "commission") %>% 
+          dplyr::select(pred_id)
+        , by = "pred_id"
+      )
+  }else{
+    fp_temp <-
+      pred_temp %>% 
+      dplyr::inner_join(
+        dbscan_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "commission") %>% 
+          dplyr::select(pred_id)
+        , by = "pred_id"
+      )
+  }
+  
   if(nrow(fp_temp)>0){
     # add pile boundaries
     terra::plot(
@@ -1898,14 +2053,26 @@ terra_plt_gt_pred_match <- function(nm) {
   ############################
   # add TP
   ############################
-  tp_temp <-
-    pred_temp %>% 
-    dplyr::inner_join(
-      dbscan_gt_pred_match[[nm]] %>% 
-        dplyr::filter(match_grp == "true positive") %>% 
-        dplyr::select(pred_id)
-      , by = "pred_id"
-    )
+  if(seg_mthd=="watershed"){
+    tp_temp <-
+      pred_temp %>% 
+      dplyr::inner_join(
+        watershed_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "true positive") %>% 
+          dplyr::select(pred_id)
+        , by = "pred_id"
+      )
+  }else{
+    tp_temp <-
+      pred_temp %>% 
+      dplyr::inner_join(
+        dbscan_gt_pred_match[[nm]] %>% 
+          dplyr::filter(match_grp == "true positive") %>% 
+          dplyr::select(pred_id)
+        , by = "pred_id"
+      )
+  }
+  
   if(nrow(tp_temp)>0){
     # add pile boundaries
     terra::plot(
@@ -1970,6 +2137,11 @@ example_aoi_plt <-
   all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
   purrr::map(terra_plt_gt_pred_match)
+# do it again
+example_aoi_plt_wshed <- 
+  all_stand_boundary$site_data_lab %>% 
+  purrr::set_names() %>% 
+  purrr::map(\(x) terra_plt_gt_pred_match(nm=x, seg_mthd = "watershed"))
 ```
 
 ```{r, include=FALSE, eval=FALSE}
@@ -2031,6 +2203,13 @@ grDevices::replayPlot(example_aoi_plt[["arnf"]])
 # grDevices::dev.off()
 ```
 
+```{r, fig.height= 4, fig.width=8, eval=T, include=F, fig.show='hide'}
+# names(example_aoi_plt)
+grDevices::jpeg("../data/arnf_example_aoi_watershed.jpeg", width = 8, height = 4, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt_wshed[["arnf"]])
+grDevices::dev.off()
+```
+
 #### BHEF
 
 ```{r, fig.height= 4.5, fig.width=8}
@@ -2038,6 +2217,13 @@ grDevices::replayPlot(example_aoi_plt[["arnf"]])
 # grDevices::jpeg("../data/bhef_example_aoi.jpeg", width = 8, height = 4.5, units = "in", res = 300)
 grDevices::replayPlot(example_aoi_plt[["bhef"]])
 # grDevices::dev.off()
+```
+
+```{r, fig.height= 4.5, fig.width=8, eval=T, include=F, fig.show='hide'}
+# names(example_aoi_plt)
+grDevices::jpeg("../data/bhef_example_aoi_watershed.jpeg", width = 8, height = 4.5, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt_wshed[["bhef"]])
+grDevices::dev.off()
 ```
 
 #### PSINF
@@ -2049,6 +2235,13 @@ grDevices::replayPlot(example_aoi_plt[["psinf"]])
 # grDevices::dev.off()
 ```
 
+```{r, fig.height= 4, fig.width=8, eval=T, include=F, fig.show='hide'}
+# names(example_aoi_plt)
+grDevices::jpeg("../data/psinf_example_aoi_watershed.jpeg", width = 8, height = 4, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt_wshed[["psinf"]])
+grDevices::dev.off()
+```
+
 #### TRFO-BLM
 
 ```{r, fig.height= 4.5, fig.width=8}
@@ -2056,6 +2249,19 @@ grDevices::replayPlot(example_aoi_plt[["psinf"]])
 # grDevices::jpeg("../data/pj_example_aoi.jpeg", width = 8, height = 4.5, units = "in", res = 300)
 grDevices::replayPlot(example_aoi_plt[["pj"]])
 # grDevices::dev.off()
+```
+
+```{r, fig.height= 4.5, fig.width=8, eval=T, include=F, fig.show='hide'}
+# names(example_aoi_plt)
+grDevices::jpeg("../data/pj_example_aoi_watershed.jpeg", width = 8, height = 4.5, units = "in", res = 300)
+grDevices::replayPlot(example_aoi_plt_wshed[["pj"]])
+grDevices::dev.off()
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
+remove(example_aoi_plt, example_aoi_plt_wshed)
+gc()
 ```
 
 ```{r, include=F,eval=FALSE}
@@ -2203,4 +2409,5 @@ gt_mtch_temp <- ground_truth_prediction_match(
 agg_ground_truth_match(ground_truth_prediction_match_ans = gt_mtch_temp)
 
 ```
+
 

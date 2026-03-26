@@ -593,6 +593,7 @@ Let's load in those image-annotated pile polygons now for each study site.
     , 99
     , 96
     , 50
+    , 268
   )
   pj_slash_piles_points <- 
     readr::read_csv("../data/Dawson_data/PJ_Piles_Unit_10.csv", progress = T, show_col_types = F) %>% 
@@ -869,6 +870,16 @@ psinf_slash_piles_polys <-
     , image_gt_volume_m3 = (1/8) * pi * (image_gt_diameter_m^2) * field_height_m
     , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * field_height_m
   )
+# psinf_slash_piles_polys %>%
+#   dplyr::inner_join(
+#     psinf_slash_piles_polys %>%
+#       sf::st_drop_geometry() %>%
+#       dplyr::count(pile_id) %>%
+#       dplyr::filter(n>1)
+#     , by = "pile_id"
+#   ) %>%
+#   dplyr::glimpse()
+
 # TRFO-BLM Pinyon-Juniper Site
 pj_slash_piles_polys <-
   match_points_to_polygons(
@@ -896,6 +907,16 @@ pj_slash_piles_polys <-
     , image_gt_volume_m3 = (1/8) * pi * (image_gt_diameter_m^2) * field_height_m
     , field_gt_volume_m3 = (1/8) * pi * (field_diameter_m^2) * field_height_m
   )
+# pj_slash_piles_polys %>% 
+#   dplyr::inner_join(
+#     pj_slash_piles_polys %>% 
+#       sf::st_drop_geometry() %>% 
+#       dplyr::count(pile_id) %>% 
+#       dplyr::filter(n>1)
+#     , by = "pile_id"
+#   ) %>% 
+#   dplyr::glimpse()
+
 # BHEF Ponderosa Pine Site
 bhef_slash_piles_polys <-
   bhef_slash_piles_polys %>% 
