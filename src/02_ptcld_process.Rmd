@@ -26,7 +26,7 @@ look at the summary of the point cloud data we'll be processing
 ```{r}
 # processing dirs
 c2t_out_dir_temp <- "../data/PFDP_Data/"
-out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+psinf_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
 ```
 
@@ -39,7 +39,7 @@ process the point cloud with the `cloud2trees::cloud2raster()` workflow
 
 ```{r, results=F}
 # do it
-if(!dir.exists(out_dir_temp)){
+if(!dir.exists(psinf_out_dir)){
   # cloud2trees
   psinf_cloud2raster_ans <- cloud2trees::cloud2raster(
     output_dir = c2t_out_dir_temp
@@ -51,10 +51,10 @@ if(!dir.exists(out_dir_temp)){
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
   # rename
-  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = psinf_out_dir)
 }else{
-  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.25m.tif") )
-  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  dtm_temp <- terra::rast( file.path(psinf_out_dir, "dtm_0.25m.tif") )
+  chm_temp <- terra::rast( file.path(psinf_out_dir, paste0("chm_", my_chm_res_m,"m.tif")) )
   # combine
   psinf_cloud2raster_ans <- list(
     "dtm_rast" = dtm_temp

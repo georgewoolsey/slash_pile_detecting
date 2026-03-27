@@ -684,11 +684,13 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-### Manuscript Figure Addition
+## Regression-based Assessment
 
-#### Figure 4
+Fit predicted versus reference values for the correctly detected slash piles (a) diameter and (b) height for the PSINF study site and (c) 2D area for all four study sites. The solid dark line represents a 1:1 relationship while the gray dashed line indicates a simple linear regression fit.
 
-Predicted versus reference values for the correctly detected slash piles (a) diameter and (b) height for the PSINF study site and (c) 2D area for all four study sites. The solid dark line represents a 1:1 relationship while the gray dashed line indicates a simple linear regression fit.
+The slope and intercept of the regression will provide insight into how well the framework represents pile dimensional measurements across the entire range of pile sizes available in the reference data. The coefficient of determination (R^2^) will tell us how well the variability in the reference pile size is explained by the predicted values. In other words, a high R^2^ means that our method for quantifying slash pile form successfully captures the trend of the data: we predict larger piles when reference piles are larger and vice-versa. 
+
+### Figure 4
 
 ```{r, results=F}
 ####################################
@@ -1389,6 +1391,340 @@ ggplot2::ggsave("../data/all_comp_scatter2_watershed.jpeg", plot = final_layout,
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 remove(list = ls()[grep("_temp",ls())])
 remove(diameter_comp_scatter1, height_comp_scatter1, final_layout, p_top_left, p_top_right, p_bottom_group)
+gc()
+```
+
+Based on the error metrics and this regression analysis, our slash pile quantification framework is highly accurate at capturing the horizontal dimensions of piles (area and diameter) but less accurate at capturing the height based on the PSINF field-measured values. The reduction in height accuracy compared to the diameter accuracy at this site is primarily driven by the tallest piles which our method provides height estimates well below the reference values. For shorter piles our method does not show a bias in representing pile height with most predicted values aligned with the reference values.
+
+## Height Accuracy Investigation{htpiles_huh}
+
+let's dig into the discrepancy between the predicted and field-measured height values. way back in the [point cloud processing section](#ptcld_process) we noticed that the base of the pile was clearly visible within the DTM of the example pile footprint. This indicates that the lower portion of some piles may be incorrectly classified as ground by the CSF ground classification algorithm. Here, we'll see if we can quantify "how much" of the pile height was included as ground instead of being attributed to the pile vertical dimension for the piles with the largest discrepancy between the predicted and reference height
+
+we need to re-load the PSINF DTM raster
+
+```{r}
+n_temp <- 8
+psinf_dtm_rast <- terra::rast( file.path(psinf_out_dir, "dtm_0.25m.tif") )
+psinf_dtm_rast
+```
+
+look at the `r n_temp` piles with the largest height under-prediction
+
+```{r}
+# piles
+htpiles_temp <- 
+  dbscan_gt_pred_match[["psinf"]] %>% 
+  dplyr::filter(match_grp=="true positive") %>% 
+  dplyr::mutate(diff_field_height_m = pred_height_m-field_height_m) %>% 
+  # dplyr::select(diff_field_height_m) %>% summary()
+  dplyr::slice_min(n = n_temp, order_by = diff_field_height_m)
+# htpiles_temp %>% dplyr::glimpse()
+htpiles_temp %>% 
+  dplyr::select(pile_id, pred_height_m, field_height_m, diff_field_height_m, pct_diff_field_height_m) %>% 
+  dplyr::mutate(
+    dplyr::across(tidyselect::starts_with("pct_"), ~scales::percent(.x, accuracy = 0.1))
+    , dplyr::across(
+      tidyselect::ends_with("_m") & !tidyselect::starts_with("pct_")
+      , ~scales::comma(.x, accuracy = 0.01)
+    )
+  ) %>% 
+  kableExtra::kbl(
+    caption = paste(n_temp, "piles with the largest height under-prediction")
+    , col.names = c(
+      "pile id"
+      , "predicted ht. (m)"
+      , "field ht. (m)"
+      , "predicted<br>difference ht. (m)"
+      , "predicted<br>% difference"
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+get the DTM within the pile footprints
+
+```{r}
+# get DTM within footprint
+dtm_temp <- 
+  htpiles_temp$pile_id %>% 
+  purrr::set_names() %>% 
+  purrr::map(function(x){
+    dta_temp <- htpiles_temp %>% dplyr::filter(pile_id==x)
+    buff_temp <- sqrt(dta_temp$gt_area_m2/pi)*0.3
+    poly_temp <- slash_piles_polys[["psinf"]] %>% dplyr::filter(pile_id == x)
+    dtm_temp <- psinf_dtm_rast %>% 
+      terra::crop(
+        poly_temp %>% 
+          sf::st_buffer(buff_temp) %>% 
+          sf::st_transform(terra::crs(psinf_dtm_rast)) %>% 
+          terra::vect()
+        , mask = T
+      )
+    # get area outside of pile
+    ground_temp <- dtm_temp %>% 
+      terra::mask(
+        poly_temp %>% 
+          sf::st_transform(terra::crs(psinf_dtm_rast)) %>% 
+          terra::vect()
+        , inverse = T
+      )
+    return(list(
+      dtm = dtm_temp
+      , poly = poly_temp
+      , ground = ground_temp
+      , buffer = buff_temp
+    ))
+  })
+# names(dtm_temp)
+```
+
+### Estimate DTM inaccuracy
+
+let's use the DTM values in and around these pile footprints to:
+
+1) calculate a corrected ground level using DTM values just outside of the pile footprint based on a 30% buffer of the pile radius
+2) estimate the DTM over-prediction, which creates the under-prediction in pile heights, by subtracting the corrected ground level from the DTM values within the pile footprint to height correct the DTM. this height-corrected DTM within the pile footprint represents the DTM over-prediction and resulting CHM under-prediction
+
+here's an example
+
+*the DTM values just outside of the pile which should be ground*
+
+```{r}
+terra::plot(dtm_temp[[1]]$ground, axes = F)
+terra::plot(terra::vect(dtm_temp[[1]]$poly), border = "cyan", col = NA, add = T)
+```
+
+*the mean of those values*
+
+```{r}
+terra::global(dtm_temp[[1]]$ground, "mean", na.rm = T)[[1]] %>% 
+  scales::comma(accuracy = 0.01)
+```
+
+*subtract the ground level (i.e. mean DTM outside of pile) from the DTM*
+
+```{r}
+(dtm_temp[[1]]$dtm-terra::global(dtm_temp[[1]]$ground, "mean", na.rm = T)[[1]]) %>% 
+  terra::clamp(lower = 0, values = T) %>%
+  terra::mask(terra::vect(dtm_temp[[1]]$poly), updatevalue = 0) %>% 
+  terra::plot(axes=F)
+terra::plot(terra::vect(dtm_temp[[1]]$poly), border = "cyan", col = NA, add = T)
+```
+
+let's do this for all `r n_temp` piles with the largest predicted height difference
+
+```{r, results=F}
+# get DTM within footprint
+htdiff_rast_temp <- 
+  dtm_temp %>% 
+  purrr::map(function(x){
+    mean_ground <- terra::global(x$ground, "mean", na.rm = T)[[1]]
+    norm <- (x$dtm-mean_ground) %>% 
+      terra::clamp(lower = 0, values = T) %>%
+      terra::mask(terra::vect(x$poly), updatevalue = 0)
+    huh <- exactextractr::exact_extract(x = norm, y = x$poly, fun = c("max", "mean"), force_df = T)
+    return(list(
+      dtm_norm = norm
+      , poly = x$poly
+      , df_sum = huh
+    ))
+  })
+# names(htdiff_rast_temp)
+# names(htdiff_rast_temp[[1]])
+# terra::plot(htdiff_rast_temp[[2]]$dtm_norm)
+# terra::plot(terra::vect(htdiff_rast_temp[[2]]$poly), border = "blue", col = NA, add = T)
+# htdiff_rast_temp[[2]]$df_sum
+
+# add the extracted summarized corrected DTM values to the pile data
+htpiles_temp <- 
+  htdiff_rast_temp %>% 
+  purrr::map_dfr("df_sum", .id = "pile_id") %>% 
+  dplyr::rename(
+    max_dtm_overpred_m = max
+    , mean_dtm_overpred_m = mean
+  ) %>% 
+  dplyr::mutate(pile_id = as.numeric(pile_id)) %>% 
+  dplyr::left_join(
+    htpiles_temp
+    , by = "pile_id"
+  ) 
+# htpiles_temp %>% dplyr::glimpse()
+```
+
+check out the corrected DTMs with the pile height underprediction compared to the maximum and mean DTM overprediction
+
+```{r, results=F}
+plts_temp <- 
+  htdiff_rast_temp %>% 
+  purrr::imap(
+    \(x,nm)
+    ggplot2::ggplot() +
+      ggplot2::geom_tile(
+        data = 
+          x$dtm_norm %>% 
+            terra::as.data.frame(xy = T) %>% 
+            dplyr::rename(f=3)
+        , ggplot2::aes(x=x,y=y,fill=f)
+      ) +
+      ggplot2::geom_sf(data = x$poly, fill = NA, color = "cyan", lwd = 1) +
+      ggplot2::scale_x_continuous(expand = c(0, 0)) +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
+      ggplot2::scale_fill_distiller(
+        palette = "Oranges", direction=1
+        , limits = c(
+          0
+          , max(c(
+            htpiles_temp$max_dtm_overpred_m
+            , htpiles_temp$mean_dtm_overpred_m
+          ))
+        )
+      ) +
+      ggplot2::labs(
+        x = ""
+        , y = ""
+        , fill = "DTM\nbias (m)"
+        , subtitle = 
+          paste0(
+            "height underprediction: ", scales::comma(
+              htpiles_temp %>% 
+                dplyr::filter(pile_id==as.numeric(nm)) %>% 
+                dplyr::pull(diff_field_height_m)
+              , accuracy = 0.01, suffix = " m"
+            )
+            , "\nDTM maximum overprediction: ", scales::comma(x$df_sum$max, accuracy = 0.01, suffix = " m")
+            , "\nDTM mean overprediction: ", scales::comma(x$df_sum$mean, accuracy = 0.01, suffix = " m")
+          )
+      ) +
+      ggplot2::theme_void() +
+      ggplot2::theme(
+        legend.position = "bottom" # c(0.5,1)
+        , legend.margin = ggplot2::margin(0,0,0,0)
+        , legend.text = ggplot2::element_text(size = 8)
+        , legend.title = ggplot2::element_text(size = 9)
+        , legend.key = ggplot2::element_rect(fill = "white")
+        # , plot.title = ggtext::element_markdown(size = 10, hjust = 0.5)
+        , plot.title = ggplot2::element_text(size = 8.5, hjust = 0.5)
+        , plot.subtitle = ggplot2::element_text(size = 8.5, hjust = 0.5)
+        , plot.background = ggplot2::element_rect(fill = "gray93", color = "gray33")
+      )
+  )
+# plts_temp[[8]]
+```
+
+```{r, fig.height=10.5, fig.width=8}
+patchwork::wrap_plots(
+  c(plts_temp, list(patchwork::guide_area()))
+  , ncol = 3
+  # , guides = "collect"
+) +
+patchwork::plot_layout(guides = "collect")
+ggplot2::ggsave("../data/height_investigation_example.jpg", height = 10.5, width = 8)
+```
+
+table the extracted maximum and mean DTM overprediction within each pile footprint and compare it to the predicted height underprediction
+
+```{r}
+htpiles_temp %>% 
+  dplyr::select(pile_id, mean_dtm_overpred_m, max_dtm_overpred_m, diff_field_height_m) %>% 
+  dplyr::mutate(
+    pct_correction = abs(max_dtm_overpred_m)/abs(diff_field_height_m)
+    , max_corrected_diff_m = max_dtm_overpred_m+diff_field_height_m
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(tidyselect::starts_with("pct_"), ~scales::percent(.x, accuracy = 0.1))
+    , dplyr::across(
+      tidyselect::ends_with("_m") & !tidyselect::starts_with("pct_")
+      , ~scales::comma(.x, accuracy = 0.01)
+    )
+  ) %>% 
+  kableExtra::kbl(
+    caption = paste(n_temp, "piles with the largest height under-prediction", "<br>with maximum and mean DTM overprediction")
+    , col.names = c(
+      "pile id"
+      , "mean<br>DTM bias (m)"
+      , "max<br>DTM bias (m)"
+      , "predicted<br>difference ht. (m)"
+      , "max<br>% correction"
+      , "max<br>possible corrected<br>difference ht. (m)"
+      
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::kable_styling()
+```
+
+we can look at this graphically to see if the DTM overprediction offsets the predicted height difference
+
+```{r, fig.height=9, fig.width=7}
+htpiles_temp %>% # dplyr::glimpse()
+  dplyr::mutate(
+    pile_id = factor(pile_id) %>% 
+      forcats::fct_reorder(diff_field_height_m) %>% 
+      forcats::fct_rev() %>% 
+      forcats::fct_relabel(~ paste0("pile_id: ", .x))
+  ) %>% 
+  ggplot2::ggplot(mapping = ggplot2::aes(y = pile_id)) +
+  # ggplot2::ggplot(mapping = ggplot2::aes(y = 0)) +
+  ggplot2::geom_segment(mapping = ggplot2::aes(x = pred_height_m, xend = pred_height_m+max_dtm_overpred_m, color = "max\npossible\ncorrection"), lwd = 1.1) +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = pred_height_m+max_dtm_overpred_m, color = "max\npossible\ncorrection"), size = 7, shape = "|") +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = pred_height_m, color = "prediction"), size = 5, shape = 19) +
+  ggplot2::geom_point(mapping = ggplot2::aes(x = field_height_m, color = "reference"), size = 5, shape = 17) +
+  # labels
+  ggplot2::geom_text(
+    mapping = ggplot2::aes(
+      x = pred_height_m+max_dtm_overpred_m
+        # pred_height_m+(max_dtm_overpred_m/2)
+      , label = scales::comma(pred_height_m+max_dtm_overpred_m, accuracy = 0.01)
+    )
+    , size = 3
+    , hjust = 0.5, vjust = -2.2
+    , color = "gray33"
+  ) +
+  ggplot2::geom_text(
+    mapping = ggplot2::aes(x = pred_height_m, label = scales::comma(pred_height_m, accuracy = 0.01))
+    , size = 3
+    , hjust = 0.5, vjust = 2.2
+  ) +
+  ggplot2::geom_text(
+    mapping = ggplot2::aes(x = field_height_m, label = scales::comma(field_height_m, accuracy = 0.01))
+    , size = 3
+    , hjust = 0.5, vjust = 2.2
+  ) +
+  # ggplot2::facet_wrap(facets = dplyr::vars(pile_id), scales = "free", axes = "all_x", strip.position = "left", ncol = 1) +
+  ggplot2::scale_color_manual(
+    values = c(
+      "gray44"
+      , rev(harrypotter::hp(n=2, option = "hermionegranger"))
+    )
+  ) +
+  ggplot2::labs(
+    x = "height (m)"
+    , y = ""
+    , color = ""
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "top"
+    , panel.grid.major.x = ggplot2::element_blank()
+    , panel.grid.minor.x = ggplot2::element_blank()
+    , axis.title.y = ggplot2::element_blank()
+    , axis.text.y = ggplot2::element_text(size = 10, face = "bold")
+    , axis.text.x = ggplot2::element_text(size = 8)
+    # , strip.placement = "outside"
+    # , axis.title.y = ggplot2::element_blank()
+    # , strip.text.y.left = ggplot2::element_text(angle = 0) 
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      override.aes = list(shape = 15, size = 5, linetype = 0)
+    )
+  )
+ggplot2::ggsave("../data/height_investigation_example_correct.jpg", height = 9, width = 7)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
