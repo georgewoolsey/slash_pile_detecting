@@ -30,7 +30,7 @@ psinf_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_deli
 las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
 ```
 
-```{r,eval=F,purl=F}
+```{r,eval=T,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
 ```
@@ -236,7 +236,7 @@ plt_rast_combine <- function(
 
 use this handy plotting function for some piles
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(psinf_slash_piles_polys$is_in_stand) %>% 
@@ -258,7 +258,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -421,7 +421,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(pj_slash_piles_polys$is_in_stand) %>% 
@@ -443,7 +443,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -481,7 +481,7 @@ las_flist_temp <- c(
 )
 ```
 
-```{r,eval=F,purl=F}
+```{r,eval=T,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_flist_temp)
 ```
@@ -573,7 +573,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(bhef_slash_piles_polys$is_in_stand) %>% 
@@ -595,7 +595,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -622,7 +622,7 @@ out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_deliv
 las_dir_temp <- "F:/UAS_Collections/ARNF_DiamondView_202510/point_cloud_high_density" # where is the raw las
 ```
 
-```{r,eval=F,purl=F}
+```{r,eval=T,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
 ```
@@ -714,7 +714,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(arnf_slash_piles_polys$is_in_stand) %>% 
@@ -736,7 +736,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
