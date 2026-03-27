@@ -339,7 +339,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li class="chapter" data-level="9.3.1" data-path="preds_quantit.html"><a href="preds_quantit.html#figure-4"><i class="fa fa-check"></i><b>9.3.1</b> Figure 4</a></li>
 </ul></li>
-<li class="chapter" data-level="9.4" data-path="preds_quantit.html"><a href="preds_quantit.html#height-accuracy-investigationhtpiles_huh"><i class="fa fa-check"></i><b>9.4</b> Height Accuracy Investigation{htpiles_huh}</a>
+<li class="chapter" data-level="9.4" data-path="preds_quantit.html"><a href="preds_quantit.html#htpiles_huh"><i class="fa fa-check"></i><b>9.4</b> Height Accuracy Investigation</a>
 <ul>
 <li class="chapter" data-level="9.4.1" data-path="preds_quantit.html"><a href="preds_quantit.html#estimate-dtm-inaccuracy"><i class="fa fa-check"></i><b>9.4.1</b> Estimate DTM inaccuracy</a></li>
 </ul></li>
@@ -568,7 +568,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>## # A tibble: 1 × 5
 ##   pile_id i_area u_area   iou pred_id
 ##     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
-## 1      13   3.14   5.97 0.526 1</code></pre>
+## 1      56   8.00   12.6 0.637 1</code></pre>
 <p>now we need to make a function that matches the instances iteratively allowing for only a single match from the predictions (i.e. one prediction can only go to one ground truth instance), and returns all instances labeled as true positive (correctly matched with a prediction), commission (predictions which do not match a ground truth instance; false positive), or omission (ground truth instances for which no predictions match; false negative)</p>
 <div class="sourceCode" id="cb255"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb255-1"><a href="meth_eval.html#cb255-1" tabindex="-1"></a>ground_truth_prediction_match <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
 <span id="cb255-2"><a href="meth_eval.html#cb255-2" tabindex="-1"></a>  <span class="co"># ground_truth should be sorted already</span></span>
@@ -685,13 +685,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb256-8"><a href="meth_eval.html#cb256-8" tabindex="-1"></a>)</span>
 <span id="cb256-9"><a href="meth_eval.html#cb256-9" tabindex="-1"></a><span class="co"># huh?</span></span>
 <span id="cb256-10"><a href="meth_eval.html#cb256-10" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
-<pre><code>## Rows: 52
+<pre><code>## Rows: 53
 ## Columns: 6
-## $ pile_id   &lt;dbl&gt; 3, 4, 5, 13, 17, 19, 20, 23, 29, 53, 63, 6, 11, 21, 22, 24, …
-## $ i_area    &lt;dbl&gt; 12.560629, 12.560629, 12.560629, 3.140157, 6.149464, 5.94241…
-## $ u_area    &lt;dbl&gt; 25.166539, 32.028082, 22.928349, 5.968836, 12.560629, 12.560…
-## $ iou       &lt;dbl&gt; 0.4991004, 0.3921755, 0.5478209, 0.5260920, 0.4895825, 0.473…
-## $ pred_id   &lt;chr&gt; &quot;4&quot;, &quot;7&quot;, &quot;11&quot;, &quot;1&quot;, &quot;5&quot;, &quot;8&quot;, &quot;10&quot;, &quot;9&quot;, &quot;3&quot;, &quot;12&quot;, &quot;2&quot;, NA…
+## $ pile_id   &lt;dbl&gt; 3, 11, 13, 19, 20, 23, 24, 29, 53, 56, 4, 5, 6, 17, 21, 22, …
+## $ i_area    &lt;dbl&gt; 12.560629, 12.560629, 3.140157, 3.140157, 8.544496, 6.309123…
+## $ u_area    &lt;dbl&gt; 25.166539, 20.184169, 5.968836, 5.942413, 12.560865, 12.5606…
+## $ iou       &lt;dbl&gt; 0.4991004, 0.6223010, 0.5260920, 0.5284313, 0.6802475, 0.502…
+## $ pred_id   &lt;chr&gt; &quot;12&quot;, &quot;5&quot;, &quot;6&quot;, &quot;2&quot;, &quot;8&quot;, &quot;9&quot;, &quot;4&quot;, &quot;3&quot;, &quot;7&quot;, &quot;1&quot;, NA, NA, N…
 ## $ match_grp &lt;ord&gt; true positive, true positive, true positive, true positive, …</code></pre>
 <p>how did our predictions do for this test example?</p>
 <div class="sourceCode" id="cb258"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb258-1"><a href="meth_eval.html#cb258-1" tabindex="-1"></a><span class="co"># what did we get?</span></span>
@@ -701,19 +701,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>## # A tibble: 3 × 3
 ##   match_grp         n pct  
 ##   &lt;ord&gt;         &lt;int&gt; &lt;chr&gt;
-## 1 omission          7 13.5%
-## 2 commission       34 65.4%
-## 3 true positive    11 21.2%</code></pre>
+## 1 omission          8 15.1%
+## 2 commission       35 66.0%
+## 3 true positive    10 18.9%</code></pre>
 <p>let’s quickly look at the IoU values on the true positives</p>
 <div class="sourceCode" id="cb260"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb260-1"><a href="meth_eval.html#cb260-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(iou) <span class="sc">%&gt;%</span> <span class="fu">summary</span>()</span></code></pre></div>
 <pre><code>##       iou        
-##  Min.   :0.3675  
-##  1st Qu.:0.4195  
-##  Median :0.4896  
-##  Mean   :0.4727  
-##  3rd Qu.:0.5142  
-##  Max.   :0.5778  
-##  NA&#39;s   :41</code></pre>
+##  Min.   :0.3777  
+##  1st Qu.:0.4674  
+##  Median :0.5142  
+##  Mean   :0.5262  
+##  3rd Qu.:0.5988  
+##  Max.   :0.6803  
+##  NA&#39;s   :43</code></pre>
 <p>here is the distribution of IoU for the TP matches</p>
 <div class="sourceCode" id="cb262"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb262-1"><a href="meth_eval.html#cb262-1" tabindex="-1"></a><span class="co"># palette</span></span>
 <span id="cb262-2"><a href="meth_eval.html#cb262-2" tabindex="-1"></a>pal_match_grp <span class="ot">=</span> <span class="fu">c</span>(</span>
@@ -838,7 +838,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>## # A tibble: 1 × 8
 ##    fn_n  fp_n  tp_n omission_rate commission_rate precision recall f_score
 ##   &lt;int&gt; &lt;int&gt; &lt;int&gt;         &lt;dbl&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
-## 1     7    34    11         0.389           0.756     0.244  0.611   0.349</code></pre>
+## 1     8    35    10         0.444           0.778     0.222  0.556   0.317</code></pre>
 </div>
 <div id="quant_metrics_form" class="section level2 hasAnchor" number="6.3">
 <h2><span class="header-section-number">6.3</span> Quantification Accuracy Metrics<a href="meth_eval.html#quant_metrics_form" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -1037,17 +1037,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb270-26"><a href="meth_eval.html#cb270-26" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
 <pre><code>## Rows: 1
 ## Columns: 11
-## $ tp_n                  &lt;dbl&gt; 11
-## $ fp_n                  &lt;dbl&gt; 34
-## $ fn_n                  &lt;dbl&gt; 7
-## $ omission_rate         &lt;dbl&gt; 0.3888889
-## $ commission_rate       &lt;dbl&gt; 0.7555556
-## $ precision             &lt;dbl&gt; 0.2444444
-## $ recall                &lt;dbl&gt; 0.6111111
-## $ f_score               &lt;dbl&gt; 0.3492063
-## $ diff_area_m2_rmse     &lt;dbl&gt; 9.094156
-## $ diff_area_m2_mean     &lt;dbl&gt; -2.210458
-## $ pct_diff_area_m2_mape &lt;dbl&gt; 0.7641388</code></pre>
+## $ tp_n                  &lt;dbl&gt; 10
+## $ fp_n                  &lt;dbl&gt; 35
+## $ fn_n                  &lt;dbl&gt; 8
+## $ omission_rate         &lt;dbl&gt; 0.4444444
+## $ commission_rate       &lt;dbl&gt; 0.7777778
+## $ precision             &lt;dbl&gt; 0.2222222
+## $ recall                &lt;dbl&gt; 0.5555556
+## $ f_score               &lt;dbl&gt; 0.3174603
+## $ diff_area_m2_rmse     &lt;dbl&gt; 6.05437
+## $ diff_area_m2_mean     &lt;dbl&gt; -2.405621
+## $ pct_diff_area_m2_mape &lt;dbl&gt; 0.5587954</code></pre>
 <p>the <code>agg_ground_truth_match()</code> allows for multiple “diff_” and “pct_diff_” columns to aggregate quantification accuracy metrics for different measurements</p>
 <div class="sourceCode" id="cb272"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb272-1"><a href="meth_eval.html#cb272-1" tabindex="-1"></a>ground_truth_prediction_match_ans <span class="sc">%&gt;%</span> </span>
 <span id="cb272-2"><a href="meth_eval.html#cb272-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
@@ -1067,20 +1067,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb272-16"><a href="meth_eval.html#cb272-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
 <pre><code>## Rows: 1
 ## Columns: 14
-## $ tp_n                            &lt;dbl&gt; 11
-## $ fp_n                            &lt;dbl&gt; 34
-## $ fn_n                            &lt;dbl&gt; 7
-## $ omission_rate                   &lt;dbl&gt; 0.3888889
-## $ commission_rate                 &lt;dbl&gt; 0.7555556
-## $ precision                       &lt;dbl&gt; 0.2444444
-## $ recall                          &lt;dbl&gt; 0.6111111
-## $ f_score                         &lt;dbl&gt; 0.3492063
-## $ diff_area_m2_rmse               &lt;dbl&gt; 9.094156
-## $ diff_other_measurement_rmse     &lt;dbl&gt; 3.609635
-## $ diff_area_m2_mean               &lt;dbl&gt; -2.210458
-## $ diff_other_measurement_mean     &lt;dbl&gt; -0.7528354
-## $ pct_diff_area_m2_mape           &lt;dbl&gt; 0.7641388
-## $ pct_diff_other_measurement_mape &lt;dbl&gt; 0.439845</code></pre>
+## $ tp_n                            &lt;dbl&gt; 10
+## $ fp_n                            &lt;dbl&gt; 35
+## $ fn_n                            &lt;dbl&gt; 8
+## $ omission_rate                   &lt;dbl&gt; 0.4444444
+## $ commission_rate                 &lt;dbl&gt; 0.7777778
+## $ precision                       &lt;dbl&gt; 0.2222222
+## $ recall                          &lt;dbl&gt; 0.5555556
+## $ f_score                         &lt;dbl&gt; 0.3174603
+## $ diff_area_m2_rmse               &lt;dbl&gt; 6.05437
+## $ diff_other_measurement_rmse     &lt;dbl&gt; 6.016002
+## $ diff_area_m2_mean               &lt;dbl&gt; -2.405621
+## $ diff_other_measurement_mean     &lt;dbl&gt; -3.120286
+## $ pct_diff_area_m2_mape           &lt;dbl&gt; 0.5587954
+## $ pct_diff_other_measurement_mape &lt;dbl&gt; 0.4435626</code></pre>
 
 </div>
 </div>

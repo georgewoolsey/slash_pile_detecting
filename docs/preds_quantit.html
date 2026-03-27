@@ -339,7 +339,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li class="chapter" data-level="9.3.1" data-path="preds_quantit.html"><a href="preds_quantit.html#figure-4"><i class="fa fa-check"></i><b>9.3.1</b> Figure 4</a></li>
 </ul></li>
-<li class="chapter" data-level="9.4" data-path="preds_quantit.html"><a href="preds_quantit.html#height-accuracy-investigationhtpiles_huh"><i class="fa fa-check"></i><b>9.4</b> Height Accuracy Investigation{htpiles_huh}</a>
+<li class="chapter" data-level="9.4" data-path="preds_quantit.html"><a href="preds_quantit.html#htpiles_huh"><i class="fa fa-check"></i><b>9.4</b> Height Accuracy Investigation</a>
 <ul>
 <li class="chapter" data-level="9.4.1" data-path="preds_quantit.html"><a href="preds_quantit.html#estimate-dtm-inaccuracy"><i class="fa fa-check"></i><b>9.4.1</b> Estimate DTM inaccuracy</a></li>
 </ul></li>
@@ -1863,8 +1863,8 @@ watershed
 <p>Based on the error metrics and this regression analysis, our slash pile quantification framework is highly accurate at capturing the horizontal dimensions of piles (area and diameter) but less accurate at capturing the height based on the PSINF field-measured values. The reduction in height accuracy compared to the diameter accuracy at this site is primarily driven by the tallest piles which our method provides height estimates well below the reference values. For shorter piles our method does not show a bias in representing pile height with most predicted values aligned with the reference values.</p>
 </div>
 </div>
-<div id="height-accuracy-investigationhtpiles_huh" class="section level2 hasAnchor" number="9.4">
-<h2><span class="header-section-number">9.4</span> Height Accuracy Investigation{htpiles_huh}<a href="preds_quantit.html#height-accuracy-investigationhtpiles_huh" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="htpiles_huh" class="section level2 hasAnchor" number="9.4">
+<h2><span class="header-section-number">9.4</span> Height Accuracy Investigation<a href="preds_quantit.html#htpiles_huh" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>let’s dig into the discrepancy between the predicted and field-measured height values. way back in the <a href="ptcld_process.html#ptcld_process">point cloud processing section</a> we noticed that the base of the pile was clearly visible within the DTM of the example pile footprint. This indicates that the lower portion of some piles may be incorrectly classified as ground by the CSF ground classification algorithm. Here, we’ll see if we can quantify “how much” of the pile height was included as ground instead of being attributed to the pile vertical dimension for the piles with the largest discrepancy between the predicted and reference height</p>
 <p>we need to re-load the PSINF DTM raster</p>
 <div class="sourceCode" id="cb356"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb356-1"><a href="preds_quantit.html#cb356-1" tabindex="-1"></a>n_temp <span class="ot">&lt;-</span> <span class="dv">8</span></span>

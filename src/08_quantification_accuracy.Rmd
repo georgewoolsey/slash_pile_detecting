@@ -1396,7 +1396,7 @@ gc()
 
 Based on the error metrics and this regression analysis, our slash pile quantification framework is highly accurate at capturing the horizontal dimensions of piles (area and diameter) but less accurate at capturing the height based on the PSINF field-measured values. The reduction in height accuracy compared to the diameter accuracy at this site is primarily driven by the tallest piles which our method provides height estimates well below the reference values. For shorter piles our method does not show a bias in representing pile height with most predicted values aligned with the reference values.
 
-## Height Accuracy Investigation{htpiles_huh}
+## Height Accuracy Investigation{#htpiles_huh}
 
 let's dig into the discrepancy between the predicted and field-measured height values. way back in the [point cloud processing section](#ptcld_process) we noticed that the base of the pile was clearly visible within the DTM of the example pile footprint. This indicates that the lower portion of some piles may be incorrectly classified as ground by the CSF ground classification algorithm. Here, we'll see if we can quantify "how much" of the pile height was included as ground instead of being attributed to the pile vertical dimension for the piles with the largest discrepancy between the predicted and reference height
 
