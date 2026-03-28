@@ -30,7 +30,7 @@ psinf_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_deli
 las_dir_temp <- "f:\\PFDP_Data\\p4pro_images\\P4Pro_06_17_2021_half_half_optimal\\2_densification\\point_cloud"
 ```
 
-```{r,eval=T,purl=F}
+```{r,eval=F,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
 ```
@@ -40,6 +40,9 @@ process the point cloud with the `cloud2trees::cloud2raster()` workflow
 ```{r, results=F}
 # do it
 if(!dir.exists(psinf_out_dir)){
+  # start time
+  my_st_temp <- Sys.time()
+  message("starting psinf cloud2raster() step at ...", my_st_temp)
   # cloud2trees
   psinf_cloud2raster_ans <- cloud2trees::cloud2raster(
     output_dir = c2t_out_dir_temp
@@ -50,8 +53,15 @@ if(!dir.exists(psinf_out_dir)){
     , chm_res_m = my_chm_res_m
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
+  # end
+  my_end_temp <- Sys.time()
   # rename
   file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = psinf_out_dir)
+  # timer
+  dplyr::tibble(
+    timer_cloud2raster_mins = difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
+  ) %>% 
+    readr::write_csv(file = file.path(psinf_out_dir,"processed_tracking_data.csv"), append = F, progress = F)
 }else{
   dtm_temp <- terra::rast( file.path(psinf_out_dir, "dtm_0.25m.tif") )
   chm_temp <- terra::rast( file.path(psinf_out_dir, paste0("chm_", my_chm_res_m,"m.tif")) )
@@ -70,7 +80,7 @@ gc()
 
 let's check out the DTM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 psinf_cloud2raster_ans$dtm_rast %>% 
   terra::crop(
     psinf_stand_boundary %>% 
@@ -95,7 +105,7 @@ terra::plot(
 
 and CHM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 psinf_cloud2raster_ans$chm_rast %>% 
   terra::crop(
     psinf_stand_boundary %>% 
@@ -236,7 +246,7 @@ plt_rast_combine <- function(
 
 use this handy plotting function for some piles
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(psinf_slash_piles_polys$is_in_stand) %>% 
@@ -258,7 +268,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -328,7 +338,7 @@ look at the summary of the point cloud data we'll be processing
 ```{r}
 # processing dirs
 c2t_out_dir_temp <- "../data/Dawson_Data/"
-out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+pj_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 # las_dir_temp <- las_dir_temp
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
@@ -338,7 +348,10 @@ process the point cloud with the `cloud2trees::cloud2raster()` workflow
 
 ```{r, results=F}
 # do it
-if(!dir.exists(out_dir_temp)){
+if(!dir.exists(pj_out_dir)){
+  # start time
+  my_st_temp <- Sys.time()
+  message("starting pj cloud2raster() step at ...", my_st_temp)
   # cloud2trees
   pj_cloud2raster_ans <- cloud2trees::cloud2raster(
     output_dir = c2t_out_dir_temp
@@ -349,12 +362,20 @@ if(!dir.exists(out_dir_temp)){
     , chm_res_m = my_chm_res_m
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
+  # end
+  my_end_temp <- Sys.time()
   # rename
-  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = pj_out_dir)
+  # timer
+  dplyr::tibble(
+    timer_cloud2raster_mins = difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
+  ) %>% 
+    readr::write_csv(file = file.path(pj_out_dir,"processed_tracking_data.csv"), append = F, progress = F)
+  
 }else{
-  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+  dtm_temp <- terra::rast( file.path(pj_out_dir, "dtm_0.2m.tif") ) %>% 
     terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
-  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  chm_temp <- terra::rast( file.path(pj_out_dir, paste0("chm_", my_chm_res_m,"m.tif")) )
   # combine
   pj_cloud2raster_ans <- list(
     "dtm_rast" = dtm_temp
@@ -370,7 +391,7 @@ gc()
 
 let's check out the DTM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 pj_cloud2raster_ans$dtm_rast %>% 
   terra::crop(
     pj_stand_boundary %>% 
@@ -394,7 +415,7 @@ terra::plot(
 
 and CHM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 pj_cloud2raster_ans$chm_rast %>% 
   terra::crop(
     pj_stand_boundary %>% 
@@ -421,7 +442,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(pj_slash_piles_polys$is_in_stand) %>% 
@@ -443,7 +464,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -468,7 +489,7 @@ look at the summary of the point cloud data we'll be processing
 ```{r}
 # processing dirs
 c2t_out_dir_temp <- "../data/BHEF_202306/"
-out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+bhef_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 # las_dir_temp <- "where/are/the/pointcloud"
 las_flist_temp <- c(
   "F:\\UAS_Collections\\BHEF_202306/Unit1and3Processing.files/BHEF_202306_Unit1and3_laz.laz"
@@ -481,7 +502,7 @@ las_flist_temp <- c(
 )
 ```
 
-```{r,eval=T,purl=F}
+```{r,eval=F,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_flist_temp)
 ```
@@ -490,7 +511,10 @@ process the point cloud with the `cloud2trees::cloud2raster()` workflow
 
 ```{r, results=F}
 # do it
-if(!dir.exists(out_dir_temp)){
+if(!dir.exists(bhef_out_dir)){
+  # start time
+  my_st_temp <- Sys.time()
+  message("starting bhef cloud2raster() step at ...", my_st_temp)
   # cloud2trees
   bhef_cloud2raster_ans <- cloud2trees::cloud2raster(
     output_dir = c2t_out_dir_temp
@@ -501,12 +525,20 @@ if(!dir.exists(out_dir_temp)){
     , chm_res_m = my_chm_res_m
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
+  # end
+  my_end_temp <- Sys.time()
   # rename
-  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = bhef_out_dir)
+  # timer
+  dplyr::tibble(
+    timer_cloud2raster_mins = difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
+  ) %>% 
+    readr::write_csv(file = file.path(bhef_out_dir,"processed_tracking_data.csv"), append = F, progress = F)
+  
 }else{
-  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+  dtm_temp <- terra::rast( file.path(bhef_out_dir, "dtm_0.2m.tif") ) %>% 
     terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
-  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  chm_temp <- terra::rast( file.path(bhef_out_dir, paste0("chm_", my_chm_res_m,"m.tif")) )
   # combine
   bhef_cloud2raster_ans <- list(
     "dtm_rast" = dtm_temp
@@ -522,7 +554,7 @@ gc()
 
 let's check out the DTM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 bhef_cloud2raster_ans$dtm_rast %>% 
   terra::crop(
     bhef_stand_boundary %>% 
@@ -546,7 +578,7 @@ terra::plot(
 
 and CHM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 bhef_cloud2raster_ans$chm_rast %>% 
   terra::crop(
     bhef_stand_boundary %>% 
@@ -573,7 +605,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(bhef_slash_piles_polys$is_in_stand) %>% 
@@ -595,7 +627,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
@@ -618,11 +650,11 @@ look at the summary of the point cloud data we'll be processing
 ```{r}
 # processing dirs
 c2t_out_dir_temp <- "../data/ARNF_DiamondView_202510/" # where do you want to save processed data to?
-out_dir_temp <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
+arnf_out_dir <- file.path(c2t_out_dir_temp, paste0("point_cloud_processing_delivery_chm",my_chm_res_m,"m") )
 las_dir_temp <- "F:/UAS_Collections/ARNF_DiamondView_202510/point_cloud_high_density" # where is the raw las
 ```
 
-```{r,eval=T,purl=F}
+```{r,eval=F,purl=F}
 # read header with catalog
 lidR::readLAScatalog(las_dir_temp)
 ```
@@ -631,7 +663,10 @@ process the point cloud with the `cloud2trees::cloud2raster()` workflow
 
 ```{r, results=F}
 # do it
-if(!dir.exists(out_dir_temp)){
+if(!dir.exists(arnf_out_dir)){
+  # start time
+  my_st_temp <- Sys.time()
+  message("starting arnf cloud2raster() step at ...", my_st_temp)
   # cloud2trees
   arnf_cloud2raster_ans <- cloud2trees::cloud2raster(
     output_dir = c2t_out_dir_temp
@@ -642,12 +677,19 @@ if(!dir.exists(out_dir_temp)){
     , chm_res_m = my_chm_res_m
     , min_height = 0 # effectively generates a DSM based on non-ground points
   )
+  # end
+  my_end_temp <- Sys.time()
   # rename
-  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = out_dir_temp)
+  file.rename(from = file.path(c2t_out_dir_temp,"point_cloud_processing_delivery"), to = arnf_out_dir)
+  # timer
+  dplyr::tibble(
+    timer_cloud2raster_mins = difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
+  ) %>% 
+    readr::write_csv(file = file.path(arnf_out_dir,"processed_tracking_data.csv"), append = F, progress = F)
 }else{
-  dtm_temp <- terra::rast( file.path(out_dir_temp, "dtm_0.2m.tif") ) %>% 
+  dtm_temp <- terra::rast( file.path(arnf_out_dir, "dtm_0.2m.tif") ) %>% 
     terra::aggregate(fact = 2, na.rm=T, cores = lasR::half_cores())
-  chm_temp <- terra::rast( file.path(out_dir_temp, paste0("chm_", my_chm_res_m,"m.tif")) )
+  chm_temp <- terra::rast( file.path(arnf_out_dir, paste0("chm_", my_chm_res_m,"m.tif")) )
   # combine
   arnf_cloud2raster_ans <- list(
     "dtm_rast" = dtm_temp
@@ -663,7 +705,7 @@ gc()
 
 let's check out the DTM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 arnf_cloud2raster_ans$dtm_rast %>% 
   terra::crop(
     arnf_stand_boundary %>% 
@@ -687,7 +729,7 @@ terra::plot(
 
 and CHM
 
-```{r, results='hide', message=FALSE, fig.show='asis'}
+```{r,eval=F, results='hide', message=FALSE, fig.show='asis'}
 arnf_cloud2raster_ans$chm_rast %>% 
   terra::crop(
     arnf_stand_boundary %>% 
@@ -714,7 +756,7 @@ terra::plot(
 
 let's visually inspect the DTM and CHM with the pile outlines overlaid for a sample of piles
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # add pile locations
 plt_list_rast_temp <- 
   1:sum(arnf_slash_piles_polys$is_in_stand) %>% 
@@ -736,7 +778,7 @@ plt_list_rast_temp <-
 
 combine the plots with `patchwork`
 
-```{r,eval=T,purl=FALSE, height = 8.5, width = 8}
+```{r,eval=F,purl=FALSE, height = 8.5, width = 8}
 patchwork::wrap_plots(
   plt_list_rast_temp
   , ncol = 2
