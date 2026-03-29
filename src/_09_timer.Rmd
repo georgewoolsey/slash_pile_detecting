@@ -56,7 +56,7 @@ this version has the `piles_workflow()` function hidden as an internal function 
 we'll get the predictions using both the DBSCAN and Watershed segmentation approaches but all we really care about the processing time and not the results themselves since we already generated and evaluated the predictions
 
 ```{r, results=F, warning=FALSE}
-# read in the cloud2raster() processing times and check if we already ran the piles_workflow()
+# read in the cloud2raster() processing times
 processed_tracking_data <- 
   out_dir_list %>% 
   purrr::map_dfr(
@@ -84,173 +84,134 @@ processed_tracking_data <-
     points_per_m2 = number_of_points/las_area_m2
     , timer_cloud2raster_mins_per_ha = timer_cloud2raster_mins/(las_area_m2/10000)
   )
-  # dplyr::glimpse()
+# dplyr::glimpse(processed_tracking_data)
+# rgb_rast_list
+# terra::global(terra::subset(rgb_rast_list[["pj"]],1), "notNA")[[1]]*prod(terra::res(terra::subset(rgb_rast_list[["pj"]],1))[1:2])
+# terra::subset(rgb_rast_list[["pj"]],1) %>% 
+#   terra::cellSize() %>% 
+#   terra::mask(terra::subset(rgb_rast_list[["pj"]],1)) %>% 
+#   terra::global("sum", na.rm=TRUE) %>% 
+#   as.numeric()
 ##################################################
-# map over slash_pile_detect for dbscan if haven't done it already
+# map over piles_workflow() for dbscan if haven't done it already
 ##################################################
-
-out_dir_list %>% 
+# check if we already ran the piles_workflow()
+processed_tracking_data_full <- 
+  out_dir_list %>% 
   purrr::imap(
     function(x, nm){
+      ###################################################
+      # dbscan
       # is it already done?
+      ###################################################
       if(
-        any(stringr::str_equal(names(processed_tracking_data), "timer_piles_workflow_mins"))
+        any(stringr::str_equal(names(processed_tracking_data), "timer_piles_workflow_dbscan_mins"))
         && nrow(
             processed_tracking_data %>% 
-            dplyr::filter(site_data_lab==nm & !is.na(timer_piles_workflow_mins))
+            dplyr::filter(site_data_lab==nm & !is.na(timer_piles_workflow_dbscan_mins))
           )==1
       ){
-        return()
+        timer_dbscan_mins <- 
+          processed_tracking_data %>% 
+          dplyr::filter(site_data_lab==nm & !is.na(timer_piles_workflow_dbscan_mins)) %>% 
+          dplyr::pull(timer_piles_workflow_dbscan_mins)
+      }else{
+        # run it
+        my_st_temp <- Sys.time()
+        message(paste("starting", nm, "piles_workflow(seg_method = dbscan) step at ...", my_st_temp))
+        # cloud2trees::piles_workflow
+        piles_workflow_ans <- cloud2trees:::piles_workflow(
+          chm_rast = chm_rast_list[[nm]]
+          , seg_method = "dbscan"
+          , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_ht_m)
+          , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(max_ht_m)
+          , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_area_m2)
+          , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(max_area_m2)
+          , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_convexity_ratio)
+          , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_circularity_ratio)
+          , smooth_segs = T
+          , rgb_rast = rgb_rast_list[[nm]]
+          , red_band_idx = 1
+          , green_band_idx = 2
+          , blue_band_idx = 3
+          , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(spectral_weight)
+          , filter_return = T
+          , outfile = file.path(x, "piles_workflow_dbscan_piles.gpkg")
+        )
+        # end
+        my_end_temp <- Sys.time()
+        # timer
+        timer_dbscan_mins <- difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
       }
+      ###################################################
+      # watershed
+      # is it already done?
+      ###################################################
+      if(
+        any(stringr::str_equal(names(processed_tracking_data), "timer_piles_workflow_watershed_mins"))
+        && nrow(
+            processed_tracking_data %>% 
+            dplyr::filter(site_data_lab==nm & !is.na(timer_piles_workflow_watershed_mins))
+          )==1
+      ){
+        timer_watershed_mins <- 
+          processed_tracking_data %>% 
+          dplyr::filter(site_data_lab==nm & !is.na(timer_piles_workflow_watershed_mins)) %>% 
+          dplyr::pull(timer_piles_workflow_watershed_mins)
+      }else{
+        # run it
+        my_st_temp <- Sys.time()
+        message(paste("starting", nm, "piles_workflow(seg_method = watershed) step at ...", my_st_temp))
+        # cloud2trees::piles_workflow
+        piles_workflow_ans <- cloud2trees:::piles_workflow(
+          chm_rast = chm_rast_list[[nm]]
+          , seg_method = "watershed"
+          , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_ht_m)
+          , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(max_ht_m)
+          , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_area_m2)
+          , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(max_area_m2)
+          , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_convexity_ratio)
+          , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(min_circularity_ratio)
+          , smooth_segs = T
+          , rgb_rast = rgb_rast_list[[nm]]
+          , red_band_idx = 1
+          , green_band_idx = 2
+          , blue_band_idx = 3
+          , spectral_weight = all_stand_boundary %>% dplyr::filter(site_data_lab==nm) %>% dplyr::pull(spectral_weight)
+          , filter_return = T
+          , outfile = file.path(x, "piles_workflow_watershed_piles.gpkg")
+        )
+        # end
+        my_end_temp <- Sys.time()
+        # timer
+        timer_watershed_mins <- difftime(my_end_temp, my_st_temp, units = c("mins")) %>% as.numeric() 
+      }
+      ###################################################
+      # write times
+      ###################################################
+      df <- 
+        processed_tracking_data %>% 
+        dplyr::filter(site_data_lab==nm) %>% 
+        dplyr::mutate(
+          timer_piles_workflow_dbscan_mins = timer_dbscan_mins
+          , timer_piles_workflow_watershed_mins = timer_watershed_mins
+          , rast_area_m2 = 
+            terra::subset(rgb_rast_list[[nm]],1) %>% 
+              terra::cellSize() %>% 
+              terra::mask(terra::subset(rgb_rast_list[[nm]],1)) %>% 
+              terra::global("sum", na.rm=TRUE) %>% 
+              as.numeric()
+        ) 
+      # write
+      df %>% 
+        dplyr::select(-c(site_data_lab)) %>% 
+        readr::write_csv(file = file.path(x,"processed_tracking_data.csv"), append = F, progress = F)
+      # return
+      return(df)
     }
-  )
-
-  # file.names to only run if not already done since it takes a while for all sites
-  dir_temp <- "../data"
-  if(!dir.exists(dir_temp)){dir.create(dir_temp,showWarnings = F)}
-  nmsfx_temp <- "_dbscan_structural_preds.gpkg"
-  if(
-    !all(file.exists( file.path(dir_temp, paste0(all_stand_boundary$site_data_lab,nmsfx_temp)) ))
-  ){
-    # map over slash_pile_detect for dbscan
-    dbscan_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        slash_pile_detect(
-            chm_rast = chm_rast[[x]]
-            , seg_method = "dbscan"
-            , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_ht_m)
-            , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_ht_m)
-            , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_area_m2)
-            , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_area_m2)
-            , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_convexity_ratio)
-            , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_circularity_ratio)
-            , ofile = file.path(dir_temp, paste0(x,nmsfx_temp))
-          )
-          # purrr::pluck("segs_sf")
-        , .progress = T
-      )
-    # # write
-    #   dbscan_structural_preds %>% 
-    #     purrr::imap(
-    #       \(x,nm)
-    #       sf::st_write(
-    #         obj = x
-    #         , dsn = file.path(dir_temp, paste0(nm,nmsfx_temp))
-    #         , append = F
-    #         , quiet = T
-    #       )
-    #     )
-    
-    # read files
-    dbscan_structural_preds <- dbscan_structural_preds %>% 
-      purrr::map(
-        \(x)
-        sf::st_read(dsn = x, quiet = T)
-      )
-  }else{
-    # read already done
-    dbscan_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        sf::st_read(
-          dsn = file.path(dir_temp, paste0(x,nmsfx_temp))
-          , quiet = T
-        )
-      )
-  }
-  # filter all candidate piles for only those that intersect with the study boundary
-  dbscan_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        dplyr::inner_join(
-          dbscan_structural_preds[[x]]
-          , dbscan_structural_preds[[x]] %>% 
-            sf::st_intersection(
-              stand_boundary[[x]] %>% 
-              sf::st_transform(sf::st_crs(dbscan_structural_preds[[x]]))
-            ) %>% 
-            sf::st_drop_geometry() %>% 
-            dplyr::select(pred_id) %>% 
-            dplyr::mutate(is_in_stand = T)
-          , by = "pred_id"
-        )
-      )
-##################################################
-# map over slash_pile_detect for watershed
-##################################################
-  # file.names to only run if not already done since it takes a while for all sites
-  dir_temp <- "../data"
-  if(!dir.exists(dir_temp)){dir.create(dir_temp,showWarnings = F)}
-  nmsfx_temp <- "_watershed_structural_preds.gpkg"
-  if(
-    !all(file.exists( file.path(dir_temp, paste0(all_stand_boundary$site_data_lab,nmsfx_temp)) ))
-  ){
-    # map over slash_pile_detect for watershed
-    watershed_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      # .[2:4] %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        slash_pile_detect(
-            chm_rast = chm_rast[[x]]
-            , seg_method = "watershed"
-            , min_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_ht_m)
-            , max_ht_m = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_ht_m)
-            , min_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_area_m2)
-            , max_area_m2 = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(max_area_m2)
-            , min_convexity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_convexity_ratio)
-            , min_circularity_ratio = all_stand_boundary %>% dplyr::filter(site_data_lab==x) %>% dplyr::pull(min_circularity_ratio)
-            , ofile = file.path(dir_temp, paste0(x,nmsfx_temp))
-          )
-          # purrr::pluck("segs_sf")
-        , .progress = T
-      )
-    # read files
-    watershed_structural_preds <- watershed_structural_preds %>% 
-      purrr::map(
-        \(x)
-        sf::st_read(dsn = x, quiet = T)
-      )
-  }else{
-    # read already done
-    watershed_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        sf::st_read(
-          dsn = file.path(dir_temp, paste0(x,nmsfx_temp))
-          , quiet = T
-        )
-      )
-  }
-  # filter all candidate piles for only those that intersect with the study boundary
-  watershed_structural_preds <- 
-      all_stand_boundary$site_data_lab %>% 
-      purrr::set_names() %>% 
-      purrr::map(
-        \(x)
-        dplyr::inner_join(
-          watershed_structural_preds[[x]]
-          , watershed_structural_preds[[x]] %>% 
-            sf::st_intersection(
-              stand_boundary[[x]] %>% 
-              sf::st_transform(sf::st_crs(watershed_structural_preds[[x]]))
-            ) %>% 
-            sf::st_drop_geometry() %>% 
-            dplyr::select(pred_id) %>% 
-            dplyr::mutate(is_in_stand = T)
-          , by = "pred_id"
-        )
-      )
+  ) %>% 
+  dplyr::bind_rows()
+processed_tracking_data_full %>% dplyr::glimpse()
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
