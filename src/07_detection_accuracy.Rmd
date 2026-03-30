@@ -1406,7 +1406,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the TP matches
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # max piles per site
 nplts_temp <- 12
 # dbscan
@@ -1453,7 +1453,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1475,7 +1475,7 @@ purrr::map(
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1496,7 +1496,7 @@ purrr::map(
 
 Check out the plots for the omissions (FN)
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1541,7 +1541,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1562,7 +1562,7 @@ purrr::map(
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1583,7 +1583,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -1681,7 +1681,7 @@ all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the commissions (FP)
 
-```{r,eval=T,purl=FALSE, results=F}
+```{r,eval=F,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1726,7 +1726,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1747,7 +1747,7 @@ purrr::map(
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1768,7 +1768,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(

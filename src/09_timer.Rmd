@@ -2,7 +2,6 @@
 
 A key component of our UAS-based slash pile detection and quantification framework is the cost and time savings compared to traditional field work, especially when used over entire treatment extents to enable census-level monitoring. When we [processed the UAS point cloud](#ptcld_process), we tracked how long it took to generate the CHM raster input required for the proposed framework using the `cloud2trees::cloud2raster()` function. We have compiled the proposed slash pile detection and quantification framework into the `cloud2trees::piles_workflow()` function to enable operational use of the tool. In this section we'll time how long the slash pile methodology takes over the four study sites.
 
-
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
 # all_stand_boundary %>% dplyr::glimpse()
 remove(list = ls()[grep("_temp",ls())])

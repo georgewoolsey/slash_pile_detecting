@@ -29,6 +29,7 @@ tab:unnamed-chunk-450
 tab:unnamed-chunk-456
 tab:unnamed-chunk-460
 tab:unnamed-chunk-467
+tab:unnamed-chunk-476
 introduction
 objective
 data_desc
@@ -166,3 +167,4 @@ all-stand-level-aggregates
 area
 height-and-diameter
 table-area-diam-ht
+timer

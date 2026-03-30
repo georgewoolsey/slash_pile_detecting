@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en-US" xml:lang="en-US">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Section 10 Processing Time | Aerial Imagery and Point Cloud Data for Slash Pile Quantification</title>
+  <meta name="description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  <meta name="generator" content="bookdown 0.34 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Section 10 Processing Time | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Section 10 Processing Time | Aerial Imagery and Point Cloud Data for Slash Pile Quantification" />
+  
+  <meta name="twitter:description" content="Using the bookdown package to write a book of data exploration. The output format for this example is bookdown::gitbook." />
+  
+
+<meta name="author" content="George Woolsey" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="preds_quantit.html"/>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/study sites-CSS-0.0.1/study sites_home-button.css" rel="stylesheet" />
+<script src="libs/clipboard-0.0.1/setClipboardText.js"></script>
+<link href="libs/mapviewCSS-0.0.1/mapview-popup.css" rel="stylesheet" />
+<link href="libs/mapviewCSS-0.0.1/mapview.css" rel="stylesheet" />
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="libs/bsTable-3.3.7/bootstrapTable.min.css" rel="stylesheet" />
+<script src="libs/bsTable-3.3.7/bootstrapTable.js"></script>
+<script type="text/javascript">
+
+// toggle visibility of R source blocks in R Markdown output
+function toggle_R() {
+  var x = document.getElementsByClassName('r');
+  if (x.length == 0) return;
+  function toggle_vis(o) {
+    var d = o.style.display;
+    o.style.display = (d == 'block' || d == '') ? 'none':'block';
+  }
+
+  for (i = 0; i < x.length; i++) {
+    var y = x[i];
+    if (y.tagName.toLowerCase() === 'pre') toggle_vis(y);
+  }
+
+    var elem = document.getElementById("myButton1");
+    if (elem.value === "Hide Code") elem.value = "Show Code";
+    else elem.value = "Hide Code";
+}
+
+document.write('<input onclick="toggle_R();" type="button" value="Hide Code" id="myButton1" style="position: absolute; top: 10%; right: 2%; z-index: 200"></input>')
+
+</script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objective"><i class="fa fa-check"></i><b>1.1</b> Objective</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#data_desc"><i class="fa fa-check"></i><b>1.2</b> Data and Site Descriptions</a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="index.html"><a href="index.html#silvicultural-prescriptions"><i class="fa fa-check"></i><b>1.2.1</b> Silvicultural Prescriptions</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#analysis-plan"><i class="fa fa-check"></i><b>1.3</b> Analysis Plan</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="data_load.html"><a href="data_load.html"><i class="fa fa-check"></i><b>2</b> Data Overview</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="data_load.html"><a href="data_load.html#study-units-vector-data"><i class="fa fa-check"></i><b>2.1</b> Study Units Vector Data</a></li>
+<li class="chapter" data-level="2.2" data-path="data_load.html"><a href="data_load.html#slash-pile-vector-data"><i class="fa fa-check"></i><b>2.2</b> Slash Pile Vector Data</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="data_load.html"><a href="data_load.html#standardize-pile-data"><i class="fa fa-check"></i><b>2.2.1</b> Standardize Pile Data</a></li>
+<li class="chapter" data-level="2.2.2" data-path="data_load.html"><a href="data_load.html#pile-form-measurements"><i class="fa fa-check"></i><b>2.2.2</b> Pile Form Measurements</a></li>
+<li class="chapter" data-level="2.2.3" data-path="data_load.html"><a href="data_load.html#image-annotation-comparison"><i class="fa fa-check"></i><b>2.2.3</b> Image-Annotation Comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="data_load.html"><a href="data_load.html#rgb-orthomosaic"><i class="fa fa-check"></i><b>2.3</b> RGB orthomosaic</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-1"><i class="fa fa-check"></i><b>2.3.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.3.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-1"><i class="fa fa-check"></i><b>2.3.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.3.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.3.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-1"><i class="fa fa-check"></i><b>2.3.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="data_load.html"><a href="data_load.html#slash-pile-rgb-imagery"><i class="fa fa-check"></i><b>2.4</b> Slash Pile RGB Imagery</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="data_load.html"><a href="data_load.html#psinf-mixed-conifer-site-2"><i class="fa fa-check"></i><b>2.4.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="2.4.2" data-path="data_load.html"><a href="data_load.html#trfo-blm-pinyon-juniper-site-2"><i class="fa fa-check"></i><b>2.4.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="2.4.3" data-path="data_load.html"><a href="data_load.html#bhef-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.4" data-path="data_load.html"><a href="data_load.html#arnf-ponderosa-pine-site-2"><i class="fa fa-check"></i><b>2.4.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="2.4.5" data-path="data_load.html"><a href="data_load.html#all"><i class="fa fa-check"></i><b>2.4.5</b> All</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="ptcld_process.html"><a href="ptcld_process.html"><i class="fa fa-check"></i><b>3</b> Point Cloud Processing</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="ptcld_process.html"><a href="ptcld_process.html#process-raw-point-cloud"><i class="fa fa-check"></i><b>3.1</b> Process Raw Point Cloud</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="ptcld_process.html"><a href="ptcld_process.html#ptcld_process_psinf"><i class="fa fa-check"></i><b>3.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="3.1.2" data-path="ptcld_process.html"><a href="ptcld_process.html#trfo-blm-pinyon-juniper-site-3"><i class="fa fa-check"></i><b>3.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="3.1.3" data-path="ptcld_process.html"><a href="ptcld_process.html#bhef-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="3.1.4" data-path="ptcld_process.html"><a href="ptcld_process.html#arnf-ponderosa-pine-site-3"><i class="fa fa-check"></i><b>3.1.4</b> ARNF Ponderosa Pine Site</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="ptcld_process.html"><a href="ptcld_process.html#clean-up"><i class="fa fa-check"></i><b>3.2</b> Clean Up</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="geom_detect.html"><a href="geom_detect.html"><i class="fa fa-check"></i><b>4</b> Geometry-based Slash Pile Detection</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="geom_detect.html"><a href="geom_detect.html#d_area"><i class="fa fa-check"></i><b>4.1</b> Demonstration Area</a></li>
+<li class="chapter" data-level="4.2" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-methods"><i class="fa fa-check"></i><b>4.2</b> Segmentation Methods</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="geom_detect.html"><a href="geom_detect.html#seg_methods"><i class="fa fa-check"></i><b>4.2.1</b> Overview of Methods</a></li>
+<li class="chapter" data-level="4.2.2" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.2</b> Watershed Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.3" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-demonstration"><i class="fa fa-check"></i><b>4.2.3</b> DBSCAN Segmentation Demonstration</a></li>
+<li class="chapter" data-level="4.2.4" data-path="geom_detect.html"><a href="geom_detect.html#comparison-of-candidate-segments"><i class="fa fa-check"></i><b>4.2.4</b> Comparison of Candidate Segments</a></li>
+<li class="chapter" data-level="4.2.5" data-path="geom_detect.html"><a href="geom_detect.html#segmentation-function"><i class="fa fa-check"></i><b>4.2.5</b> Segmentation Function</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="geom_detect.html"><a href="geom_detect.html#candidate-shape-refinement-and-area-filtering"><i class="fa fa-check"></i><b>4.3</b> Candidate Shape Refinement and Area filtering</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation"><i class="fa fa-check"></i><b>4.3.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.3.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation"><i class="fa fa-check"></i><b>4.3.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.3.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison"><i class="fa fa-check"></i><b>4.3.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="geom_detect.html"><a href="geom_detect.html#candidate-geometric-filtering"><i class="fa fa-check"></i><b>4.4</b> Candidate Geometric filtering</a>
+<ul>
+<li class="chapter" data-level="4.4.1" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-convexity"><i class="fa fa-check"></i><b>4.4.1</b> Shape Irregularity: Convexity</a></li>
+<li class="chapter" data-level="4.4.2" data-path="geom_detect.html"><a href="geom_detect.html#shape-irregularity-circularity"><i class="fa fa-check"></i><b>4.4.2</b> Shape Irregularity: Circularity</a></li>
+</ul></li>
+<li class="chapter" data-level="4.5" data-path="geom_detect.html"><a href="geom_detect.html#structural-metrics-from-chm"><i class="fa fa-check"></i><b>4.5</b> Structural Metrics from CHM</a>
+<ul>
+<li class="chapter" data-level="4.5.1" data-path="geom_detect.html"><a href="geom_detect.html#structural-rasters"><i class="fa fa-check"></i><b>4.5.1</b> Structural Rasters</a></li>
+<li class="chapter" data-level="4.5.2" data-path="geom_detect.html"><a href="geom_detect.html#demonstration-candidate-segment-metrics"><i class="fa fa-check"></i><b>4.5.2</b> Demonstration Candidate Segment Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="4.6" data-path="geom_detect.html"><a href="geom_detect.html#final-shape-refinement"><i class="fa fa-check"></i><b>4.6</b> Final Shape Refinement</a>
+<ul>
+<li class="chapter" data-level="4.6.1" data-path="geom_detect.html"><a href="geom_detect.html#watershed-segmentation-3"><i class="fa fa-check"></i><b>4.6.1</b> Watershed Segmentation</a></li>
+<li class="chapter" data-level="4.6.2" data-path="geom_detect.html"><a href="geom_detect.html#dbscan-segmentation-3"><i class="fa fa-check"></i><b>4.6.2</b> DBSCAN Segmentation</a></li>
+<li class="chapter" data-level="4.6.3" data-path="geom_detect.html"><a href="geom_detect.html#quick-methods-comparison-2"><i class="fa fa-check"></i><b>4.6.3</b> Quick methods comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="4.7" data-path="geom_detect.html"><a href="geom_detect.html#slash_pile_detect_fn"><i class="fa fa-check"></i><b>4.7</b> Pile Detection Function</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="data_fusion.html"><a href="data_fusion.html"><i class="fa fa-check"></i><b>5</b> Data Fusion</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="data_fusion.html"><a href="data_fusion.html#rgb-indices"><i class="fa fa-check"></i><b>5.1</b> RGB Indices</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-functions"><i class="fa fa-check"></i><b>5.1.1</b> Spectral Index Functions</a></li>
+<li class="chapter" data-level="5.1.2" data-path="data_fusion.html"><a href="data_fusion.html#spectral-index-of-polygons"><i class="fa fa-check"></i><b>5.1.2</b> Spectral Index of Polygons</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="data_fusion.html"><a href="data_fusion.html#demonstration-pile-spectral-summary"><i class="fa fa-check"></i><b>5.2</b> Demonstration Pile Spectral Summary</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="data_fusion.html"><a href="data_fusion.html#voting-system"><i class="fa fa-check"></i><b>5.2.1</b> Voting System</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="data_fusion.html"><a href="data_fusion.html#polygon_spectral_filtering"><i class="fa fa-check"></i><b>5.3</b> Candidate Polygon Spectral Filtering Function</a></li>
+<li class="chapter" data-level="5.4" data-path="data_fusion.html"><a href="data_fusion.html#data-fusion-method-demonstration"><i class="fa fa-check"></i><b>5.4</b> Data Fusion Method Demonstration</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="meth_eval.html"><a href="meth_eval.html"><i class="fa fa-check"></i><b>6</b> Method Evaluation</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="meth_eval.html"><a href="meth_eval.html#iou_match"><i class="fa fa-check"></i><b>6.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="6.2" data-path="meth_eval.html"><a href="meth_eval.html#detect_metrics_form"><i class="fa fa-check"></i><b>6.2</b> Detection Accuracy Metrics</a></li>
+<li class="chapter" data-level="6.3" data-path="meth_eval.html"><a href="meth_eval.html#quant_metrics_form"><i class="fa fa-check"></i><b>6.3</b> Quantification Accuracy Metrics</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="meth_preds.html"><a href="meth_preds.html"><i class="fa fa-check"></i><b>7</b> Method Predictions</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="meth_preds.html"><a href="meth_preds.html#size-and-geometric-parameter-settings"><i class="fa fa-check"></i><b>7.1</b> Size and Geometric Parameter Settings</a>
+<ul>
+<li class="chapter" data-level="7.1.1" data-path="meth_preds.html"><a href="meth_preds.html#psinf-mixed-conifer-site-3"><i class="fa fa-check"></i><b>7.1.1</b> PSINF Mixed Conifer Site</a></li>
+<li class="chapter" data-level="7.1.2" data-path="meth_preds.html"><a href="meth_preds.html#trfo-blm-pinyon-juniper-site-4"><i class="fa fa-check"></i><b>7.1.2</b> TRFO-BLM Pinyon-Juniper Site</a></li>
+<li class="chapter" data-level="7.1.3" data-path="meth_preds.html"><a href="meth_preds.html#bhef-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.3</b> BHEF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.4" data-path="meth_preds.html"><a href="meth_preds.html#arnf-ponderosa-pine-site-4"><i class="fa fa-check"></i><b>7.1.4</b> ARNF Ponderosa Pine Site</a></li>
+<li class="chapter" data-level="7.1.5" data-path="meth_preds.html"><a href="meth_preds.html#study-paremeter-settings"><i class="fa fa-check"></i><b>7.1.5</b> Study Paremeter Settings</a></li>
+</ul></li>
+<li class="chapter" data-level="7.2" data-path="meth_preds.html"><a href="meth_preds.html#chm-based-slash-pile-candidates"><i class="fa fa-check"></i><b>7.2</b> CHM-based Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.2.1" data-path="meth_preds.html"><a href="meth_preds.html#dbscan-candidates"><i class="fa fa-check"></i><b>7.2.1</b> DBSCAN Candidates</a></li>
+<li class="chapter" data-level="7.2.2" data-path="meth_preds.html"><a href="meth_preds.html#watershed-candidates"><i class="fa fa-check"></i><b>7.2.2</b> Watershed Candidates</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="meth_preds.html"><a href="meth_preds.html#spectral-filter-slash-pile-candidates"><i class="fa fa-check"></i><b>7.3</b> Spectral Filter Slash Pile Candidates</a>
+<ul>
+<li class="chapter" data-level="7.3.1" data-path="meth_preds.html"><a href="meth_preds.html#dbscan-predictions"><i class="fa fa-check"></i><b>7.3.1</b> DBSCAN Predictions</a></li>
+<li class="chapter" data-level="7.3.2" data-path="meth_preds.html"><a href="meth_preds.html#watershed-predictions"><i class="fa fa-check"></i><b>7.3.2</b> Watershed Predictions</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="preds_detect.html"><a href="preds_detect.html"><i class="fa fa-check"></i><b>8</b> Detection Accuracy</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="preds_detect.html"><a href="preds_detect.html#instance-matching"><i class="fa fa-check"></i><b>8.1</b> Instance Matching</a></li>
+<li class="chapter" data-level="8.2" data-path="preds_detect.html"><a href="preds_detect.html#detection-accuracy-metrics"><i class="fa fa-check"></i><b>8.2</b> Detection Accuracy Metrics</a>
+<ul>
+<li class="chapter" data-level="8.2.1" data-path="preds_detect.html"><a href="preds_detect.html#agg_inst_match"><i class="fa fa-check"></i><b>8.2.1</b> Aggregate Instance Match Results</a></li>
+<li class="chapter" data-level="8.2.2" data-path="preds_detect.html"><a href="preds_detect.html#detection-accuracy-results"><i class="fa fa-check"></i><b>8.2.2</b> Detection Accuracy Results</a></li>
+</ul></li>
+<li class="chapter" data-level="8.3" data-path="preds_detect.html"><a href="preds_detect.html#segmentation-method-accuracy-comparison"><i class="fa fa-check"></i><b>8.3</b> Segmentation Method Accuracy Comparison</a>
+<ul>
+<li class="chapter" data-level="8.3.1" data-path="preds_detect.html"><a href="preds_detect.html#paired-t-test"><i class="fa fa-check"></i><b>8.3.1</b> Paired T-Test</a></li>
+<li class="chapter" data-level="8.3.2" data-path="preds_detect.html"><a href="preds_detect.html#bayesian-approach"><i class="fa fa-check"></i><b>8.3.2</b> Bayesian Approach</a></li>
+</ul></li>
+<li class="chapter" data-level="8.4" data-path="preds_detect.html"><a href="preds_detect.html#individual-pile-evaluation"><i class="fa fa-check"></i><b>8.4</b> Individual Pile Evaluation</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="preds_detect.html"><a href="preds_detect.html#true-positives"><i class="fa fa-check"></i><b>8.4.1</b> True Positives</a></li>
+<li class="chapter" data-level="8.4.2" data-path="preds_detect.html"><a href="preds_detect.html#omissions-false-negatives"><i class="fa fa-check"></i><b>8.4.2</b> Omissions (False Negatives)</a></li>
+<li class="chapter" data-level="8.4.3" data-path="preds_detect.html"><a href="preds_detect.html#commissions-false-positives"><i class="fa fa-check"></i><b>8.4.3</b> commissions (False Positives)</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="preds_detect.html"><a href="preds_detect.html#figures-for-manuscript"><i class="fa fa-check"></i><b>8.5</b> Figures for Manuscript</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="preds_detect.html"><a href="preds_detect.html#figure-3"><i class="fa fa-check"></i><b>8.5.1</b> Figure 3</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="preds_quantit.html"><a href="preds_quantit.html"><i class="fa fa-check"></i><b>9</b> Quantification Accuracy</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="preds_quantit.html"><a href="preds_quantit.html#height-and-diameter-accuracy"><i class="fa fa-check"></i><b>9.1</b> Height and Diameter Accuracy</a>
+<ul>
+<li class="chapter" data-level="9.1.1" data-path="preds_quantit.html"><a href="preds_quantit.html#stand-level-aggregation"><i class="fa fa-check"></i><b>9.1.1</b> Stand-level Aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.2" data-path="preds_quantit.html"><a href="preds_quantit.html#area-accuracy"><i class="fa fa-check"></i><b>9.2</b> Area Accuracy</a>
+<ul>
+<li class="chapter" data-level="9.2.1" data-path="preds_quantit.html"><a href="preds_quantit.html#stand-level-aggregation-1"><i class="fa fa-check"></i><b>9.2.1</b> Stand-level Aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="preds_quantit.html"><a href="preds_quantit.html#regression-based-assessment"><i class="fa fa-check"></i><b>9.3</b> Regression-based Assessment</a>
+<ul>
+<li class="chapter" data-level="9.3.1" data-path="preds_quantit.html"><a href="preds_quantit.html#figure-4"><i class="fa fa-check"></i><b>9.3.1</b> Figure 4</a></li>
+</ul></li>
+<li class="chapter" data-level="9.4" data-path="preds_quantit.html"><a href="preds_quantit.html#htpiles_huh"><i class="fa fa-check"></i><b>9.4</b> Height Accuracy Investigation</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="preds_quantit.html"><a href="preds_quantit.html#estimate-dtm-inaccuracy"><i class="fa fa-check"></i><b>9.4.1</b> Estimate DTM inaccuracy</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="preds_quantit.html"><a href="preds_quantit.html#vol_comp"><i class="fa fa-check"></i><b>9.5</b> Volume Comparison</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="preds_quantit.html"><a href="preds_quantit.html#irregular-vs.-paraboloid-comparison-of-individual-piles"><i class="fa fa-check"></i><b>9.5.1</b> Irregular vs. Paraboloid: Comparison of Individual Piles</a></li>
+<li class="chapter" data-level="9.5.2" data-path="preds_quantit.html"><a href="preds_quantit.html#extreme-volume-disagreements"><i class="fa fa-check"></i><b>9.5.2</b> Extreme Volume Disagreements</a></li>
+<li class="chapter" data-level="9.5.3" data-path="preds_quantit.html"><a href="preds_quantit.html#paraboloid-volume-comparison"><i class="fa fa-check"></i><b>9.5.3</b> Paraboloid Volume Comparison</a></li>
+<li class="chapter" data-level="9.5.4" data-path="preds_quantit.html"><a href="preds_quantit.html#paraboloid-vs.-paraboloid-comparison-of-individual-piles"><i class="fa fa-check"></i><b>9.5.4</b> Paraboloid vs. Paraboloid: Comparison of Individual Piles</a></li>
+<li class="chapter" data-level="9.5.5" data-path="preds_quantit.html"><a href="preds_quantit.html#stand-level-aggregation-2"><i class="fa fa-check"></i><b>9.5.5</b> Stand-level Aggregation</a></li>
+</ul></li>
+<li class="chapter" data-level="9.6" data-path="preds_quantit.html"><a href="preds_quantit.html#all-stand-level-aggregates"><i class="fa fa-check"></i><b>9.6</b> All Stand-Level Aggregates</a>
+<ul>
+<li class="chapter" data-level="9.6.1" data-path="preds_quantit.html"><a href="preds_quantit.html#area"><i class="fa fa-check"></i><b>9.6.1</b> Area</a></li>
+<li class="chapter" data-level="9.6.2" data-path="preds_quantit.html"><a href="preds_quantit.html#height-and-diameter"><i class="fa fa-check"></i><b>9.6.2</b> Height and Diameter</a></li>
+<li class="chapter" data-level="9.6.3" data-path="preds_quantit.html"><a href="preds_quantit.html#table-area-diam-ht"><i class="fa fa-check"></i><b>9.6.3</b> Table Area, Diam, Ht</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="timer.html"><a href="timer.html"><i class="fa fa-check"></i><b>10</b> Processing Time</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Aerial Imagery and Point Cloud Data for Slash Pile Quantification</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="timer" class="section level1 hasAnchor" number="10">
+<h1><span class="header-section-number">Section 10</span> Processing Time<a href="timer.html#timer" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>A key component of our UAS-based slash pile detection and quantification framework is the cost and time savings compared to traditional field work, especially when used over entire treatment extents to enable census-level monitoring. When we <a href="ptcld_process.html#ptcld_process">processed the UAS point cloud</a>, we tracked how long it took to generate the CHM raster input required for the proposed framework using the <code>cloud2trees::cloud2raster()</code> function. We have compiled the proposed slash pile detection and quantification framework into the <code>cloud2trees::piles_workflow()</code> function to enable operational use of the tool. In this section we’ll time how long the slash pile methodology takes over the four study sites.</p>
+<p>first, we’ll rename our <code>chm_rast</code> and <code>rgb_rast</code> objects in our current R session so that it is clear what we are processing</p>
+<div class="sourceCode" id="cb412"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb412-1"><a href="timer.html#cb412-1" tabindex="-1"></a>chm_rast_list <span class="ot">&lt;-</span> chm_rast</span>
+<span id="cb412-2"><a href="timer.html#cb412-2" tabindex="-1"></a>rgb_rast_list <span class="ot">&lt;-</span> rgb_rast</span>
+<span id="cb412-3"><a href="timer.html#cb412-3" tabindex="-1"></a><span class="fu">remove</span>(chm_rast, rgb_rast)</span>
+<span id="cb412-4"><a href="timer.html#cb412-4" tabindex="-1"></a><span class="fu">gc</span>()</span>
+<span id="cb412-5"><a href="timer.html#cb412-5" tabindex="-1"></a><span class="co"># organize our out_dir paths where the c2t outputs live as well</span></span>
+<span id="cb412-6"><a href="timer.html#cb412-6" tabindex="-1"></a>  <span class="co"># suffix</span></span>
+<span id="cb412-7"><a href="timer.html#cb412-7" tabindex="-1"></a>  suffix_temp <span class="ot">&lt;-</span> <span class="st">&quot;_out_dir&quot;</span></span>
+<span id="cb412-8"><a href="timer.html#cb412-8" tabindex="-1"></a>  <span class="co"># convert to list of objects and remove the suffix from the name in the list</span></span>
+<span id="cb412-9"><a href="timer.html#cb412-9" tabindex="-1"></a>  out_dir_list <span class="ot">&lt;-</span></span>
+<span id="cb412-10"><a href="timer.html#cb412-10" tabindex="-1"></a>    all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb412-11"><a href="timer.html#cb412-11" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb412-12"><a href="timer.html#cb412-12" tabindex="-1"></a>    base<span class="sc">::</span><span class="fu">mget</span>(<span class="at">inherits =</span> T) <span class="sc">%&gt;%</span></span>
+<span id="cb412-13"><a href="timer.html#cb412-13" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">set_names</span>(<span class="sc">~</span> <span class="fu">str_remove</span>(.x, suffix_temp))</span>
+<span id="cb412-14"><a href="timer.html#cb412-14" tabindex="-1"></a>  <span class="co"># names(out_dir_list)</span></span>
+<span id="cb412-15"><a href="timer.html#cb412-15" tabindex="-1"></a>  <span class="co"># dplyr::glimpse(out_dir_list)</span></span>
+<span id="cb412-16"><a href="timer.html#cb412-16" tabindex="-1"></a>  <span class="co"># remove</span></span>
+<span id="cb412-17"><a href="timer.html#cb412-17" tabindex="-1"></a>  all_stand_boundary<span class="sc">$</span>site_data_lab <span class="sc">%&gt;%</span></span>
+<span id="cb412-18"><a href="timer.html#cb412-18" tabindex="-1"></a>    <span class="fu">paste0</span>(suffix_temp) <span class="sc">%&gt;%</span></span>
+<span id="cb412-19"><a href="timer.html#cb412-19" tabindex="-1"></a>    purrr<span class="sc">::</span><span class="fu">map</span>(\(x) <span class="fu">remove</span>(<span class="at">list =</span> x,<span class="at">inherits =</span> T))</span></code></pre></div>
+<p>let’s see which <code>cloud2trees</code> version we have</p>
+<div class="sourceCode" id="cb413"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb413-1"><a href="timer.html#cb413-1" tabindex="-1"></a><span class="fu">packageVersion</span>(<span class="st">&quot;cloud2trees&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] &#39;0.8.0&#39;</code></pre>
+<p>this version has the <code>piles_workflow()</code> function hidden as an internal function so we’re going to use <code>:::</code> syntax, but future users should be able to use <code>::</code> syntax as in <code>cloud2trees::piles_workflow()</code></p>
+<p>read in the <code>cloud2raster()</code> processing times</p>
+<div class="sourceCode" id="cb415"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb415-1"><a href="timer.html#cb415-1" tabindex="-1"></a><span class="co"># read in the cloud2raster() processing times</span></span>
+<span id="cb415-2"><a href="timer.html#cb415-2" tabindex="-1"></a>processed_tracking_data <span class="ot">&lt;-</span> </span>
+<span id="cb415-3"><a href="timer.html#cb415-3" tabindex="-1"></a>  out_dir_list <span class="sc">%&gt;%</span> </span>
+<span id="cb415-4"><a href="timer.html#cb415-4" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb415-5"><a href="timer.html#cb415-5" tabindex="-1"></a>    \(x)</span>
+<span id="cb415-6"><a href="timer.html#cb415-6" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">bind_cols</span>(</span>
+<span id="cb415-7"><a href="timer.html#cb415-7" tabindex="-1"></a>      <span class="co"># cloud2raster timer</span></span>
+<span id="cb415-8"><a href="timer.html#cb415-8" tabindex="-1"></a>      readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="at">file =</span> <span class="fu">file.path</span>(x,<span class="st">&quot;processed_tracking_data.csv&quot;</span>), <span class="at">progress =</span> F, <span class="at">show_col_types =</span> F) <span class="sc">%&gt;%</span> </span>
+<span id="cb415-9"><a href="timer.html#cb415-9" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>( <span class="sc">-</span>dplyr<span class="sc">::</span><span class="fu">any_of</span>(<span class="fu">c</span>(</span>
+<span id="cb415-10"><a href="timer.html#cb415-10" tabindex="-1"></a>          <span class="st">&quot;hey_xxxxxxxxxx&quot;</span></span>
+<span id="cb415-11"><a href="timer.html#cb415-11" tabindex="-1"></a>          , <span class="st">&quot;number_of_points&quot;</span></span>
+<span id="cb415-12"><a href="timer.html#cb415-12" tabindex="-1"></a>          , <span class="st">&quot;las_area_m2&quot;</span></span>
+<span id="cb415-13"><a href="timer.html#cb415-13" tabindex="-1"></a>        )))</span>
+<span id="cb415-14"><a href="timer.html#cb415-14" tabindex="-1"></a>      <span class="co"># data from las_ctg</span></span>
+<span id="cb415-15"><a href="timer.html#cb415-15" tabindex="-1"></a>      , sf<span class="sc">::</span><span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="fu">file.path</span>(x,<span class="st">&quot;raw_las_ctg_info.gpkg&quot;</span>), <span class="at">quiet =</span> T) <span class="sc">%&gt;%</span> </span>
+<span id="cb415-16"><a href="timer.html#cb415-16" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb415-17"><a href="timer.html#cb415-17" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_set_geometry</span>(<span class="st">&quot;geometry&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb415-18"><a href="timer.html#cb415-18" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb415-19"><a href="timer.html#cb415-19" tabindex="-1"></a>          <span class="at">geometry =</span> sf<span class="sc">::</span><span class="fu">st_union</span>(geometry)</span>
+<span id="cb415-20"><a href="timer.html#cb415-20" tabindex="-1"></a>          , <span class="at">number_of_points =</span> <span class="fu">sum</span>(Number.of.point.records, <span class="at">na.rm =</span> T)</span>
+<span id="cb415-21"><a href="timer.html#cb415-21" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
+<span id="cb415-22"><a href="timer.html#cb415-22" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb415-23"><a href="timer.html#cb415-23" tabindex="-1"></a>          <span class="at">las_area_m2 =</span> sf<span class="sc">::</span><span class="fu">st_area</span>(geometry) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb415-24"><a href="timer.html#cb415-24" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
+<span id="cb415-25"><a href="timer.html#cb415-25" tabindex="-1"></a>        sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>()</span>
+<span id="cb415-26"><a href="timer.html#cb415-26" tabindex="-1"></a>    )</span>
+<span id="cb415-27"><a href="timer.html#cb415-27" tabindex="-1"></a>    , <span class="at">.id =</span> <span class="st">&quot;site_data_lab&quot;</span></span>
+<span id="cb415-28"><a href="timer.html#cb415-28" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb415-29"><a href="timer.html#cb415-29" tabindex="-1"></a>  <span class="co"># add calcs</span></span>
+<span id="cb415-30"><a href="timer.html#cb415-30" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb415-31"><a href="timer.html#cb415-31" tabindex="-1"></a>    <span class="at">points_per_m2 =</span> number_of_points<span class="sc">/</span>las_area_m2</span>
+<span id="cb415-32"><a href="timer.html#cb415-32" tabindex="-1"></a>    , <span class="at">timer_cloud2raster_mins_per_ha =</span> timer_cloud2raster_mins<span class="sc">/</span>(las_area_m2<span class="sc">/</span><span class="dv">10000</span>)</span>
+<span id="cb415-33"><a href="timer.html#cb415-33" tabindex="-1"></a>  )</span>
+<span id="cb415-34"><a href="timer.html#cb415-34" tabindex="-1"></a><span class="co"># dplyr::glimpse(processed_tracking_data)</span></span></code></pre></div>
+<p>we’ll get the predictions using both the DBSCAN and Watershed segmentation approaches but all we really care about is the processing time and not the results themselves since we already generated and evaluated the predictions</p>
+<div class="sourceCode" id="cb416"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb416-1"><a href="timer.html#cb416-1" tabindex="-1"></a><span class="co"># rgb_rast_list</span></span>
+<span id="cb416-2"><a href="timer.html#cb416-2" tabindex="-1"></a><span class="co"># terra::global(terra::subset(rgb_rast_list[[&quot;pj&quot;]],1), &quot;notNA&quot;)[[1]]*prod(terra::res(terra::subset(rgb_rast_list[[&quot;pj&quot;]],1))[1:2])</span></span>
+<span id="cb416-3"><a href="timer.html#cb416-3" tabindex="-1"></a><span class="co"># terra::subset(rgb_rast_list[[&quot;pj&quot;]],1) %&gt;% </span></span>
+<span id="cb416-4"><a href="timer.html#cb416-4" tabindex="-1"></a><span class="co">#   terra::cellSize() %&gt;% </span></span>
+<span id="cb416-5"><a href="timer.html#cb416-5" tabindex="-1"></a><span class="co">#   terra::mask(terra::subset(rgb_rast_list[[&quot;pj&quot;]],1)) %&gt;% </span></span>
+<span id="cb416-6"><a href="timer.html#cb416-6" tabindex="-1"></a><span class="co">#   terra::global(&quot;sum&quot;, na.rm=TRUE) %&gt;% </span></span>
+<span id="cb416-7"><a href="timer.html#cb416-7" tabindex="-1"></a><span class="co">#   as.numeric()</span></span>
+<span id="cb416-8"><a href="timer.html#cb416-8" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb416-9"><a href="timer.html#cb416-9" tabindex="-1"></a><span class="co"># map over piles_workflow() for dbscan if haven&#39;t done it already</span></span>
+<span id="cb416-10"><a href="timer.html#cb416-10" tabindex="-1"></a><span class="do">##################################################</span></span>
+<span id="cb416-11"><a href="timer.html#cb416-11" tabindex="-1"></a><span class="co"># out_dir_list</span></span>
+<span id="cb416-12"><a href="timer.html#cb416-12" tabindex="-1"></a><span class="co"># check if we already ran the piles_workflow()</span></span>
+<span id="cb416-13"><a href="timer.html#cb416-13" tabindex="-1"></a>processed_tracking_data_full <span class="ot">&lt;-</span> </span>
+<span id="cb416-14"><a href="timer.html#cb416-14" tabindex="-1"></a>  out_dir_list <span class="sc">%&gt;%</span> </span>
+<span id="cb416-15"><a href="timer.html#cb416-15" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">imap</span>(</span>
+<span id="cb416-16"><a href="timer.html#cb416-16" tabindex="-1"></a>    <span class="cf">function</span>(x, nm){</span>
+<span id="cb416-17"><a href="timer.html#cb416-17" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-18"><a href="timer.html#cb416-18" tabindex="-1"></a>      <span class="co"># get raster area</span></span>
+<span id="cb416-19"><a href="timer.html#cb416-19" tabindex="-1"></a>      <span class="co"># is it already done?</span></span>
+<span id="cb416-20"><a href="timer.html#cb416-20" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-21"><a href="timer.html#cb416-21" tabindex="-1"></a>      <span class="cf">if</span>(</span>
+<span id="cb416-22"><a href="timer.html#cb416-22" tabindex="-1"></a>        <span class="fu">any</span>(stringr<span class="sc">::</span><span class="fu">str_equal</span>(<span class="fu">names</span>(processed_tracking_data), <span class="st">&quot;rast_area_m2&quot;</span>))</span>
+<span id="cb416-23"><a href="timer.html#cb416-23" tabindex="-1"></a>        <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(</span>
+<span id="cb416-24"><a href="timer.html#cb416-24" tabindex="-1"></a>            processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-25"><a href="timer.html#cb416-25" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(rast_area_m2))</span>
+<span id="cb416-26"><a href="timer.html#cb416-26" tabindex="-1"></a>          )<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb416-27"><a href="timer.html#cb416-27" tabindex="-1"></a>      ){</span>
+<span id="cb416-28"><a href="timer.html#cb416-28" tabindex="-1"></a>        this_rast_area_m2 <span class="ot">&lt;-</span> </span>
+<span id="cb416-29"><a href="timer.html#cb416-29" tabindex="-1"></a>          processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-30"><a href="timer.html#cb416-30" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(rast_area_m2)) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-31"><a href="timer.html#cb416-31" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">pull</span>(rast_area_m2)</span>
+<span id="cb416-32"><a href="timer.html#cb416-32" tabindex="-1"></a>      }<span class="cf">else</span>{</span>
+<span id="cb416-33"><a href="timer.html#cb416-33" tabindex="-1"></a>        this_rast_area_m2 <span class="ot">&lt;-</span> </span>
+<span id="cb416-34"><a href="timer.html#cb416-34" tabindex="-1"></a>          terra<span class="sc">::</span><span class="fu">subset</span>(rgb_rast_list[[nm]],<span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-35"><a href="timer.html#cb416-35" tabindex="-1"></a>          terra<span class="sc">::</span><span class="fu">cellSize</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb416-36"><a href="timer.html#cb416-36" tabindex="-1"></a>          terra<span class="sc">::</span><span class="fu">mask</span>(terra<span class="sc">::</span><span class="fu">subset</span>(rgb_rast_list[[nm]],<span class="dv">1</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-37"><a href="timer.html#cb416-37" tabindex="-1"></a>          terra<span class="sc">::</span><span class="fu">global</span>(<span class="st">&quot;sum&quot;</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-38"><a href="timer.html#cb416-38" tabindex="-1"></a>          <span class="fu">as.numeric</span>()</span>
+<span id="cb416-39"><a href="timer.html#cb416-39" tabindex="-1"></a>      }</span>
+<span id="cb416-40"><a href="timer.html#cb416-40" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-41"><a href="timer.html#cb416-41" tabindex="-1"></a>      <span class="co"># dbscan</span></span>
+<span id="cb416-42"><a href="timer.html#cb416-42" tabindex="-1"></a>      <span class="co"># is it already done?</span></span>
+<span id="cb416-43"><a href="timer.html#cb416-43" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-44"><a href="timer.html#cb416-44" tabindex="-1"></a>      <span class="cf">if</span>(</span>
+<span id="cb416-45"><a href="timer.html#cb416-45" tabindex="-1"></a>        <span class="fu">any</span>(stringr<span class="sc">::</span><span class="fu">str_equal</span>(<span class="fu">names</span>(processed_tracking_data), <span class="st">&quot;timer_piles_workflow_dbscan_mins&quot;</span>))</span>
+<span id="cb416-46"><a href="timer.html#cb416-46" tabindex="-1"></a>        <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(</span>
+<span id="cb416-47"><a href="timer.html#cb416-47" tabindex="-1"></a>            processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-48"><a href="timer.html#cb416-48" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(timer_piles_workflow_dbscan_mins))</span>
+<span id="cb416-49"><a href="timer.html#cb416-49" tabindex="-1"></a>          )<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb416-50"><a href="timer.html#cb416-50" tabindex="-1"></a>      ){</span>
+<span id="cb416-51"><a href="timer.html#cb416-51" tabindex="-1"></a>        timer_dbscan_mins <span class="ot">&lt;-</span> </span>
+<span id="cb416-52"><a href="timer.html#cb416-52" tabindex="-1"></a>          processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-53"><a href="timer.html#cb416-53" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(timer_piles_workflow_dbscan_mins)) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-54"><a href="timer.html#cb416-54" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">pull</span>(timer_piles_workflow_dbscan_mins)</span>
+<span id="cb416-55"><a href="timer.html#cb416-55" tabindex="-1"></a>      }<span class="cf">else</span>{</span>
+<span id="cb416-56"><a href="timer.html#cb416-56" tabindex="-1"></a>        <span class="co"># run it</span></span>
+<span id="cb416-57"><a href="timer.html#cb416-57" tabindex="-1"></a>        my_st_temp <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb416-58"><a href="timer.html#cb416-58" tabindex="-1"></a>        <span class="fu">message</span>(<span class="fu">paste</span>(<span class="st">&quot;starting&quot;</span>, nm, <span class="st">&quot;piles_workflow(seg_method = dbscan) step at ...&quot;</span>, my_st_temp))</span>
+<span id="cb416-59"><a href="timer.html#cb416-59" tabindex="-1"></a>        <span class="co"># cloud2trees::piles_workflow</span></span>
+<span id="cb416-60"><a href="timer.html#cb416-60" tabindex="-1"></a>        piles_workflow_ans <span class="ot">&lt;-</span> cloud2trees<span class="sc">:::</span><span class="fu">piles_workflow</span>(</span>
+<span id="cb416-61"><a href="timer.html#cb416-61" tabindex="-1"></a>          <span class="at">chm_rast =</span> chm_rast_list[[nm]]</span>
+<span id="cb416-62"><a href="timer.html#cb416-62" tabindex="-1"></a>          , <span class="at">seg_method =</span> <span class="st">&quot;dbscan&quot;</span></span>
+<span id="cb416-63"><a href="timer.html#cb416-63" tabindex="-1"></a>          , <span class="at">min_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_ht_m)</span>
+<span id="cb416-64"><a href="timer.html#cb416-64" tabindex="-1"></a>          , <span class="at">max_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_ht_m)</span>
+<span id="cb416-65"><a href="timer.html#cb416-65" tabindex="-1"></a>          , <span class="at">min_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_area_m2)</span>
+<span id="cb416-66"><a href="timer.html#cb416-66" tabindex="-1"></a>          , <span class="at">max_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_area_m2)</span>
+<span id="cb416-67"><a href="timer.html#cb416-67" tabindex="-1"></a>          , <span class="at">min_convexity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_convexity_ratio)</span>
+<span id="cb416-68"><a href="timer.html#cb416-68" tabindex="-1"></a>          , <span class="at">min_circularity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_circularity_ratio)</span>
+<span id="cb416-69"><a href="timer.html#cb416-69" tabindex="-1"></a>          , <span class="at">smooth_segs =</span> T</span>
+<span id="cb416-70"><a href="timer.html#cb416-70" tabindex="-1"></a>          , <span class="at">rgb_rast =</span> rgb_rast_list[[nm]]</span>
+<span id="cb416-71"><a href="timer.html#cb416-71" tabindex="-1"></a>          , <span class="at">red_band_idx =</span> <span class="dv">1</span></span>
+<span id="cb416-72"><a href="timer.html#cb416-72" tabindex="-1"></a>          , <span class="at">green_band_idx =</span> <span class="dv">2</span></span>
+<span id="cb416-73"><a href="timer.html#cb416-73" tabindex="-1"></a>          , <span class="at">blue_band_idx =</span> <span class="dv">3</span></span>
+<span id="cb416-74"><a href="timer.html#cb416-74" tabindex="-1"></a>          , <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb416-75"><a href="timer.html#cb416-75" tabindex="-1"></a>          , <span class="at">filter_return =</span> T</span>
+<span id="cb416-76"><a href="timer.html#cb416-76" tabindex="-1"></a>          , <span class="at">outfile =</span> <span class="fu">file.path</span>(x, <span class="st">&quot;piles_workflow_dbscan_piles.gpkg&quot;</span>)</span>
+<span id="cb416-77"><a href="timer.html#cb416-77" tabindex="-1"></a>        )</span>
+<span id="cb416-78"><a href="timer.html#cb416-78" tabindex="-1"></a>        <span class="co"># end</span></span>
+<span id="cb416-79"><a href="timer.html#cb416-79" tabindex="-1"></a>        my_end_temp <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb416-80"><a href="timer.html#cb416-80" tabindex="-1"></a>        <span class="co"># timer</span></span>
+<span id="cb416-81"><a href="timer.html#cb416-81" tabindex="-1"></a>        timer_dbscan_mins <span class="ot">&lt;-</span> <span class="fu">difftime</span>(my_end_temp, my_st_temp, <span class="at">units =</span> <span class="fu">c</span>(<span class="st">&quot;mins&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>() </span>
+<span id="cb416-82"><a href="timer.html#cb416-82" tabindex="-1"></a>      }</span>
+<span id="cb416-83"><a href="timer.html#cb416-83" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-84"><a href="timer.html#cb416-84" tabindex="-1"></a>      <span class="co"># watershed</span></span>
+<span id="cb416-85"><a href="timer.html#cb416-85" tabindex="-1"></a>      <span class="co"># is it already done?</span></span>
+<span id="cb416-86"><a href="timer.html#cb416-86" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-87"><a href="timer.html#cb416-87" tabindex="-1"></a>      <span class="cf">if</span>(</span>
+<span id="cb416-88"><a href="timer.html#cb416-88" tabindex="-1"></a>        <span class="fu">any</span>(stringr<span class="sc">::</span><span class="fu">str_equal</span>(<span class="fu">names</span>(processed_tracking_data), <span class="st">&quot;timer_piles_workflow_watershed_mins&quot;</span>))</span>
+<span id="cb416-89"><a href="timer.html#cb416-89" tabindex="-1"></a>        <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(</span>
+<span id="cb416-90"><a href="timer.html#cb416-90" tabindex="-1"></a>            processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-91"><a href="timer.html#cb416-91" tabindex="-1"></a>            dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(timer_piles_workflow_watershed_mins))</span>
+<span id="cb416-92"><a href="timer.html#cb416-92" tabindex="-1"></a>          )<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb416-93"><a href="timer.html#cb416-93" tabindex="-1"></a>      ){</span>
+<span id="cb416-94"><a href="timer.html#cb416-94" tabindex="-1"></a>        timer_watershed_mins <span class="ot">&lt;-</span> </span>
+<span id="cb416-95"><a href="timer.html#cb416-95" tabindex="-1"></a>          processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-96"><a href="timer.html#cb416-96" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(timer_piles_workflow_watershed_mins)) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-97"><a href="timer.html#cb416-97" tabindex="-1"></a>          dplyr<span class="sc">::</span><span class="fu">pull</span>(timer_piles_workflow_watershed_mins)</span>
+<span id="cb416-98"><a href="timer.html#cb416-98" tabindex="-1"></a>      }<span class="cf">else</span>{</span>
+<span id="cb416-99"><a href="timer.html#cb416-99" tabindex="-1"></a>        <span class="co"># run it</span></span>
+<span id="cb416-100"><a href="timer.html#cb416-100" tabindex="-1"></a>        my_st_temp <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb416-101"><a href="timer.html#cb416-101" tabindex="-1"></a>        <span class="fu">message</span>(<span class="fu">paste</span>(<span class="st">&quot;starting&quot;</span>, nm, <span class="st">&quot;piles_workflow(seg_method = watershed) step at ...&quot;</span>, my_st_temp))</span>
+<span id="cb416-102"><a href="timer.html#cb416-102" tabindex="-1"></a>        <span class="co"># cloud2trees::piles_workflow</span></span>
+<span id="cb416-103"><a href="timer.html#cb416-103" tabindex="-1"></a>        piles_workflow_ans <span class="ot">&lt;-</span> cloud2trees<span class="sc">:::</span><span class="fu">piles_workflow</span>(</span>
+<span id="cb416-104"><a href="timer.html#cb416-104" tabindex="-1"></a>          <span class="at">chm_rast =</span> chm_rast_list[[nm]]</span>
+<span id="cb416-105"><a href="timer.html#cb416-105" tabindex="-1"></a>          , <span class="at">seg_method =</span> <span class="st">&quot;watershed&quot;</span></span>
+<span id="cb416-106"><a href="timer.html#cb416-106" tabindex="-1"></a>          , <span class="at">min_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_ht_m)</span>
+<span id="cb416-107"><a href="timer.html#cb416-107" tabindex="-1"></a>          , <span class="at">max_ht_m =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_ht_m)</span>
+<span id="cb416-108"><a href="timer.html#cb416-108" tabindex="-1"></a>          , <span class="at">min_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_area_m2)</span>
+<span id="cb416-109"><a href="timer.html#cb416-109" tabindex="-1"></a>          , <span class="at">max_area_m2 =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(max_area_m2)</span>
+<span id="cb416-110"><a href="timer.html#cb416-110" tabindex="-1"></a>          , <span class="at">min_convexity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_convexity_ratio)</span>
+<span id="cb416-111"><a href="timer.html#cb416-111" tabindex="-1"></a>          , <span class="at">min_circularity_ratio =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(min_circularity_ratio)</span>
+<span id="cb416-112"><a href="timer.html#cb416-112" tabindex="-1"></a>          , <span class="at">smooth_segs =</span> T</span>
+<span id="cb416-113"><a href="timer.html#cb416-113" tabindex="-1"></a>          , <span class="at">rgb_rast =</span> rgb_rast_list[[nm]]</span>
+<span id="cb416-114"><a href="timer.html#cb416-114" tabindex="-1"></a>          , <span class="at">red_band_idx =</span> <span class="dv">1</span></span>
+<span id="cb416-115"><a href="timer.html#cb416-115" tabindex="-1"></a>          , <span class="at">green_band_idx =</span> <span class="dv">2</span></span>
+<span id="cb416-116"><a href="timer.html#cb416-116" tabindex="-1"></a>          , <span class="at">blue_band_idx =</span> <span class="dv">3</span></span>
+<span id="cb416-117"><a href="timer.html#cb416-117" tabindex="-1"></a>          , <span class="at">spectral_weight =</span> all_stand_boundary <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">pull</span>(spectral_weight)</span>
+<span id="cb416-118"><a href="timer.html#cb416-118" tabindex="-1"></a>          , <span class="at">filter_return =</span> T</span>
+<span id="cb416-119"><a href="timer.html#cb416-119" tabindex="-1"></a>          , <span class="at">outfile =</span> <span class="fu">file.path</span>(x, <span class="st">&quot;piles_workflow_watershed_piles.gpkg&quot;</span>)</span>
+<span id="cb416-120"><a href="timer.html#cb416-120" tabindex="-1"></a>        )</span>
+<span id="cb416-121"><a href="timer.html#cb416-121" tabindex="-1"></a>        <span class="co"># end</span></span>
+<span id="cb416-122"><a href="timer.html#cb416-122" tabindex="-1"></a>        my_end_temp <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb416-123"><a href="timer.html#cb416-123" tabindex="-1"></a>        <span class="co"># timer</span></span>
+<span id="cb416-124"><a href="timer.html#cb416-124" tabindex="-1"></a>        timer_watershed_mins <span class="ot">&lt;-</span> <span class="fu">difftime</span>(my_end_temp, my_st_temp, <span class="at">units =</span> <span class="fu">c</span>(<span class="st">&quot;mins&quot;</span>)) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>() </span>
+<span id="cb416-125"><a href="timer.html#cb416-125" tabindex="-1"></a>      }</span>
+<span id="cb416-126"><a href="timer.html#cb416-126" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-127"><a href="timer.html#cb416-127" tabindex="-1"></a>      <span class="co"># write times</span></span>
+<span id="cb416-128"><a href="timer.html#cb416-128" tabindex="-1"></a>      <span class="do">###################################################</span></span>
+<span id="cb416-129"><a href="timer.html#cb416-129" tabindex="-1"></a>      df <span class="ot">&lt;-</span> </span>
+<span id="cb416-130"><a href="timer.html#cb416-130" tabindex="-1"></a>        processed_tracking_data <span class="sc">%&gt;%</span> </span>
+<span id="cb416-131"><a href="timer.html#cb416-131" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(site_data_lab<span class="sc">==</span>nm) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-132"><a href="timer.html#cb416-132" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb416-133"><a href="timer.html#cb416-133" tabindex="-1"></a>          <span class="at">timer_piles_workflow_dbscan_mins =</span> timer_dbscan_mins</span>
+<span id="cb416-134"><a href="timer.html#cb416-134" tabindex="-1"></a>          , <span class="at">timer_piles_workflow_watershed_mins =</span> timer_watershed_mins</span>
+<span id="cb416-135"><a href="timer.html#cb416-135" tabindex="-1"></a>          , <span class="at">rast_area_m2 =</span> this_rast_area_m2</span>
+<span id="cb416-136"><a href="timer.html#cb416-136" tabindex="-1"></a>          , <span class="at">chm_rast_res_m =</span> terra<span class="sc">::</span><span class="fu">subset</span>(chm_rast_list[[nm]],<span class="dv">1</span>) <span class="sc">%&gt;%</span> terra<span class="sc">::</span><span class="fu">res</span>() <span class="sc">%&gt;%</span> .[<span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb416-137"><a href="timer.html#cb416-137" tabindex="-1"></a>          , <span class="at">rgb_rast_res_m =</span> terra<span class="sc">::</span><span class="fu">subset</span>(rgb_rast_list[[nm]],<span class="dv">1</span>) <span class="sc">%&gt;%</span> terra<span class="sc">::</span><span class="fu">res</span>() <span class="sc">%&gt;%</span> .[<span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb416-138"><a href="timer.html#cb416-138" tabindex="-1"></a>        ) </span>
+<span id="cb416-139"><a href="timer.html#cb416-139" tabindex="-1"></a>      <span class="co"># write</span></span>
+<span id="cb416-140"><a href="timer.html#cb416-140" tabindex="-1"></a>      df <span class="sc">%&gt;%</span> </span>
+<span id="cb416-141"><a href="timer.html#cb416-141" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(site_data_lab)) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-142"><a href="timer.html#cb416-142" tabindex="-1"></a>        readr<span class="sc">::</span><span class="fu">write_csv</span>(<span class="at">file =</span> <span class="fu">file.path</span>(x,<span class="st">&quot;processed_tracking_data.csv&quot;</span>), <span class="at">append =</span> F, <span class="at">progress =</span> F)</span>
+<span id="cb416-143"><a href="timer.html#cb416-143" tabindex="-1"></a>      <span class="co"># return</span></span>
+<span id="cb416-144"><a href="timer.html#cb416-144" tabindex="-1"></a>      <span class="fu">return</span>(df)</span>
+<span id="cb416-145"><a href="timer.html#cb416-145" tabindex="-1"></a>    }</span>
+<span id="cb416-146"><a href="timer.html#cb416-146" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb416-147"><a href="timer.html#cb416-147" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">bind_rows</span>()</span>
+<span id="cb416-148"><a href="timer.html#cb416-148" tabindex="-1"></a><span class="co"># processed_tracking_data_full %&gt;% dplyr::glimpse()</span></span></code></pre></div>
+<p>let’s add the per area values and look at the processing data structure</p>
+<div class="sourceCode" id="cb417"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb417-1"><a href="timer.html#cb417-1" tabindex="-1"></a>processed_tracking_data_full <span class="ot">&lt;-</span></span>
+<span id="cb417-2"><a href="timer.html#cb417-2" tabindex="-1"></a>  processed_tracking_data_full <span class="sc">%&gt;%</span> </span>
+<span id="cb417-3"><a href="timer.html#cb417-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb417-4"><a href="timer.html#cb417-4" tabindex="-1"></a>    <span class="at">timer_piles_workflow_dbscan_mins_per_ha =</span> timer_piles_workflow_dbscan_mins<span class="sc">/</span>(rast_area_m2<span class="sc">/</span><span class="dv">10000</span>)</span>
+<span id="cb417-5"><a href="timer.html#cb417-5" tabindex="-1"></a>    , <span class="at">timer_piles_workflow_watershed_mins_per_ha =</span> timer_piles_workflow_watershed_mins<span class="sc">/</span>(rast_area_m2<span class="sc">/</span><span class="dv">10000</span>)</span>
+<span id="cb417-6"><a href="timer.html#cb417-6" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb417-7"><a href="timer.html#cb417-7" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb417-8"><a href="timer.html#cb417-8" tabindex="-1"></a>    all_stand_boundary <span class="sc">%&gt;%</span> </span>
+<span id="cb417-9"><a href="timer.html#cb417-9" tabindex="-1"></a>      sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb417-10"><a href="timer.html#cb417-10" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(site, site_data_lab, site_full_lab, site_area_ha)</span>
+<span id="cb417-11"><a href="timer.html#cb417-11" tabindex="-1"></a>    , <span class="at">by =</span> <span class="st">&quot;site_data_lab&quot;</span></span>
+<span id="cb417-12"><a href="timer.html#cb417-12" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb417-13"><a href="timer.html#cb417-13" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">relocate</span>(tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;site&quot;</span>))</span>
+<span id="cb417-14"><a href="timer.html#cb417-14" tabindex="-1"></a>processed_tracking_data_full <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">glimpse</span>()</span></code></pre></div>
+<pre><code>## Rows: 4
+## Columns: 16
+## $ site_data_lab                              &lt;chr&gt; &quot;arnf&quot;, &quot;bhef&quot;, &quot;psinf&quot;, &quot;p…
+## $ site                                       &lt;chr&gt; &quot;ARNF Ponderosa Pine Site&quot;,…
+## $ site_full_lab                              &lt;chr&gt; &quot;Arapahoe and Roosevelt Nat…
+## $ site_area_ha                               &lt;dbl&gt; 73.606204, 103.102464, 17.4…
+## $ timer_cloud2raster_mins                    &lt;dbl&gt; 174.040155, 106.994817, 17.…
+## $ points_per_m2                              &lt;dbl&gt; 1102.8458, 491.5385, 375.40…
+## $ timer_cloud2raster_mins_per_ha             &lt;dbl&gt; 1.4019279, 0.3706547, 0.409…
+## $ timer_piles_workflow_dbscan_mins           &lt;dbl&gt; 3.414274, 14.960973, 7.4795…
+## $ timer_piles_workflow_watershed_mins        &lt;dbl&gt; 14.204253, 50.410156, 8.247…
+## $ rast_area_m2                               &lt;dbl&gt; 780582.76, 1099205.20, 1920…
+## $ chm_rast_res_m                             &lt;dbl&gt; 0.15, 0.15, 0.10, 0.10
+## $ rgb_rast_res_m                             &lt;dbl&gt; 0.08, 0.08, 0.06, 0.06
+## $ number_of_points                           &lt;int&gt; 1369110780, 1418896812, 158…
+## $ las_area_m2                                &lt;dbl&gt; 1241434.4, 2886644.0, 42091…
+## $ timer_piles_workflow_dbscan_mins_per_ha    &lt;dbl&gt; 0.04374007, 0.13610719, 0.3…
+## $ timer_piles_workflow_watershed_mins_per_ha &lt;dbl&gt; 0.1819699, 0.4586055, 0.429…</code></pre>
+<p>make a nice table of the processing times per hectare</p>
+<div class="sourceCode" id="cb419"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb419-1"><a href="timer.html#cb419-1" tabindex="-1"></a>processed_tracking_data_full <span class="sc">%&gt;%</span> </span>
+<span id="cb419-2"><a href="timer.html#cb419-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb419-3"><a href="timer.html#cb419-3" tabindex="-1"></a>    site_full_lab, site_area_ha</span>
+<span id="cb419-4"><a href="timer.html#cb419-4" tabindex="-1"></a>    <span class="co"># data desc</span></span>
+<span id="cb419-5"><a href="timer.html#cb419-5" tabindex="-1"></a>    , points_per_m2, chm_rast_res_m, rgb_rast_res_m</span>
+<span id="cb419-6"><a href="timer.html#cb419-6" tabindex="-1"></a>    <span class="co"># timer</span></span>
+<span id="cb419-7"><a href="timer.html#cb419-7" tabindex="-1"></a>    <span class="co"># , tidyselect::ends_with(&quot;_per_ha&quot;)</span></span>
+<span id="cb419-8"><a href="timer.html#cb419-8" tabindex="-1"></a>    , timer_cloud2raster_mins_per_ha, timer_piles_workflow_dbscan_mins_per_ha, timer_piles_workflow_watershed_mins_per_ha</span>
+<span id="cb419-9"><a href="timer.html#cb419-9" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-10"><a href="timer.html#cb419-10" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb419-11"><a href="timer.html#cb419-11" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_area_ha&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="fl">0.1</span>, <span class="at">suffix =</span> <span class="st">&quot; ha&quot;</span>))</span>
+<span id="cb419-12"><a href="timer.html#cb419-12" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_per_m2&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="dv">1</span>))</span>
+<span id="cb419-13"><a href="timer.html#cb419-13" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_res_m&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="fl">0.01</span>))</span>
+<span id="cb419-14"><a href="timer.html#cb419-14" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_per_ha&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="fl">0.001</span>))</span>
+<span id="cb419-15"><a href="timer.html#cb419-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-16"><a href="timer.html#cb419-16" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(site_full_lab) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-17"><a href="timer.html#cb419-17" tabindex="-1"></a>  <span class="co"># dplyr::glimpse()</span></span>
+<span id="cb419-18"><a href="timer.html#cb419-18" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kbl</span>(</span>
+<span id="cb419-19"><a href="timer.html#cb419-19" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Data Processing Summary&quot;</span></span>
+<span id="cb419-20"><a href="timer.html#cb419-20" tabindex="-1"></a>    , <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb419-21"><a href="timer.html#cb419-21" tabindex="-1"></a>      <span class="st">&quot;site&quot;</span>, <span class="st">&quot;hectares&quot;</span></span>
+<span id="cb419-22"><a href="timer.html#cb419-22" tabindex="-1"></a>      <span class="co"># data desc</span></span>
+<span id="cb419-23"><a href="timer.html#cb419-23" tabindex="-1"></a>      , <span class="st">&quot;points m&lt;sup&gt;-2&lt;/sup&gt;&quot;</span>, <span class="st">&quot;CHM&lt;br&gt;resolution (m)&quot;</span>, <span class="st">&quot;RGB ortho&lt;br/&gt;resolution (m)&quot;</span></span>
+<span id="cb419-24"><a href="timer.html#cb419-24" tabindex="-1"></a>      <span class="co"># timer</span></span>
+<span id="cb419-25"><a href="timer.html#cb419-25" tabindex="-1"></a>      <span class="co"># , &quot;timer_cloud2raster_mins_per_ha&quot;, &quot;timer_piles_workflow_dbscan_mins_per_ha&quot;, &quot;timer_piles_workflow_watershed_mins_per_ha&quot;</span></span>
+<span id="cb419-26"><a href="timer.html#cb419-26" tabindex="-1"></a>      , <span class="st">&quot;`cloud2raster()`&quot;</span>, <span class="st">&quot;`piles_workflow()`&lt;br/&gt;DBSCAN&quot;</span>, <span class="st">&quot;`piles_workflow()`&lt;br/&gt;watershed&quot;</span></span>
+<span id="cb419-27"><a href="timer.html#cb419-27" tabindex="-1"></a>    )</span>
+<span id="cb419-28"><a href="timer.html#cb419-28" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb419-29"><a href="timer.html#cb419-29" tabindex="-1"></a>    <span class="co"># , digits = 2</span></span>
+<span id="cb419-30"><a href="timer.html#cb419-30" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-31"><a href="timer.html#cb419-31" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>(<span class="at">font_size =</span> <span class="dv">11</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-32"><a href="timer.html#cb419-32" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">add_header_above</span>(</span>
+<span id="cb419-33"><a href="timer.html#cb419-33" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb419-34"><a href="timer.html#cb419-34" tabindex="-1"></a>      <span class="st">&quot; &quot;</span><span class="ot">=</span><span class="dv">2</span></span>
+<span id="cb419-35"><a href="timer.html#cb419-35" tabindex="-1"></a>      , <span class="st">&quot;Input Data&lt;br/&gt;Description&quot;</span> <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb419-36"><a href="timer.html#cb419-36" tabindex="-1"></a>      , <span class="st">&quot;Processing Time&lt;br/&gt;minutes ha&lt;sup&gt;-1&lt;/sup&gt;&quot;</span> <span class="ot">=</span> <span class="dv">3</span></span>
+<span id="cb419-37"><a href="timer.html#cb419-37" tabindex="-1"></a>    )</span>
+<span id="cb419-38"><a href="timer.html#cb419-38" tabindex="-1"></a>    , <span class="at">escape =</span> F</span>
+<span id="cb419-39"><a href="timer.html#cb419-39" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb419-40"><a href="timer.html#cb419-40" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">column_spec</span>(<span class="fu">seq</span>(<span class="dv">2</span>,<span class="dv">8</span>,<span class="at">by=</span><span class="dv">3</span>), <span class="at">border_right =</span> <span class="cn">TRUE</span>, <span class="at">include_thead =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<table class="table" style="font-size: 11px; margin-left: auto; margin-right: auto;">
+<caption style="font-size: initial !important;">
+<span id="tab:unnamed-chunk-476">Table 10.1: </span>Data Processing Summary
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="2">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Input Data<br>Description
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+<p>Processing Time<br>minutes ha<sup>-1</sup></p>
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+site
+</th>
+<th style="text-align:left;border-right:1px solid;">
+hectares
+</th>
+<th style="text-align:left;">
+points m<sup>-2</sup>
+</th>
+<th style="text-align:left;">
+CHM<br>resolution (m)
+</th>
+<th style="text-align:left;border-right:1px solid;">
+RGB ortho<br>resolution (m)
+</th>
+<th style="text-align:left;">
+<code>cloud2raster()</code>
+</th>
+<th style="text-align:left;">
+<code>piles_workflow()</code><br>DBSCAN
+</th>
+<th style="text-align:left;border-right:1px solid;">
+<code>piles_workflow()</code><br>watershed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Arapahoe and Roosevelt National Forest (ARNF)
+</td>
+<td style="text-align:left;border-right:1px solid;">
+73.6 ha
+</td>
+<td style="text-align:left;">
+1,103
+</td>
+<td style="text-align:left;">
+0.15
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.08
+</td>
+<td style="text-align:left;">
+1.402
+</td>
+<td style="text-align:left;">
+0.044
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.182
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black Hills Experimental Forest (BHEF)
+</td>
+<td style="text-align:left;border-right:1px solid;">
+103.1 ha
+</td>
+<td style="text-align:left;">
+492
+</td>
+<td style="text-align:left;">
+0.15
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.08
+</td>
+<td style="text-align:left;">
+0.371
+</td>
+<td style="text-align:left;">
+0.136
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.459
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pike and San Isabel National Forest (PSINF)
+</td>
+<td style="text-align:left;border-right:1px solid;">
+17.5 ha
+</td>
+<td style="text-align:left;">
+375
+</td>
+<td style="text-align:left;">
+0.10
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.06
+</td>
+<td style="text-align:left;">
+0.409
+</td>
+<td style="text-align:left;">
+0.389
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.429
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tres Rios Field Office (TRFO-BLM)
+</td>
+<td style="text-align:left;border-right:1px solid;">
+5.2 ha
+</td>
+<td style="text-align:left;">
+569
+</td>
+<td style="text-align:left;">
+0.10
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.06
+</td>
+<td style="text-align:left;">
+0.305
+</td>
+<td style="text-align:left;">
+0.424
+</td>
+<td style="text-align:left;border-right:1px solid;">
+0.595
+</td>
+</tr>
+</tbody>
+</table>
+<p>let’s make a plot as well</p>
+<div class="sourceCode" id="cb420"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb420-1"><a href="timer.html#cb420-1" tabindex="-1"></a><span class="co"># plot it</span></span>
+<span id="cb420-2"><a href="timer.html#cb420-2" tabindex="-1"></a>processed_tracking_data_full <span class="sc">%&gt;%</span> </span>
+<span id="cb420-3"><a href="timer.html#cb420-3" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb420-4"><a href="timer.html#cb420-4" tabindex="-1"></a>    site_full_lab, site_area_ha</span>
+<span id="cb420-5"><a href="timer.html#cb420-5" tabindex="-1"></a>    <span class="co"># timer</span></span>
+<span id="cb420-6"><a href="timer.html#cb420-6" tabindex="-1"></a>    <span class="co"># , tidyselect::ends_with(&quot;_per_ha&quot;)</span></span>
+<span id="cb420-7"><a href="timer.html#cb420-7" tabindex="-1"></a>    , timer_cloud2raster_mins_per_ha, timer_piles_workflow_dbscan_mins_per_ha, timer_piles_workflow_watershed_mins_per_ha</span>
+<span id="cb420-8"><a href="timer.html#cb420-8" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-9"><a href="timer.html#cb420-9" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">cols =</span> tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;timer_piles_workflow_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-10"><a href="timer.html#cb420-10" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb420-11"><a href="timer.html#cb420-11" tabindex="-1"></a>    <span class="at">name =</span> name <span class="sc">%&gt;%</span> </span>
+<span id="cb420-12"><a href="timer.html#cb420-12" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_remove_all</span>(<span class="st">&quot;^timer_piles_workflow_&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-13"><a href="timer.html#cb420-13" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_remove_all</span>(<span class="st">&quot;_mins_per_ha$&quot;</span>)</span>
+<span id="cb420-14"><a href="timer.html#cb420-14" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-15"><a href="timer.html#cb420-15" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(</span>
+<span id="cb420-16"><a href="timer.html#cb420-16" tabindex="-1"></a>    <span class="at">method =</span> name</span>
+<span id="cb420-17"><a href="timer.html#cb420-17" tabindex="-1"></a>    , <span class="at">timer_piles_workflow_mins_per_ha =</span> value</span>
+<span id="cb420-18"><a href="timer.html#cb420-18" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-19"><a href="timer.html#cb420-19" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="at">cols =</span> tidyselect<span class="sc">::</span><span class="fu">starts_with</span>(<span class="st">&quot;timer_&quot;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-20"><a href="timer.html#cb420-20" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb420-21"><a href="timer.html#cb420-21" tabindex="-1"></a>    <span class="at">name =</span> name <span class="sc">%&gt;%</span> </span>
+<span id="cb420-22"><a href="timer.html#cb420-22" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_remove_all</span>(<span class="st">&quot;^timer_&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-23"><a href="timer.html#cb420-23" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_remove_all</span>(<span class="st">&quot;_mins_per_ha$&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-24"><a href="timer.html#cb420-24" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_c</span>(<span class="st">&quot;()&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-25"><a href="timer.html#cb420-25" tabindex="-1"></a>      <span class="fu">factor</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb420-26"><a href="timer.html#cb420-26" tabindex="-1"></a>      forcats<span class="sc">::</span><span class="fu">fct_rev</span>()</span>
+<span id="cb420-27"><a href="timer.html#cb420-27" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-28"><a href="timer.html#cb420-28" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="at">part =</span> name) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-29"><a href="timer.html#cb420-29" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(site_full_lab, site_area_ha, method) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-30"><a href="timer.html#cb420-30" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">sum_value =</span> <span class="fu">sum</span>(value,<span class="at">na.rm=</span>T)) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-31"><a href="timer.html#cb420-31" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb420-32"><a href="timer.html#cb420-32" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb420-33"><a href="timer.html#cb420-33" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;_area_ha&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="fl">0.1</span>, <span class="at">suffix =</span> <span class="st">&quot; ha&quot;</span>), <span class="at">.names =</span> <span class="st">&quot;{.col}_lab&quot;</span>)</span>
+<span id="cb420-34"><a href="timer.html#cb420-34" tabindex="-1"></a>    , dplyr<span class="sc">::</span><span class="fu">across</span>(tidyselect<span class="sc">::</span><span class="fu">ends_with</span>(<span class="st">&quot;value&quot;</span>), <span class="sc">~</span>scales<span class="sc">::</span><span class="fu">comma</span>(.x,<span class="at">accuracy =</span> <span class="fl">0.001</span>), <span class="at">.names =</span> <span class="st">&quot;{.col}_lab&quot;</span>)</span>
+<span id="cb420-35"><a href="timer.html#cb420-35" tabindex="-1"></a>    , <span class="at">sum_value_lab =</span> </span>
+<span id="cb420-36"><a href="timer.html#cb420-36" tabindex="-1"></a>      <span class="co"># stringr::str_c(&quot;Total: &quot;, sum_value_lab) %&gt;% </span></span>
+<span id="cb420-37"><a href="timer.html#cb420-37" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_c</span>(<span class="st">&quot;Total: &quot;</span>, sum_value_lab, <span class="st">&quot; (min $ha^{-1}$)&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-38"><a href="timer.html#cb420-38" tabindex="-1"></a>      latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="at">output =</span> <span class="st">&quot;character&quot;</span>)</span>
+<span id="cb420-39"><a href="timer.html#cb420-39" tabindex="-1"></a>    , <span class="at">method =</span> method <span class="sc">%&gt;%</span></span>
+<span id="cb420-40"><a href="timer.html#cb420-40" tabindex="-1"></a>      <span class="fu">factor</span>(<span class="at">ordered =</span> T) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-41"><a href="timer.html#cb420-41" tabindex="-1"></a>      forcats<span class="sc">::</span><span class="fu">fct_recode</span>(<span class="st">&quot;DBSCAN&quot;</span> <span class="ot">=</span> <span class="st">&quot;dbscan&quot;</span>, <span class="st">&quot;Watershed&quot;</span> <span class="ot">=</span> <span class="st">&quot;watershed&quot;</span>)</span>
+<span id="cb420-42"><a href="timer.html#cb420-42" tabindex="-1"></a>    , <span class="at">site_full_lab =</span> stringr<span class="sc">::</span><span class="fu">str_wrap</span>(site_full_lab, <span class="at">width=</span><span class="dv">26</span>)</span>
+<span id="cb420-43"><a href="timer.html#cb420-43" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb420-44"><a href="timer.html#cb420-44" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb420-45"><a href="timer.html#cb420-45" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb420-46"><a href="timer.html#cb420-46" tabindex="-1"></a>      <span class="at">y =</span> method</span>
+<span id="cb420-47"><a href="timer.html#cb420-47" tabindex="-1"></a>      , <span class="at">fill =</span> part</span>
+<span id="cb420-48"><a href="timer.html#cb420-48" tabindex="-1"></a>      , <span class="at">group =</span> part</span>
+<span id="cb420-49"><a href="timer.html#cb420-49" tabindex="-1"></a>    )</span>
+<span id="cb420-50"><a href="timer.html#cb420-50" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-51"><a href="timer.html#cb420-51" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_col</span>(<span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> value), <span class="at">alpha =</span> <span class="fl">0.88</span>, <span class="at">width =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb420-52"><a href="timer.html#cb420-52" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_text</span>(</span>
+<span id="cb420-53"><a href="timer.html#cb420-53" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb420-54"><a href="timer.html#cb420-54" tabindex="-1"></a>      <span class="at">x =</span> value</span>
+<span id="cb420-55"><a href="timer.html#cb420-55" tabindex="-1"></a>      , <span class="at">label =</span> value_lab</span>
+<span id="cb420-56"><a href="timer.html#cb420-56" tabindex="-1"></a>      , <span class="at">fontface =</span> <span class="st">&quot;bold&quot;</span></span>
+<span id="cb420-57"><a href="timer.html#cb420-57" tabindex="-1"></a>    )</span>
+<span id="cb420-58"><a href="timer.html#cb420-58" tabindex="-1"></a>    , <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">vjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb420-59"><a href="timer.html#cb420-59" tabindex="-1"></a>    , <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">2.5</span></span>
+<span id="cb420-60"><a href="timer.html#cb420-60" tabindex="-1"></a>    , <span class="at">vjust =</span> <span class="dv">2</span></span>
+<span id="cb420-61"><a href="timer.html#cb420-61" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-62"><a href="timer.html#cb420-62" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb420-63"><a href="timer.html#cb420-63" tabindex="-1"></a>    <span class="at">mapping =</span> ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> sum_value, <span class="at">label =</span> sum_value_lab)</span>
+<span id="cb420-64"><a href="timer.html#cb420-64" tabindex="-1"></a>    , <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">3.5</span></span>
+<span id="cb420-65"><a href="timer.html#cb420-65" tabindex="-1"></a>    , <span class="at">hjust =</span> <span class="sc">-</span><span class="fl">0.05</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb420-66"><a href="timer.html#cb420-66" tabindex="-1"></a>    , <span class="at">parse =</span> T</span>
+<span id="cb420-67"><a href="timer.html#cb420-67" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-68"><a href="timer.html#cb420-68" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">facet_grid</span>(</span>
+<span id="cb420-69"><a href="timer.html#cb420-69" tabindex="-1"></a>    <span class="at">rows =</span> dplyr<span class="sc">::</span><span class="fu">vars</span>(site_full_lab)</span>
+<span id="cb420-70"><a href="timer.html#cb420-70" tabindex="-1"></a>    <span class="co"># , cols = dplyr::vars(method)</span></span>
+<span id="cb420-71"><a href="timer.html#cb420-71" tabindex="-1"></a>    , <span class="at">scales =</span> <span class="st">&quot;free_y&quot;</span></span>
+<span id="cb420-72"><a href="timer.html#cb420-72" tabindex="-1"></a>    , <span class="at">axes =</span> <span class="st">&quot;all_x&quot;</span></span>
+<span id="cb420-73"><a href="timer.html#cb420-73" tabindex="-1"></a>    , <span class="at">switch =</span> <span class="st">&quot;y&quot;</span></span>
+<span id="cb420-74"><a href="timer.html#cb420-74" tabindex="-1"></a>    <span class="co"># , labeller = ggplot2::label_wrap_gen(width = 20)</span></span>
+<span id="cb420-75"><a href="timer.html#cb420-75" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-76"><a href="timer.html#cb420-76" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_fill_brewer</span>(<span class="at">palette =</span> <span class="st">&quot;Set2&quot;</span>) <span class="sc">+</span></span>
+<span id="cb420-77"><a href="timer.html#cb420-77" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">scale_x_continuous</span>(</span>
+<span id="cb420-78"><a href="timer.html#cb420-78" tabindex="-1"></a>    <span class="at">labels =</span> scales<span class="sc">::</span>comma, <span class="at">expand =</span> ggplot2<span class="sc">::</span><span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="dv">0</span>,.<span class="dv">3</span>))</span>
+<span id="cb420-79"><a href="timer.html#cb420-79" tabindex="-1"></a>    , <span class="at">breaks =</span> <span class="cn">NULL</span></span>
+<span id="cb420-80"><a href="timer.html#cb420-80" tabindex="-1"></a>    , <span class="at">position =</span> <span class="st">&quot;top&quot;</span></span>
+<span id="cb420-81"><a href="timer.html#cb420-81" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-82"><a href="timer.html#cb420-82" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb420-83"><a href="timer.html#cb420-83" tabindex="-1"></a>    <span class="at">x =</span> latex2exp<span class="sc">::</span><span class="fu">TeX</span>(<span class="st">&quot;minutes $ha^{-1}$&quot;</span>)</span>
+<span id="cb420-84"><a href="timer.html#cb420-84" tabindex="-1"></a>    , <span class="at">y =</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb420-85"><a href="timer.html#cb420-85" tabindex="-1"></a>    , <span class="at">fill =</span> <span class="st">&quot;processing</span><span class="sc">\n</span><span class="st">step&quot;</span></span>
+<span id="cb420-86"><a href="timer.html#cb420-86" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb420-87"><a href="timer.html#cb420-87" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_light</span>() <span class="sc">+</span></span>
+<span id="cb420-88"><a href="timer.html#cb420-88" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme</span>(</span>
+<span id="cb420-89"><a href="timer.html#cb420-89" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span></span>
+<span id="cb420-90"><a href="timer.html#cb420-90" tabindex="-1"></a>    , <span class="at">axis.text.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>)</span>
+<span id="cb420-91"><a href="timer.html#cb420-91" tabindex="-1"></a>    , <span class="at">axis.title.x =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">13</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold&quot;</span>)</span>
+<span id="cb420-92"><a href="timer.html#cb420-92" tabindex="-1"></a>    , <span class="at">strip.text.y =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold&quot;</span>)</span>
+<span id="cb420-93"><a href="timer.html#cb420-93" tabindex="-1"></a>    , <span class="at">strip.placement =</span> <span class="st">&quot;outside&quot;</span></span>
+<span id="cb420-94"><a href="timer.html#cb420-94" tabindex="-1"></a>    , <span class="at">strip.text.y.left =</span> ggplot2<span class="sc">::</span><span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>)</span>
+<span id="cb420-95"><a href="timer.html#cb420-95" tabindex="-1"></a>    <span class="co"># , strip.background = ggplot2::element_blank()</span></span>
+<span id="cb420-96"><a href="timer.html#cb420-96" tabindex="-1"></a>    , <span class="at">panel.grid =</span> ggplot2<span class="sc">::</span><span class="fu">element_blank</span>()</span>
+<span id="cb420-97"><a href="timer.html#cb420-97" tabindex="-1"></a>  )</span></code></pre></div>
+<p><img src="slash_pile_detecting_files/figure-html/unnamed-chunk-477-1.png" alt="" width="816" /></p>
+<div class="sourceCode" id="cb421"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb421-1"><a href="timer.html#cb421-1" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggsave</span>(<span class="st">&quot;../data/processing_timer.jpeg&quot;</span>, <span class="at">height =</span> <span class="fl">9.9</span>, <span class="at">width =</span> <span class="fl">8.5</span>, <span class="at">dpi =</span> <span class="dv">300</span>)</span></code></pre></div>
+
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="preds_quantit.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+  "sharing": {
+    "github": false,
+    "facebook": true,
+    "twitter": true,
+    "linkedin": false,
+    "weibo": false,
+    "instapaper": false,
+    "vk": false,
+    "whatsapp": false,
+    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+  },
+  "fontsettings": {
+    "theme": "white",
+    "family": "sans",
+    "size": 2
+  },
+  "edit": {
+    "link": null,
+    "text": null
+  },
+  "history": {
+    "link": null,
+    "text": null
+  },
+  "view": {
+    "link": null,
+    "text": null
+  },
+  "download": null,
+  "search": {
+    "engine": "fuse",
+    "options": null
+  },
+  "toc": {
+    "collapse": "subsection"
+  }
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
