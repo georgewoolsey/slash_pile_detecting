@@ -53,7 +53,7 @@ packageVersion("cloud2trees")
 
 this version has the `piles_workflow()` function hidden as an internal function so we're going to use `:::` syntax, but future users should be able to use `::` syntax as in `cloud2trees::piles_workflow()`
 
-we'll get the predictions using both the DBSCAN and Watershed segmentation approaches but all we really care about the processing time and not the results themselves since we already generated and evaluated the predictions
+read in the `cloud2raster()` processing times
 
 ```{r, results=F, warning=FALSE}
 # read in the cloud2raster() processing times
@@ -63,7 +63,12 @@ processed_tracking_data <-
     \(x)
     dplyr::bind_cols(
       # cloud2raster timer
-      readr::read_csv(file = file.path(x,"processed_tracking_data.csv"), progress = F, show_col_types = F)
+      readr::read_csv(file = file.path(x,"processed_tracking_data.csv"), progress = F, show_col_types = F) %>% 
+        dplyr::select( -dplyr::any_of(c(
+          "hey_xxxxxxxxxx"
+          , "number_of_points"
+          , "las_area_m2"
+        )))
       # data from las_ctg
       , sf::st_read(dsn = file.path(x,"raw_las_ctg_info.gpkg"), quiet = T) %>% 
         dplyr::ungroup() %>% 
@@ -85,6 +90,11 @@ processed_tracking_data <-
     , timer_cloud2raster_mins_per_ha = timer_cloud2raster_mins/(las_area_m2/10000)
   )
 # dplyr::glimpse(processed_tracking_data)
+```
+
+we'll get the predictions using both the DBSCAN and Watershed segmentation approaches but all we really care about is the processing time and not the results themselves since we already generated and evaluated the predictions
+
+```{r, results=F, warning=FALSE}
 # rgb_rast_list
 # terra::global(terra::subset(rgb_rast_list[["pj"]],1), "notNA")[[1]]*prod(terra::res(terra::subset(rgb_rast_list[["pj"]],1))[1:2])
 # terra::subset(rgb_rast_list[["pj"]],1) %>% 
@@ -95,11 +105,35 @@ processed_tracking_data <-
 ##################################################
 # map over piles_workflow() for dbscan if haven't done it already
 ##################################################
+# out_dir_list
 # check if we already ran the piles_workflow()
 processed_tracking_data_full <- 
   out_dir_list %>% 
   purrr::imap(
     function(x, nm){
+      ###################################################
+      # get raster area
+      # is it already done?
+      ###################################################
+      if(
+        any(stringr::str_equal(names(processed_tracking_data), "rast_area_m2"))
+        && nrow(
+            processed_tracking_data %>% 
+            dplyr::filter(site_data_lab==nm & !is.na(rast_area_m2))
+          )==1
+      ){
+        this_rast_area_m2 <- 
+          processed_tracking_data %>% 
+          dplyr::filter(site_data_lab==nm & !is.na(rast_area_m2)) %>% 
+          dplyr::pull(rast_area_m2)
+      }else{
+        this_rast_area_m2 <- 
+          terra::subset(rgb_rast_list[[nm]],1) %>% 
+          terra::cellSize() %>% 
+          terra::mask(terra::subset(rgb_rast_list[[nm]],1)) %>% 
+          terra::global("sum", na.rm=TRUE) %>% 
+          as.numeric()
+      }
       ###################################################
       # dbscan
       # is it already done?
@@ -195,12 +229,9 @@ processed_tracking_data_full <-
         dplyr::mutate(
           timer_piles_workflow_dbscan_mins = timer_dbscan_mins
           , timer_piles_workflow_watershed_mins = timer_watershed_mins
-          , rast_area_m2 = 
-            terra::subset(rgb_rast_list[[nm]],1) %>% 
-              terra::cellSize() %>% 
-              terra::mask(terra::subset(rgb_rast_list[[nm]],1)) %>% 
-              terra::global("sum", na.rm=TRUE) %>% 
-              as.numeric()
+          , rast_area_m2 = this_rast_area_m2
+          , chm_rast_res_m = terra::subset(chm_rast_list[[nm]],1) %>% terra::res() %>% .[1] %>% as.numeric()
+          , rgb_rast_res_m = terra::subset(rgb_rast_list[[nm]],1) %>% terra::res() %>% .[1] %>% as.numeric()
         ) 
       # write
       df %>% 
@@ -211,7 +242,7 @@ processed_tracking_data_full <-
     }
   ) %>% 
   dplyr::bind_rows()
-processed_tracking_data_full %>% dplyr::glimpse()
+# processed_tracking_data_full %>% dplyr::glimpse()
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
@@ -219,8 +250,176 @@ remove(list = ls()[grep("_temp",ls())])
 gc()
 ```
 
-```{r,eval=F,purl=FALSE}
-# long stuff
-# cloud2trees:::piles_workflow()
+let's add the per area values and look at the processing data structure
+
+```{r}
+processed_tracking_data_full <-
+  processed_tracking_data_full %>% 
+  dplyr::mutate(
+    timer_piles_workflow_dbscan_mins_per_ha = timer_piles_workflow_dbscan_mins/(rast_area_m2/10000)
+    , timer_piles_workflow_watershed_mins_per_ha = timer_piles_workflow_watershed_mins/(rast_area_m2/10000)
+  ) %>% 
+  dplyr::left_join(
+    all_stand_boundary %>% 
+      sf::st_drop_geometry() %>% 
+      dplyr::select(site, site_data_lab, site_full_lab, site_area_ha)
+    , by = "site_data_lab"
+  ) %>% 
+  dplyr::relocate(tidyselect::starts_with("site"))
+processed_tracking_data_full %>% dplyr::glimpse()
 ```
 
+make a nice table of the processing times per hectare
+
+```{r}
+processed_tracking_data_full %>% 
+  dplyr::select(
+    site_full_lab, site_area_ha
+    # data desc
+    , points_per_m2, chm_rast_res_m, rgb_rast_res_m
+    # timer
+    # , tidyselect::ends_with("_per_ha")
+    , timer_cloud2raster_mins_per_ha, timer_piles_workflow_dbscan_mins_per_ha, timer_piles_workflow_watershed_mins_per_ha
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(tidyselect::ends_with("_area_ha"), ~scales::comma(.x,accuracy = 0.1, suffix = " ha"))
+    , dplyr::across(tidyselect::ends_with("_per_m2"), ~scales::comma(.x,accuracy = 1))
+    , dplyr::across(tidyselect::ends_with("_res_m"), ~scales::comma(.x,accuracy = 0.01))
+    , dplyr::across(tidyselect::ends_with("_per_ha"), ~scales::comma(.x,accuracy = 0.001))
+  ) %>% 
+  dplyr::arrange(site_full_lab) %>% 
+  # dplyr::glimpse()
+  kableExtra::kbl(
+    caption = "Data Processing Summary"
+    , col.names = c(
+      "site", "hectares"
+      # data desc
+      , "points m<sup>-2</sup>", "CHM<br>resolution (m)", "RGB ortho<br/>resolution (m)"
+      # timer
+      # , "timer_cloud2raster_mins_per_ha", "timer_piles_workflow_dbscan_mins_per_ha", "timer_piles_workflow_watershed_mins_per_ha"
+      , "`cloud2raster()`", "`piles_workflow()`<br/>DBSCAN", "`piles_workflow()`<br/>watershed"
+    )
+    , escape = F
+    # , digits = 2
+  ) %>% 
+  kableExtra::kable_styling(font_size = 11) %>% 
+  kableExtra::add_header_above(
+    c(
+      " "=2
+      , "Input Data<br/>Description" = 3
+      , "Processing Time<br/>minutes ha<sup>-1</sup>" = 3
+    )
+    , escape = F
+  ) %>% 
+  kableExtra::column_spec(seq(2,8,by=3), border_right = TRUE, include_thead = TRUE)
+```
+
+let's make a plot as well
+
+```{r, fig.height = 9.9, fig.width = 8.5}
+# plot it
+processed_tracking_data_full %>% 
+  dplyr::select(
+    site_full_lab, site_area_ha
+    # timer
+    # , tidyselect::ends_with("_per_ha")
+    , timer_cloud2raster_mins_per_ha, timer_piles_workflow_dbscan_mins_per_ha, timer_piles_workflow_watershed_mins_per_ha
+  ) %>% 
+  tidyr::pivot_longer(cols = tidyselect::starts_with("timer_piles_workflow_")) %>% 
+  dplyr::mutate(
+    name = name %>% 
+      stringr::str_remove_all("^timer_piles_workflow_") %>% 
+      stringr::str_remove_all("_mins_per_ha$")
+  ) %>% 
+  dplyr::rename(
+    method = name
+    , timer_piles_workflow_mins_per_ha = value
+  ) %>% 
+  tidyr::pivot_longer(cols = tidyselect::starts_with("timer_")) %>% 
+  dplyr::mutate(
+    name = name %>% 
+      stringr::str_remove_all("^timer_") %>% 
+      stringr::str_remove_all("_mins_per_ha$") %>% 
+      stringr::str_c("()") %>% 
+      factor() %>% 
+      forcats::fct_rev()
+  ) %>% 
+  dplyr::rename(part = name) %>% 
+  dplyr::group_by(site_full_lab, site_area_ha, method) %>% 
+  dplyr::mutate(sum_value = sum(value,na.rm=T)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    dplyr::across(tidyselect::ends_with("_area_ha"), ~scales::comma(.x,accuracy = 0.1, suffix = " ha"), .names = "{.col}_lab")
+    , dplyr::across(tidyselect::ends_with("value"), ~scales::comma(.x,accuracy = 0.001), .names = "{.col}_lab")
+    , sum_value_lab = 
+      # stringr::str_c("Total: ", sum_value_lab) %>% 
+      stringr::str_c("Total: ", sum_value_lab, " (min $ha^{-1}$)") %>% 
+      latex2exp::TeX(output = "character")
+    , method = method %>%
+      factor(ordered = T) %>% 
+      forcats::fct_recode("DBSCAN" = "dbscan", "Watershed" = "watershed")
+    , site_full_lab = stringr::str_wrap(site_full_lab, width=26)
+  ) %>% 
+  ggplot2::ggplot(
+    mapping = ggplot2::aes(
+      y = method
+      , fill = part
+      , group = part
+    )
+  ) +
+  ggplot2::geom_col(mapping = ggplot2::aes(x = value), alpha = 0.88, width = 0.4) +
+  ggplot2::geom_text(
+    mapping = ggplot2::aes(
+      x = value
+      , label = value_lab
+      , fontface = "bold"
+    )
+    , position = position_stack(vjust = 0.5)
+    , color = "black", size = 2.5
+    , vjust = 2
+  ) +
+  geom_text(
+    mapping = ggplot2::aes(x = sum_value, label = sum_value_lab)
+    , color = "black", size = 3.5
+    , hjust = -0.05, vjust = -1
+    , parse = T
+  ) +
+  ggplot2::facet_grid(
+    rows = dplyr::vars(site_full_lab)
+    # , cols = dplyr::vars(method)
+    , scales = "free_y"
+    , axes = "all_x"
+    , switch = "y"
+    # , labeller = ggplot2::label_wrap_gen(width = 20)
+  ) +
+  ggplot2::scale_fill_brewer(palette = "Set2") +
+  ggplot2::scale_x_continuous(
+    labels = scales::comma, expand = ggplot2::expansion(mult = c(0,.3))
+    , breaks = NULL
+    , position = "top"
+  ) +
+  ggplot2::labs(
+    x = latex2exp::TeX("minutes $ha^{-1}$")
+    , y = ""
+    , fill = "processing\nstep"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "top"
+    , axis.text.y = ggplot2::element_text(size = 9, color = "black")
+    , axis.title.x = ggplot2::element_text(size = 13, color = "black", face = "bold")
+    , strip.text.y = ggplot2::element_text(size = 11, color = "black", face = "bold")
+    , strip.placement = "outside"
+    , strip.text.y.left = ggplot2::element_text(angle = 90)
+    # , strip.background = ggplot2::element_blank()
+    , panel.grid = ggplot2::element_blank()
+  )
+ggplot2::ggsave("../data/processing_timer.jpeg", height = 9.9, width = 8.5, dpi = 300)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, include=FALSE}
+# all_stand_boundary %>% dplyr::glimpse()
+remove(list = ls()[grep("_temp",ls())])
+remove(processed_tracking_data)
+gc()
+```
