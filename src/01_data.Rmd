@@ -35,6 +35,10 @@ library(lwgeom) # advanced functions for spatial operations
 library(lidR) # lidar data
 library(rgl) # 3d plots
 library(cloud2trees) # the cloud2trees
+
+# statistical analysis
+library(brms) # brms
+library(tidybayes) # tidybayes
 ```
 
 ```{r, include=F, warning=F, message=F}

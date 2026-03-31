@@ -691,13 +691,14 @@ agg_ground_truth_match_ans <-
   ) %>% 
   dplyr::inner_join(
     all_stand_boundary %>% 
-      dplyr::select(site_data_lab, site) %>% 
+      dplyr::select(site_data_lab, site, site_full_lab) %>% 
       sf::st_drop_geometry()
     , by = "site_data_lab"
   ) %>% 
   # make factor
   dplyr::mutate(
     site = ordered(site)
+    , site_full_lab = ordered(site_full_lab)
     , method = method %>%
       factor(ordered = T) %>% 
       forcats::fct_recode("DBSCAN" = "dbscan", "Watershed" = "watershed")
@@ -925,7 +926,26 @@ the `t.test()` computed the mean difference (MD) between the DBSCAN and Watershe
 
 The paired t-test above failed to detect a difference in detection accuracy (F-score) by segmentation method (DBSCAN vs Watershed). With only four sites the paired t-test may not be robust enough to detect differences in detection accuracy across the methods. An alternative is a quick Bayesian model which may provide a more robust alternative to the paired t-test by estimating the full probability distribution of the difference between methods rather than relying on a single p-value. While a paired t-test simply evaluates the average difference within sites, a Bayesian model can account for the nested structure of the data by allowing the intercept to vary by study site (`(1|site)` in the model) while keeping the slope constant across locations (`f_score ~ method` in the model). The slope of the model represents the effect of the segmentation method. This approach allows the model to adjust for the unique baseline difficulty of pile detection at each study site and isolates the detection accuracy change caused by using a different segmentation method. Since F-score is bound between zero and one, we use a Beta regression family to ensure predictions are not made outside of these bounds.
 
-```{r}
+The fully-factored model specification:
+
+$$
+\begin{aligned} 
+\text{Likelihood:} \\ 
+y_{i} &\sim \text{Beta}(\mu_{i}, \phi) \\ \\ 
+\text{Linear Predictor:} \\ 
+\text{logit}(\mu_{i}) &= \alpha + \alpha_{\text{site}[i]} + \beta \cdot \text{Method}_{i} \\ \\ 
+\text{Priors:} \\ 
+\alpha &\sim \text{Student-t}(3, 0, 2.5) \\ 
+\beta &\sim \text{Normal}(0, 1) \\ 
+\alpha_{\text{site}} &\sim \text{Normal}(0, \sigma_{\text{site}}) \\ 
+\sigma_{\text{site}} &\sim \text{Student-t}(3, 0, 2.5) \\
+\phi &\sim \text{Gamma}(0.01, 0.01) 
+\end{aligned}
+$$
+
+where, $y_{i}$ represents the F-score for the $i$-th observation within study site $j$, parameterized using the mean $\mu$ and a precision parameter $\phi$
+
+```{r brms-brm-fmod}
 # brms::brm
 fscore_mod_method_temp <- brms::brm(
   f_score ~ method + (1|site)
@@ -933,14 +953,391 @@ fscore_mod_method_temp <- brms::brm(
   # family
   , family = brms::Beta(link = "logit")
   # mcmc
-  , iter = 6000, warmup = 3000
+  , iter = 20000, warmup = 10000
+  # , iter = 6000, warmup = 3000
   , chains = 4
   , cores = lasR::half_cores()
-  , file = paste0("../data/", "fscore_mod_method")
+  , file = paste0("../data/", "fscore_mod_seg_method")
+  # , file = paste0("../data/", "fscore_mod_method")
+  , control = list(adapt_delta = 0.999, max_treedepth = 13)
 )
 # look at results
 # plot(fscore_mod_method_temp)
+# summary(fscore_mod_method_temp)
+# check the prior distributions
+# check priors
+# brms::prior_summary(fscore_mod_method_temp) %>%
+#   kableExtra::kbl() %>% 
+#   kableExtra::kable_styling()
 ```
+
+#### Posterior Predictive Checks
+
+check the trace plots for problems with convergence of the Markov chains
+
+```{r}
+plot(fscore_mod_method_temp)
+```
+
+Sufficient convergence was checked with $\hat{R}$ values near 1 ([Brooks & Gelman, 1998](https://scholar.google.com/scholar?cluster=14209404114665352991&hl=en&as_sdt=0,6)). 
+
+in the plot below, $\hat{R}$ values are colored using different shades (lighter is better). The chosen thresholds are somewhat arbitrary, but can be useful guidelines in practice ([Gabry and Mahr 2025](https://mc-stan.org/bayesplot/reference/MCMC-diagnostics.html)):
+
+* light: below 1.05 (good)
+* mid: between 1.05 and 1.1 (ok)
+* dark: above 1.1 (too high)
+
+check our $\hat{R}$ values
+
+```{r}
+brms::mcmc_plot(fscore_mod_method_temp, type = "rhat_hist") +
+  ggplot2::scale_x_continuous(breaks = scales::breaks_extended(n = 8), expand = ggplot2::expansion(mult = c(0.1,0.1))) +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::labs(
+    subtitle = latex2exp::TeX("MCMC chain convergence check for $\\hat{R}$ values")
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , legend.direction = "horizontal"
+    , plot.subtitle = ggplot2::element_text()
+    , axis.title.x = ggplot2::element_text(size = 12)
+  )
+ggplot2::ggsave("../data/bayes_mcmc_chk1.jpeg", height = 7, width = 8.5, dpi = 300)
+```
+
+and another check of our $\hat{R}$ values
+
+```{r}
+# and another check of our $\hat{R}$ values
+fscore_mod_method_temp %>% 
+  brms::rhat() %>% 
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "parameter") %>%
+  dplyr::rename_with(tolower) %>% 
+  dplyr::rename(rhat = 2) %>% 
+  dplyr::filter(
+    stringr::str_starts(parameter, "b_") 
+    | stringr::str_starts(parameter, "r_") 
+    | stringr::str_starts(parameter, "sd_") 
+    | parameter == "phi"
+  ) %>%
+  dplyr::mutate(
+    chk = (rhat <= 1*0.998 | rhat >= 1*1.002)
+  ) %>% 
+  ggplot2::ggplot(ggplot2::aes(x = rhat, y = parameter, color = chk, fill = chk)) +
+  ggplot2::geom_vline(xintercept = 1, linetype = "dashed", color = "gray44", lwd = 1.2) +
+  ggplot2::geom_vline(xintercept = 1*0.998, lwd = 1.5) +
+  ggplot2::geom_vline(xintercept = 1*1.002, lwd = 1.5) +
+  ggplot2::geom_vline(xintercept = 1*0.999, lwd = 1.2, color = "gray33") +
+  ggplot2::geom_vline(xintercept = 1*1.001, lwd = 1.2, color = "gray33") +
+  ggplot2::geom_point() +
+  ggplot2::scale_fill_manual(values = c("navy", "firebrick")) +
+  ggplot2::scale_color_manual(values = c("navy", "firebrick")) +
+  ggplot2::scale_y_discrete(NULL, breaks = NULL) +
+  ggplot2::labs(
+    x = latex2exp::TeX("$\\hat{R}$")
+    , subtitle = latex2exp::TeX("MCMC chain convergence check for $\\hat{R}$ values")
+    , title = "F-Score"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , axis.text.y = ggplot2::element_text(size = 4)
+    , panel.grid.major.x = ggplot2::element_blank()
+    , panel.grid.minor.x = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(size = 8)
+    , plot.title = ggplot2::element_text(size = 9)
+  )
+```
+
+The effective length of an MCMC chain is indicated by the effective sample size (ESS), which refers to the sample size of the MCMC chain **not** to the sample size of the data where acceptable values allow "for reasonably accurate and stable estimates of the limits of the 95% HDI...If accuracy of the HDI limits is not crucial for your application, then a smaller ESS may be sufficient" [(Kruschke 2015, p. 184)](https://sites.google.com/site/doingbayesiandataanalysis/)
+
+```{r, include=F, eval=F}
+# >One simple guideline is this: For reasonably accurate and stable estimates of the limits of the 95% HDI, an ESS of 10,000 is recommended. This is merely a heuristic based on experience with practical applications, it is not a requirement. If accuracy of the HDI limits is not crucial for your application, then a smaller ESS may be sufficient. (p.184)
+# get ess values from model summary
+summary(fscore_mod_method_temp) %>%
+  purrr::pluck("fixed") %>%
+  dplyr::as_tibble() %>%
+  dplyr::rename(ess = Bulk_ESS) %>%
+  dplyr::mutate(parameter = dplyr::row_number(), chk = ess>10000) %>%
+  ggplot2::ggplot(ggplot2::aes(x = ess, y = parameter, color = chk, fill = chk)) +
+  ggplot2::geom_vline(xintercept = 10000, linetype = "dashed", color = "gray44", lwd = 1.2) +
+  ggplot2::geom_segment( ggplot2::aes(x = 0, xend=ess, yend=parameter), color="black") +
+  ggplot2::geom_point() +
+  ggplot2::scale_fill_manual(values = c("TRUE"="blue3","FALSE"="red3")) +
+  ggplot2::scale_color_manual(values = c("TRUE"="blue3","FALSE"="red3")) +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels = scales::comma) +
+  ggplot2::labs(
+    x = "ESS"
+    , subtitle = "MCMC chain resolution check for effective sample size (ESS) values"
+    , y = ""
+    , title = "F-Score"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , axis.text.y = ggplot2::element_text(size = 4)
+    , panel.grid.major.x = ggplot2::element_blank()
+    , panel.grid.minor.x = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(size = 8)
+    , plot.title = ggplot2::element_text(size = 9)
+  )
+```
+
+Ratios of effective sample size (ESS) to total sample size with values are colored using different shades (lighter is better). A ratio close to "1" (no autocorrelation) is ideal, while a low ratio suggests the need for more samples or model re-parameterization. Efficiently mixing MCMC chains are important because they guarantee the resulting posterior samples accurately represent the true distribution of model parameters, which is necessary for reliable and precise estimation of parameter values and their associated uncertainties (credible intervals). The chosen thresholds are somewhat arbitrary, but can be useful guidelines in practice ([Gabry and Mahr 2025](https://mc-stan.org/bayesplot/reference/MCMC-diagnostics.html)):
+
+* light: between 0.5 and 1 (high)
+* mid: between 0.1 and 0.5 (good)
+* dark: below 0.1 (low)
+
+```{r}
+# and another effective sample size check
+brms::mcmc_plot(fscore_mod_method_temp, type = "neff_hist") +
+# brms::mcmc_plot(fscore_mod_method_temp, type = "neff") +
+  ggplot2::scale_x_continuous(limits = c(0,NA), breaks = scales::breaks_extended(n = 9)) +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::labs(
+    subtitle = "MCMC chain resolution check for effective sample size (ESS) ratios"
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = "none"
+    , legend.direction = "horizontal"
+    , plot.subtitle = ggplot2::element_text()
+    , axis.title.x = ggplot2::element_text(size = 12)
+  )
+ggplot2::ggsave("../data/bayes_mcmc_chk2.jpeg", height = 7, width = 8.5, dpi = 300)
+```
+
+our observed range of ESS to Total Sample Size ratios are generally considered good to excellent, indicating the MCMC chains are performing well and mixing efficiently
+
+Posterior predictive checks were used to evaluate model goodness-of-fit by comparing data simulated from the model with the observed data used to estimate the model parameters ([Hobbs & Hooten, 2015](https://scholar.google.com/scholar?cluster=9228589188684720156&hl=en&as_sdt=0,6)).
+
+To learn more about this approach to posterior predictive checks, check out Gabry’s (2025) vignette, [Graphical posterior predictive checks using the bayesplot package](https://cran.r-project.org/web/packages/bayesplot/vignettes/graphical-ppcs.html). 
+
+posterior-predictive check to make sure the model does an okay job simulating data that resemble the sample data. our objective is to construct the model such that it faithfully represents the data.
+
+##### Overall
+
+```{r}
+# posterior predictive check
+brms::pp_check(
+    fscore_mod_method_temp
+    , type = "dens_overlay"
+    , ndraws = 222
+  ) + 
+  ggplot2::labs(subtitle = "posterior-predictive check (overlaid densities)") +
+  ggplot2::theme_light() +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 14)
+    , plot.subtitle = ggplot2::element_text(size = 8)
+    , plot.title = ggplot2::element_text(size = 9)
+  )
+```
+
+and another posterior predictive check for the overall model combining mean and sd
+
+```{r}
+# brms::pp_check(fscore_mod_method_temp, type = "xxx")
+# and another posterior predictive check for the overall model combining mean and sd
+set.seed(77)
+p1_temp <-
+  brms::pp_check(
+    fscore_mod_method_temp
+    , type = "stat_2d"
+    , stat = c("median","sd")
+    , ndraws = 4444
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    subtitle = "(a) Overall joint distribution of F-score median and SD"
+    , x = "F-score median"
+  ) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 8)
+    , legend.title = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  ) +
+  ggplot2::guides(
+    color = ggplot2::guide_legend(
+      override.aes = list(shape = 15, size = 8, linetype = 0)
+    )
+  )
+p1_temp
+```
+
+overall median
+
+```{r}
+set.seed(55)
+p8_temp <- 
+  brms::pp_check(
+    fscore_mod_method_temp
+    , type = "stat"
+    , stat = "median"
+    , ndraws = 888
+  ) +
+  ggplot2::theme_light() +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    subtitle = "(b) Overall distribution of simulated F-score median"
+    , x = "F-score median"
+  ) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 8)
+    , legend.title = ggplot2::element_blank()
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+p8_temp
+```
+
+##### Grouped
+
+grouped density overlay by method
+
+```{r}
+brms::pp_check(
+    fscore_mod_method_temp
+    , type = "dens_overlay_grouped" # ""
+    , group = "method"
+    , ndraws = 222
+  ) + 
+  ggplot2::labs(subtitle = "posterior-predictive check (overlaid densities)\nby segmentation method") +
+  ggplot2::theme_light() +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 14)
+    , plot.subtitle = ggplot2::element_text(size = 8)
+    , plot.title = ggplot2::element_text(size = 9)
+  )
+```
+
+grouped median by method
+
+```{r}
+# grouped
+p2_temp <-
+  brms::pp_check(
+    fscore_mod_method_temp
+    , type = "stat_grouped" # "dens_overlay_grouped"
+    , stat = "median"
+    , group = "method"
+    , ndraws = 888
+  ) + 
+  ggplot2::theme_light() +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    subtitle = "(c) Distribution of simulated F-score median by segmentation method"
+    , x = "F-score median"
+  ) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 8)
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# p2_temp
+# p2_temp$facet
+# p2_temp$facet$params$facets
+p2_temp <- 
+  p2_temp +
+  ggplot2::facet_wrap(
+    facets = p2_temp$facet$params$facets
+    # , ncol = 1
+    , scales = "free_y"
+  )
+p2_temp
+
+```
+
+grouped median by site
+
+```{r}
+# grouped
+p3_temp <-
+  brms::pp_check(
+    fscore_mod_method_temp
+    , type = "stat_grouped" # "dens_overlay_grouped"
+    , stat = "median"
+    , group = "site"
+    , ndraws = 888
+  ) + 
+  ggplot2::theme_light() +
+  ggplot2::scale_y_continuous(NULL, breaks = NULL) +
+  ggplot2::scale_x_continuous(labels=scales::percent) +
+  ggplot2::labs(
+    subtitle = "(d) Distribution of simulated F-score median by site"
+    , x = "F-score median"
+  ) +
+  ggplot2::theme(
+    legend.position = "top", legend.direction = "horizontal"
+    , legend.text = ggplot2::element_text(size = 8)
+    , plot.subtitle = ggplot2::element_text(face = "bold")
+    , strip.text = ggplot2::element_text(face = "bold", color = "black")
+  )
+# p3_temp
+# p3_temp$facet
+# p3_temp$facet$params$facets
+p3_temp <- 
+  p3_temp +
+  ggplot2::facet_wrap(
+    facets = p3_temp$facet$params$facets
+    , nrow = 1
+    , labeller = 
+      ggplot2::as_labeller(function(x) gsub(" .*", "", x))
+      # ggplot2::as_labeller(
+      #   setNames(unique(agg_ground_truth_match_ans$site_full_lab), unique(agg_ground_truth_match_ans$site))
+      # )
+    , scales = "free_y"
+  )
+p3_temp
+```
+
+combine for manuscript
+
+```{r, fig.height = 10.5, fig.width = 8.5}
+no_leg_temp <- 
+  ggplot2::guides(
+    color = "none", shape = "none"
+    , fill = "none", size = "none"
+  )
+  # ggplot2::theme(legend.position = "none")
+(
+  p1_temp+ggplot2::theme(legend.position = "bottom")+
+  p8_temp+no_leg_temp
+) / 
+  (p2_temp+no_leg_temp) / (p3_temp+no_leg_temp) +
+  patchwork::plot_layout(guides = "collect") & 
+  ggplot2::theme(
+    legend.position = "bottom"
+    , plot.subtitle = ggplot2::element_text(size = 10.5)
+    , axis.text = ggplot2::element_text(size = 7.5)
+    , axis.title.x = ggplot2::element_text(size = 7)
+    , axis.title.y = ggplot2::element_text(size = 7)
+    # , plot.tag = element_text(face = "bold", size = 11)
+    # , plot.tag.position = c(0.17, 1.06)
+    # , plot.margin = ggplot2::margin(t = 0.1, r = 0.1, b = 0.1, l = 0.1, unit = "in")
+  )
+
+# final_layout
+ggplot2::ggsave("../data/bayes_ppc_chk1.jpeg", height = 10.5, width = 8.5, dpi = 300)
+```
+
+#### Model Results
 
 quickly look at the model estimates of the effect of segmentation method
 
@@ -959,6 +1356,7 @@ draws_temp <- agg_ground_truth_match_ans %>%
   tidybayes::add_epred_draws(fscore_mod_method_temp, re_formula = NA) %>% 
   dplyr::mutate(value = .epred) %>% 
   dplyr::ungroup()
+# draws_temp %>% dplyr::count(method)
 # plot
 draws_temp %>% 
   ggplot(

@@ -1035,14 +1035,14 @@ p_bottom_group <- wrap_elements(full = (
 ))
 
 final_layout <- 
-  plot_spacer() / 
+  patchwork::plot_spacer() / 
   (p_top_left + p_top_right) / 
-  plot_spacer() / 
+  patchwork::plot_spacer() / 
   p_bottom_group + 
-  plot_layout(
+  patchwork::plot_layout(
     heights = c(0.05, 1, 0.05, 2.1)
   ) +
-  plot_annotation(
+  patchwork::plot_annotation(
     ### this is so horrible......
     tag_levels = list(c(
       "                                                 (a) Predicted Diameter versus Reference Diameter"
