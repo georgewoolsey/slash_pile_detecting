@@ -1357,9 +1357,14 @@ draws_temp <- agg_ground_truth_match_ans %>%
   dplyr::mutate(value = .epred) %>% 
   dplyr::ungroup()
 # draws_temp %>% dplyr::count(method)
+median_temp <- draws_temp %>% 
+  dplyr::group_by(method) %>% 
+  tidybayes::median_hdci(value)
 # plot
-draws_temp %>% 
-  ggplot(
+plt_temp <- 
+  draws_temp %>% 
+  dplyr::mutate(method = forcats::fct_rev(method)) %>% 
+  ggplot2::ggplot(
     mapping = aes(
       x = value
       , y = method
@@ -1372,22 +1377,45 @@ draws_temp %>%
     , shape = 21, point_color = "gray66", point_fill = "black"
     , justification = -0.01
   ) +
-  harrypotter::scale_fill_hp_d(option = "dracomalfoy", drop = F) +
-  ggplot2::scale_x_continuous(limits = c(0,1), labels=scales::percent, breaks = scales::breaks_extended(n=6)) +
+  ggplot2::geom_text(
+    data = median_temp
+    , mapping = ggplot2::aes(x = value, label = scales::percent(value,accuracy = 0.1))
+    , size = 3.5
+    , hjust = 0.5, vjust = 2
+  ) +
+  ggplot2::geom_text(
+    data = median_temp
+    , mapping = ggplot2::aes(x = .upper, label = scales::percent(.upper,accuracy = 0.1))
+    , size = 3
+    , hjust = -0.1, vjust = 1
+  ) +
+  ggplot2::geom_text(
+    data = median_temp
+    , mapping = ggplot2::aes(x = .lower, label = scales::percent(.lower,accuracy = 0.1))
+    , size = 3
+    , hjust = 1.1, vjust = 1
+  ) +
+  # harrypotter::scale_fill_hp_d(option = "dracomalfoy", drop = F, direction = -1) +
+  ggplot2::scale_fill_manual(values = c("plum2","plum4")) +
+  ggplot2::scale_x_continuous(
+    limits = c(0,1.05)
+    , labels=scales::percent, breaks = scales::breaks_extended(n=6)
+  ) +
   ggplot2::labs(
     subtitle = "posterior distribution of F-score by segmentation method\nand the 95% highest posterior density interval (HDI)"
     , x = "F-score", y = ""
   ) +
-  theme_light() +
-  theme(legend.position = "none")
+  ggplot2::theme_light() +
+  ggplot2::theme(legend.position = "none", axis.text.y = ggplot2::element_text(face = "bold", size =11))
+plt_temp
+plt_temp <- plt_temp + ggplot2::theme(plot.title = ggplot2::element_blank(),plot.subtitle = ggplot2::element_blank())
+ggplot2::ggsave("../data/bayes_method_pred.jpeg", plot = plt_temp, height = 7, width = 8.5, dpi = 300)
 ```
 
 summary table of the posterior distribution and 95% HDI using `tidybayes::median_hdci()` to avoid potential for returning multiple rows by group if our data is grouped. See the [documentation](https://mjskay.github.io/ggdist/reference/point_interval.html) for the `ggdist` package which notes that "If the distribution is multimodal, hdi may return multiple intervals for each probability level (these will be spread over rows)."
 
 ```{r}
-draws_temp %>%
-  dplyr::group_by(method) %>% 
-  tidybayes::median_hdci(value) %>% 
+median_temp %>% 
   dplyr::select(-c(.point,.interval, .width)) %>% 
   dplyr::mutate(
     dplyr::across(
@@ -1422,43 +1450,69 @@ comp_temp <- draws_temp %>%
 med_comp_temp <- tidybayes::median_hdci(comp_temp$value)
 mean_comp_temp <- tidybayes::mean_hdci(comp_temp$value)
 # plot
-comp_temp %>% 
-  ggplot2::ggplot(aes(x = value, y = 0)) +
+plt_temp <-
+  comp_temp %>% 
+  ggplot2::ggplot(mapping=ggplot2::aes( y = 0)) +
   ggplot2::geom_vline(
     xintercept = 0
     # , linetype = "dashed"
-    , color = "black"
-    , lwd = 1.5
+    , color = "gray77"
+    , lwd = 1.2
   ) +
   tidybayes::stat_halfeye(
-    point_interval = tidybayes::median_hdci, .width = .95
-    , fill = "navy", alpha = 0.8
+    mapping = ggplot2::aes(x = value)
+    , point_interval = tidybayes::median_hdci, .width = .95
+    , fill = "thistle4", alpha = 0.9
     , interval_color = "gray66"
     , shape = 21, point_color = "gray66", point_fill = "black"
     , justification = -0.01
   ) +
-  ggplot2::annotate(
-    "text"
-    , x = (med_comp_temp %>% dplyr::select(y,ymin,ymax) %>% base::unlist(use.names = F))
-    , y = -0.01
-    , label = (
-      med_comp_temp %>% 
-        dplyr::select(y,ymin,ymax) %>% 
-        base::unlist(use.names = F) %>% 
-        scales::percent(accuracy = 0.1)
-    )
+  # ggplot2::annotate(
+  #   "text"
+  #   , x = (med_comp_temp %>% dplyr::select(y,ymin,ymax) %>% base::unlist(use.names = F))
+  #   , y = -0.01
+  #   , label = (
+  #     med_comp_temp %>% 
+  #       dplyr::select(y,ymin,ymax) %>% 
+  #       base::unlist(use.names = F) %>% 
+  #       scales::percent(accuracy = 0.1)
+  #   )
+  # ) +
+  ggplot2::geom_text(
+    data = med_comp_temp
+    , mapping = ggplot2::aes(x = y, label = scales::percent(y,accuracy = 0.1))
+    , size = 3.5
+    , hjust = 0.5, vjust = 2
+  ) +
+  ggplot2::geom_text(
+    data = med_comp_temp
+    , mapping = ggplot2::aes(x = ymax, label = scales::percent(ymax,accuracy = 0.1))
+    , size = 3
+    , hjust = -0.1, vjust = 1
+  ) +
+  ggplot2::geom_text(
+    data = med_comp_temp
+    , mapping = ggplot2::aes(x = ymin, label = scales::percent(ymin,accuracy = 0.1))
+    , size = 3
+    , hjust = 1.1, vjust = 1
   ) +
   ggplot2::scale_y_continuous(breaks=NULL) +
   ggplot2::scale_x_continuous(labels=scales::percent, breaks = scales::breaks_extended(n=8), expand = ggplot2::expansion(mult = 0.05)) +
   ggplot2::labs(
     subtitle = "difference in F-score between segmentation methods"
-    , x = "difference in F-score"
-    , y = "difference (DBSCAN - Watershed)"
+    , x = "difference in F-score\n(DBSCAN - Watershed)"
+    , y = "" # "difference: DBSCAN - Watershed"
   ) +
   ggplot2::theme_light() +
   ggplot2::theme(
-    axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5)
+    # axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5)
+    # , axis.text.y = ggplot2::element_text(face = "bold", size =11)
+    axis.title.x = ggplot2::element_text(face = "bold", size =11)
+    , axis.title.y = ggplot2::element_blank()
   )
+plt_temp
+plt_temp <- plt_temp + ggplot2::theme(plot.title = ggplot2::element_blank(),plot.subtitle = ggplot2::element_blank())
+ggplot2::ggsave("../data/bayes_method_diff_pred.jpeg", plot = plt_temp, height = 7, width = 8.5, dpi = 300)
 # scales::percent(mean_comp_temp$y,accuracy=0.1)
 # scales::percent(ttest_temp$estimate, accuracy = 0.1)
 ```
@@ -1804,7 +1858,7 @@ dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the TP matches
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # max piles per site
 nplts_temp <- 12
 # dbscan
@@ -1851,7 +1905,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1873,7 +1927,7 @@ purrr::map(
 
 plot example true positive matches on the RGB with the actual pile (cyan) and predicted (magenta) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1894,7 +1948,7 @@ purrr::map(
 
 Check out the plots for the omissions (FN)
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -1939,7 +1993,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1960,7 +2014,7 @@ purrr::map(
 
 plot example omissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -1981,7 +2035,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # function to plot ortho
 terra_plt_ortho <- function(
   ortho
@@ -2079,7 +2133,7 @@ all_stand_boundary$site_data_lab %>%
 
 Check out the plots for the commissions (FP)
 
-```{r,eval=F,purl=FALSE, results=F}
+```{r,eval=T,purl=FALSE, results=F}
 # dbscan
 dbscan_tp_plts_temp <- all_stand_boundary$site_data_lab %>% 
   purrr::set_names() %>% 
@@ -2124,7 +2178,7 @@ watershed_tp_plts_temp <- all_stand_boundary$site_data_lab %>%
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -2145,7 +2199,7 @@ purrr::map(
 
 plot example commissions on the RGB with the actual pile (cyan) pile outlined
 
-```{r,eval=F,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
+```{r,eval=T,purl=FALSE, fig.height=8.8, results='hide', fig.show='asis'}
 all_stand_boundary$site_data_lab %>% 
 purrr::map(
   function(x){
@@ -2166,7 +2220,7 @@ purrr::map(
 
 why are these missing?
 
-```{r,eval=F,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
+```{r,eval=T,purl=FALSE, results=F, fig.show='asis', fig.height=8.8}
 # map over it 
 all_stand_boundary$site_data_lab %>% 
   purrr::map(

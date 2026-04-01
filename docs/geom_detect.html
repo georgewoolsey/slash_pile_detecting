@@ -1012,16 +1012,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="geom_detect.html#cb114-1" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">freq</span>(watershed_segs) <span class="sc">%&gt;%</span> </span>
 <span id="cb114-2"><a href="geom_detect.html#cb114-2" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">10</span>)</span></code></pre></div>
 <pre><code>##    layer value count
-## 1      1    53    29
-## 2      1     8     7
-## 3      1   212    12
-## 4      1    91    42
-## 5      1   154    41
-## 6      1   126     1
-## 7      1   184    71
-## 8      1   173   574
-## 9      1    32     9
-## 10     1   120    11</code></pre>
+## 1      1   181    16
+## 2      1    19    26
+## 3      1   131    18
+## 4      1   171     9
+## 5      1    99    21
+## 6      1    21    71
+## 7      1   180    45
+## 8      1   106    13
+## 9      1    43   443
+## 10     1    18     2</code></pre>
 <p>where the “value” is the segment identifier and the count is the number of raster cells assigned to that segment</p>
 <p>how many predicted segments are there?</p>
 <div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="geom_detect.html#cb116-1" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">freq</span>(watershed_segs) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(value)) <span class="sc">%&gt;%</span> <span class="fu">nrow</span>()</span></code></pre></div>
